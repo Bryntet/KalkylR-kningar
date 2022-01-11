@@ -143,7 +143,7 @@ def raknaMarginal(config, prylInfo, personalInfo, inputData):
 
 
 
-""""
+"""
 def raknaTillganglighetsTjanster(inputData):
   tillganglighetsPris = 0
   tillganglighetsKostnad = 0
@@ -159,10 +159,20 @@ def raknaTillganglighetsTjanster(inputData):
     tillganglighetsPris += inputData["liveMinuter"]
     tillganglighetsKostnad += inputData["liveMinuter"]
   if inputData["syntolkning"] == "Live":
+    tillganglighetsPris += inputData[liveMinuter]
+    tillganglighetsKostnad += inputData["liveMinuter"]
+  elif inputData["syntolking"] == "Post":
 
+
+
+    
   tillganglighetsInfo = {}
   return tillganglighetsInfo
 """
+
+
+
+
 
 
 def skaffaPrylarUrPaket(paketId, prylTable, paketTable, paket = True, personal = 0, svanis = False, **prylar):
@@ -175,6 +185,7 @@ def skaffaPrylarUrPaket(paketId, prylTable, paketTable, paket = True, personal =
   if paket == True:
     paketIdPlace = paketTable.get(paketId)  
     personal += int(paketIdPlace["fields"]["Personal"])
+    print(personal)
     try:
       if paketIdPlace["fields"]["Svanis"]:
         svanis = True
@@ -264,7 +275,7 @@ def skaffaPrylarUrPaket(paketId, prylTable, paketTable, paket = True, personal =
 
 
 
-inputFields=["gigNamn", "prylPaket", "dagLängd", "extraPrylar", "dagLängd", "dagar", "extraPersonal", "hyrKostnad", "textning", "syntolkning", "antalPaket", "antalPrylar", "extraPrylar", "debug"]
+inputFields=["gigNamn", "prylPaket", "dagLängd", "extraPrylar", "dagLängd", "dagar", "extraPersonal", "hyrKostnad", "textning", "syntolkning", "antalPaket", "antalPrylar", "extraPrylar"]
 paketFields=["Paket Namn", "Paket i prylPaket", "Prylar", "Antal Prylar", "Personal", "Svanis", "Hyreskostnad"]
 prylFields=["Pryl Namn", "pris"]
 
@@ -311,6 +322,7 @@ while True:
               paketId = inputData["prylPaket"][i]
               prylarUrPaket = skaffaPrylarUrPaket(paketId, prylTable, paketTable, paket=True)
               personal += prylarUrPaket["personal"]
+              
               #print(prylarUrPaket)
               for pryl in prylarUrPaket["prylLista"]:
                 prylLista.append(pryl)
@@ -331,7 +343,7 @@ while True:
         prylarUrPrylId = skaffaPrylarUrPaket(0, prylTable, paketTable, False, prylar=inputData["extraPrylar"])
         for pryl in prylarUrPrylId["prylLista"]:
           prylLista.append(pryl)
-      
+
       except KeyError:
         pass
       #print(prylLista)
@@ -363,16 +375,19 @@ while True:
       marginalInfo = raknaMarginal(config, prylInfo, personalInfo, inputData)
       kalkylOutput = {}
       kalkylOutput["Gig Namn"] = inputData["gigNamn"]
-      kalkylOutput.update(marginalInfo)
+      kalkylOutput["Helpris"] = marginalInfo["Helpris"]
+      kalkylOutput["Marginal"] = marginalInfo["Marginal"]
+      kalkylOutput["Personal"] = inputData["personal"]
+      kalkylOutput["Projekttimmar"] = personalInfo["projektTimmar"]
+      kalkylOutput["Riggtimmar"] = personalInfo["riggTimmar"]
+      kalkylOutput["Totalt timmar"] = personalInfo["timBudget"]
+      kalkylOutput["Prylpris"] = prylInfo["prylPris"]
       print(kalkylOutput)
-      try:
-        if inputData["debug"]:
-          kalkylOutput["debug"] = "`" + str([config, inputData, prylInfo, personalInfo, marginalInfo]) + "`"
-          #print(kalkylOutput["debug"])
-          print(config, inputData, prylInfo, personalInfo, marginalInfo)
-      except KeyError:
-        pass
 
+      kalkylOutput["debug"] = "`" + str([config, inputData, prylInfo, personalInfo, marginalInfo]) + "`"
+      #print(kalkylOutput["debug"])
+      print(config, inputData, prylInfo, personalInfo, marginalInfo)
+      
       duplicateOrNot = False
 
       for record in outputTableList:
@@ -385,6 +400,7 @@ while True:
       svanis = False
       stop = time.time()
       print("The time of the run:", stop - start, "\n Time to middle was: ", middle - start)
+      
   except IndexError:
     pass
 
