@@ -1,13 +1,36 @@
 import os
-import re
 import time
 from pyairtable import Table
+import random
+from threading import Thread
+
+
 api_key = os.environ['api_key']
 import math
 
+from flask import Flask, request
+
+app = Flask(  # Create a flask app
+	__name__,
+	template_folder='templates',  # Name of html file folder
+	static_folder='static'  # Name of directory for static files
+)
+
+
+
+@app.route("/")
+def home(methods=["GET"]):
+  global areWeRunning
+  areWeRunning = True
+  return "hi"
+
+
+
+def server():
+    app.run(host='0.0.0.0')
+
 
 personal = 0
-
 
 svanis = False
 
@@ -119,9 +142,9 @@ def raknaMarginal(config, prylInfo, personalInfo, inputData):
   except ZeroDivisionError:
     prylMarginal = 0
   
+  print(prylInfo, personalInfo)
 
   avkastning = helPris - prylKostnad - personalKostnad - hyrKostnad
-
   marginal = avkastning / (helPris - hyrKostnad * (1 - hyrMulti * hyrMarginal))
   
   marginalInfo = {
@@ -175,23 +198,27 @@ def raknaTillganglighetsTjanster(inputData):
 
 
 
-def skaffaPrylarUrPaket(paketId, prylTable, paketTable, paket = True, personal = 0, svanis = False, **prylar):
-  paketTable = Table(api_key, 'appdfwFF83lU6ipfH', 'Pryl Paket')
-  prylTable = Table(api_key, 'appdfwFF83lU6ipfH', 'Prylar')
+def skaffaPrylarUrPaket(paketId, prylTableList, paketTableList, personal = 0, paket = True, svanis = False, **prylar):
+  global inputData
   #print(prylar)
-  global inputFields
-  global paketFields
-  global prylFields
+  #print(prylTableList)
   if paket == True:
-    paketIdPlace = paketTable.get(paketId)  
+    for record in paketTableList:
+      #print(record["id"], paketId)
+      #print(record["id"], paketId)
+      print(record["if"], paketId)
+      if paketId == record["id"]:
+        paketIdPlace = record
+        break
+
     personal += int(paketIdPlace["fields"]["Personal"])
-    print(personal)
+    #print(personal)
     try:
       if paketIdPlace["fields"]["Svanis"]:
         svanis = True
     except KeyError:
       pass
-  prylTableList = prylTable.all(fields=prylFields)
+  
   #print(prylTableList)
 
   prylLista = []
@@ -204,8 +231,8 @@ def skaffaPrylarUrPaket(paketId, prylTable, paketTable, paket = True, personal =
   if paket == True:
     try:
       for paketPaketId in paketIdPlace["fields"]["Paket i prylPaket"]:
-
-        output = skaffaPrylarUrPaket(paketPaketId, prylTable, paketTable, personal, paket = True)
+        #print(prylTableList[0], paketTableList[0])
+        output = skaffaPrylarUrPaket(paketPaketId, prylTableList, paketTableList, personal, paket = True)
         #print(output["prylLista"])
         prelPrylLista.append(output["prylLista"])
         #prylLista.append(output["prylLista"])
@@ -216,26 +243,31 @@ def skaffaPrylarUrPaket(paketId, prylTable, paketTable, paket = True, personal =
     except KeyError:
       pass
     #Kolla efter alla prylar 
-    
     try:
       try:
-        antalPrylar = paketIdPlace["fields"]["Antal Prylar"].split(",")
+        
+        antalPrylar = str(paketIdPlace["fields"]["Antal Prylar"])+","
+        antalPrylar = antalPrylar.split(",")
+        if antalPrylar[-1] == "":
+          del antalPrylar[-1]
         
         for prylId in paketIdPlace["fields"]["Prylar"]:
-          for item in prylTableList:
+          for record in prylTableList:
             #print(item["id"], prylId)
-            if item["id"] == prylId:
-              pryl = prylTableList[int(prylTableList.index(item))+1]
+            if record["id"] == prylId:
+              pryl = prylTableList[int(prylTableList.index(record))+1]
               platsILista = paketIdPlace["fields"]["Prylar"].index(prylId)
+              #print(prylId, platsILista)
               
-              for i in range(0, int(antalPrylar[platsILista])):
-                prylLista.append(item["fields"])
+              for i in range(0, platsILista):
+                prylLista.append(record["fields"])
+              break
               
       except KeyError:
         for prylId in paketIdPlace["fields"]["Prylar"]:
-          for item in prylTableList:
-            if item == prylId:
-              pryl = prylTableList[int(prylTableList.index(item))+1]
+          for record in prylTableList:
+            if record == prylId:
+              pryl = prylTableList[int(prylTableList.index(record))+1]
               prylLista.append(pryl["fields"])
               
         #pryl = prylTable.get(prylId)
@@ -243,164 +275,187 @@ def skaffaPrylarUrPaket(paketId, prylTable, paketTable, paket = True, personal =
           
     except KeyError:
       pass
-
   if prylar:
     try:
-      antalPrylar = inputData["antalPrylar"].split(",")
-      print(antalPrylar)
+      antalPrylar = str(inputData["antalPrylar"])+","
+      antalPrylar = antalPrylar.split(",")
+      if antalPrylar[-1] == "":
+       del antalPrylar[-1] 
+        
+      #print(antalPrylar)
       for prylId in prylar["prylar"]:
-        for item in prylTableList:
-          if item["id"] == prylId:
+        for record in prylTableList:
+          if record["id"] == prylId:
             
-            pryl = prylTableList[int(prylTableList.index(item))+1]
+            pryl = prylTableList[int(prylTableList.index(record))+1]
             platsILista = prylar["prylar"].index(prylId)
-            print(antalPrylar[int(platsILista)])
+            #print(antalPrylar[int(platsILista)])
             for i in range(0, int(antalPrylar[platsILista])):
-              prylLista.append(item["fields"])
+              prylLista.append(record["fields"])
             
 
     except KeyError:
       for prylId in prylar["prylar"]:
         #print(prylId)
-        for item in prylTableList:
+        for record in prylTableList:
           #print(item)
-          if item["id"] == prylId:
-            prylLista.append(item["fields"])
+          if record["id"] == prylId:
+            prylLista.append(record["fields"])
             
-
-  
   #print(prylLista)
   #print(stop - start, svanisTime - start, paketRecursionTime - svanisTime, prylTime - paketRecursionTime)
+  print(prylLista)
   return {"prylLista": prylLista, "personal": personal, "svanis": svanis}
 
 
 
-inputFields=["gigNamn", "prylPaket", "dagLängd", "extraPrylar", "dagLängd", "dagar", "extraPersonal", "hyrKostnad", "textning", "syntolkning", "antalPaket", "antalPrylar", "extraPrylar"]
+inputFields=["gigNamn", "prylPaket", "dagLängd", "extraPrylar", "dagLängd", "dagar", "extraPersonal", "hyrKostnad", "antalPaket", "antalPrylar", "extraPrylar"]
 paketFields=["Paket Namn", "Paket i prylPaket", "Prylar", "Antal Prylar", "Personal", "Svanis", "Hyreskostnad"]
 prylFields=["Pryl Namn", "pris"]
 
 config = {}
+baseName = "appG1QEArAVGABdjm"
+inputTable = Table(api_key, baseName, 'Input data')
+paketTable = Table(api_key, baseName, 'Pryl Paket')
+prylTable = Table(api_key, baseName, 'Prylar')
+outputTable = Table(api_key, baseName, 'Output table')
+configTable = Table(api_key, baseName, 'Config')
 
-inputTable = Table(api_key, 'appdfwFF83lU6ipfH', 'Input data')
-paketTable = Table(api_key, 'appdfwFF83lU6ipfH', 'Pryl Paket')
-prylTable = Table(api_key, 'appdfwFF83lU6ipfH', 'Prylar')
-outputTable = Table(api_key, 'appdfwFF83lU6ipfH', 'Output table')
-configTable = Table(api_key, 'appdfwFF83lU6ipfH', 'Config')
-while True:
-
-  inputTableList = inputTable.all(fields=inputFields)
-
-  try:
-    #om ny rad i "Input Data" (att man har submittat form): kör kod 
-    if inputTableList[1]:
-
+areWeRunning = False
+def everything():
+  global paketFields
+  global inputData
+  global areWeRunning
+  global svanis
+  global prylFields
+  global inputFields
+  
+  while True:
+    personal = 0
+    if areWeRunning == True:
+      areWeRunning = False
+      allPrylar = prylTable.all(fields=prylFields)
+      allPaket = paketTable.all(fields=paketFields)
+      inputTableList = inputTable.all(fields=inputFields)
+      #print(allPrylar)
       outputTableList = outputTable.all()
 
       start = time.time()
 
       configTableList = configTable.all()
-      inputData = inputTableList[1]["fields"]
-      inputData.pop("Paket Namn (from prylPaket)", None)
-      
-      #uppdatera översta "Input Data" table, och sedan ta bort det nya som var underst
-      inputTable.update(inputTableList[0]["id"], inputData)
-      inputTable.delete(inputTableList[1]["id"])
+      try:
+          
+        inputData = inputTableList[1]["fields"]
+        inputData.pop("Paket Namn (from prylPaket)", None)
+        
+        #uppdatera översta "Input Data" table, och sedan ta bort det nya som var underst
+        inputTable.update(inputTableList[0]["id"], inputData)
+        inputTable.delete(inputTableList[1]["id"])
+        dontRunAnyMore = False
+      except IndexError:
+        dontRunAnyMore = True
+      if dontRunAnyMore != True:
+          
+        prylLista = []
+        #Fixa prylar från paket ids + antal paket som används
+        try: 
+          try:
+            #print(inputData)
+            inputData["antalPaket"] += ","
+            inputData["antalPaket"] = inputData["antalPaket"].split(",")
+            if inputData["antalPaket"][-1] == '':
+              del inputData["antalPaket"][-1]
+            for i in range(0, len(inputData["antalPaket"])):
+              startILoop = time.time()
+              for j in range(0, int(inputData["antalPaket"][i])):
+                startILoopLoop = time.time()
+                print(inputData["prylPaket"])
+                paketId = inputData["prylPaket"][i]
+                prylarUrPaket = skaffaPrylarUrPaket(paketId, allPrylar, allPaket, paket=True)
+                personal += prylarUrPaket["personal"]
+                print(time.time() - startILoopLoop)
 
-      prylLista = []
-      #Fixa prylar från paket ids + antal paket som används
-      try: 
-        try:
-          inputData["antalPaket"] += ","
-          inputData["antalPaket"] = inputData["antalPaket"].split(",")
-          if inputData["antalPaket"][1] == '':
-            del inputData["antalPaket"][1]
-          #print(inputData["antalPaket"])
-          for i in range(0, len(inputData["antalPaket"])):
-            #print("hello")
-            for j in range(0, int(inputData["antalPaket"][i])):
-              #print("hello 2")
-              paketId = inputData["prylPaket"][i]
-              prylarUrPaket = skaffaPrylarUrPaket(paketId, prylTable, paketTable, paket=True)
+                for pryl in prylarUrPaket["prylLista"]:
+                  prylLista.append(pryl)
+              print(time.time() - startILoop)
+            #print(prylLista)
+          except KeyError:
+            for paketId in inputData["prylPaket"]:
+              prylarUrPaket = skaffaPrylarUrPaket(paketId, allPrylar, allPaket, paket=True)
               personal += prylarUrPaket["personal"]
-              
               #print(prylarUrPaket)
               for pryl in prylarUrPaket["prylLista"]:
                 prylLista.append(pryl)
-          #print(prylLista)
+              #print(prylLista)
         except KeyError:
-          for paketId in inputData["prylPaket"]:
-            prylarUrPaket = skaffaPrylarUrPaket(paketId, prylTable, paketTable, paket=True)
-            personal += prylarUrPaket["personal"]
-            #print(prylarUrPaket)
-            for pryl in prylarUrPaket["prylLista"]:
-              prylLista.append(pryl)
-            #print(prylLista)
-      except KeyError:
-        pass
+          pass
+        print("hello")
+        #Fixa prylar från IDs  
+        try:
+          prylarUrPrylId = skaffaPrylarUrPaket(0, allPrylar, allPaket, False, prylar=inputData["extraPrylar"])
+          for pryl in prylarUrPrylId["prylLista"]:
+            prylLista.append(pryl)
 
-      #Fixa prylar från IDs  
-      try:
-        prylarUrPrylId = skaffaPrylarUrPaket(0, prylTable, paketTable, False, prylar=inputData["extraPrylar"])
-        for pryl in prylarUrPrylId["prylLista"]:
-          prylLista.append(pryl)
+        except KeyError:
+          pass
+        #print(prylLista)
+        middle = time.time()
+        inputData["prylar"] = prylLista
+        try:
+          inputData["svanis"] = prylarUrPaket["svanis"]
+          inputData["personal"] = personal + inputData["extraPersonal"]
+        except NameError:
+          inputData["svanis"] = False
+          inputData["personal"] = inputData["extraPersonal"]
 
-      except KeyError:
-        pass
-      #print(prylLista)
-      middle = time.time()
-      inputData["prylar"] = prylLista
-      try:
-        inputData["svanis"] = prylarUrPaket["svanis"]
-        inputData["personal"] = personal + inputData["extraPersonal"]
-      except NameError:
-        inputData["svanis"] = False
-        inputData["personal"] = inputData["extraPersonal"]
+        #fyfan
 
-      #fyfan
+        #inputData.update(prylarOchPersonalAvPaket(inputData))
+        
+        #inputData["prylar"] = fixaPrylarna(inputData)
+        #print(inputData["prylar"])
+        for record in configTableList:
+          config[record["fields"]["Name"]] = record["fields"]["Siffra i decimal"]
+        print("Running the kalkylark\n")
+        #print(inputData["prylar"], "\n")
 
-      #inputData.update(prylarOchPersonalAvPaket(inputData))
+
+
+
+        prylInfo = raknaPryl(config, inputData)
+        personalInfo = raknaPersonal(config, prylInfo, inputData)
+        marginalInfo = raknaMarginal(config, prylInfo, personalInfo, inputData)
+        kalkylOutput = {}
+        kalkylOutput["Gig Namn"] = inputData["gigNamn"]
+        kalkylOutput["Helpris"] = marginalInfo["Helpris"]
+        kalkylOutput["Marginal"] = marginalInfo["Marginal"]
+        kalkylOutput["Personal"] = inputData["personal"]
+        kalkylOutput["Projekttimmar"] = personalInfo["projektTimmar"]
+        kalkylOutput["Riggtimmar"] = personalInfo["riggTimmar"]
+        kalkylOutput["Totalt timmar"] = personalInfo["timBudget"]
+        kalkylOutput["Prylpris"] = prylInfo["prylPris"]
+        print(kalkylOutput)
+
+        kalkylOutput["debug"] = "`" + str([config, inputData, prylInfo, personalInfo, marginalInfo]) + "`"
+        #print(kalkylOutput["debug"])
+        print(config, inputData, prylInfo, personalInfo, marginalInfo)
+        
+        duplicateOrNot = False
+
+        for record in outputTableList:
+          #print(record)
+          if record["fields"]["Gig Namn"] == inputData["gigNamn"]:
+            outputTable.update(record["id"], kalkylOutput, replace=True)
+            duplicateOrNot = True
+        if duplicateOrNot == False:
+          outputTable.create(kalkylOutput)
+        svanis = False
+        stop = time.time()
+        print("The time of the run:", stop - start, "\n Time to middle was: ", middle - start)
       
-      #inputData["prylar"] = fixaPrylarna(inputData)
-      #print(inputData["prylar"])
-      for record in configTableList:
-        config[record["fields"]["Name"]] = record["fields"]["Siffra i decimal"]
-      print("Running the kalkylark\n")
-      #print(inputData["prylar"], "\n")
 
-
-
-
-      prylInfo = raknaPryl(config, inputData)
-      personalInfo = raknaPersonal(config, prylInfo, inputData)
-      marginalInfo = raknaMarginal(config, prylInfo, personalInfo, inputData)
-      kalkylOutput = {}
-      kalkylOutput["Gig Namn"] = inputData["gigNamn"]
-      kalkylOutput["Helpris"] = marginalInfo["Helpris"]
-      kalkylOutput["Marginal"] = marginalInfo["Marginal"]
-      kalkylOutput["Personal"] = inputData["personal"]
-      kalkylOutput["Projekttimmar"] = personalInfo["projektTimmar"]
-      kalkylOutput["Riggtimmar"] = personalInfo["riggTimmar"]
-      kalkylOutput["Totalt timmar"] = personalInfo["timBudget"]
-      kalkylOutput["Prylpris"] = prylInfo["prylPris"]
-      print(kalkylOutput)
-
-      kalkylOutput["debug"] = "`" + str([config, inputData, prylInfo, personalInfo, marginalInfo]) + "`"
-      #print(kalkylOutput["debug"])
-      print(config, inputData, prylInfo, personalInfo, marginalInfo)
-      
-      duplicateOrNot = False
-
-      for record in outputTableList:
-        #print(record)
-        if record["fields"]["Gig Namn"] == inputData["gigNamn"]:
-          outputTable.update(record["id"], kalkylOutput, replace=True)
-          duplicateOrNot = True
-      if duplicateOrNot == False:
-        outputTable.create(kalkylOutput)
-      svanis = False
-      stop = time.time()
-      print("The time of the run:", stop - start, "\n Time to middle was: ", middle - start)
-      
-  except IndexError:
-    pass
-
+areWeRunning = True
+if __name__ == '__main__':
+    Thread(target = server).start()
+    Thread(target = everything).start()
+    print("hello")

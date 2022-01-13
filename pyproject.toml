@@ -7,6 +7,11 @@ authors = ["Your Name <you@example.com>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 pyairtable = "^1.0.0"
+slack-sdk = "^3.13.0"
+slack-bolt = "^1.11.1"
+python-dotenv = "^0.19.2"
+Flask = "^2.0.2"
+requests = "^2.27.1"
 
 [tool.poetry.dev-dependencies]
 
