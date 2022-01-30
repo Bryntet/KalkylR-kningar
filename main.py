@@ -88,6 +88,7 @@ def raknaPersonal(config, prylInfo, inputData):
   return personalInfo
 
 def raknaPryl(config, inputData):
+  print("in raknaPryl", inputData["prylar"])
   #Pris = Pris för kund ellie e best
   #Kostnad = Kostnad för levande video kooperativet!
   prylPris = 0
@@ -199,6 +200,7 @@ def raknaTillganglighetsTjanster(inputData):
 
 
 def skaffaPrylarUrPaket(paketId, prylTableList, paketTableList, personal = 0, paket = True, svanis = False, **prylar):
+  print("in skaffaPrylarUrPaket")
   global inputData
   #print(prylar)
   #print(prylTableList)
@@ -206,18 +208,20 @@ def skaffaPrylarUrPaket(paketId, prylTableList, paketTableList, personal = 0, pa
     for record in paketTableList:
       #print(record["id"], paketId)
       #print(record["id"], paketId)
-      print(record["if"], paketId)
+      print(record["id"], paketId)
       if paketId == record["id"]:
         paketIdPlace = record
         break
 
+    print(paketIdPlace)
     personal += int(paketIdPlace["fields"]["Personal"])
     #print(personal)
     try:
       if paketIdPlace["fields"]["Svanis"]:
         svanis = True
-    except KeyError:
-      pass
+    except KeyError as e:
+      print(e)
+      #pass
   
   #print(prylTableList)
 
@@ -225,10 +229,11 @@ def skaffaPrylarUrPaket(paketId, prylTableList, paketTableList, personal = 0, pa
 
  
   #prelPrylLista = []
-
+  
   #Recursion med möjliga paket i prylpaket, output till lista
   prelPrylLista = []
   if paket == True:
+    print("hello")
     try:
       for paketPaketId in paketIdPlace["fields"]["Paket i prylPaket"]:
         #print(prylTableList[0], paketTableList[0])
@@ -240,8 +245,9 @@ def skaffaPrylarUrPaket(paketId, prylTableList, paketTableList, personal = 0, pa
       for pryl in prelPrylLista[0]:
         prylLista.append(pryl)
           
-    except KeyError:
-      pass
+    except KeyError as e:
+      print(e)
+      #pass
     #Kolla efter alla prylar 
     try:
       try:
@@ -263,7 +269,8 @@ def skaffaPrylarUrPaket(paketId, prylTableList, paketTableList, personal = 0, pa
                 prylLista.append(record["fields"])
               break
               
-      except KeyError:
+      except KeyError as e:
+        print(e)
         for prylId in paketIdPlace["fields"]["Prylar"]:
           for record in prylTableList:
             if record == prylId:
@@ -273,14 +280,15 @@ def skaffaPrylarUrPaket(paketId, prylTableList, paketTableList, personal = 0, pa
         #pryl = prylTable.get(prylId)
 
           
-    except KeyError:
-      pass
+    except KeyError as e:
+      print(e)
+      #pass
   if prylar:
     try:
       antalPrylar = str(inputData["antalPrylar"])+","
       antalPrylar = antalPrylar.split(",")
       if antalPrylar[-1] == "":
-       del antalPrylar[-1] 
+       del antalPrylar[-1]
         
       #print(antalPrylar)
       for prylId in prylar["prylar"]:
@@ -294,7 +302,8 @@ def skaffaPrylarUrPaket(paketId, prylTableList, paketTableList, personal = 0, pa
               prylLista.append(record["fields"])
             
 
-    except KeyError:
+    except KeyError as e:
+      print(e)
       for prylId in prylar["prylar"]:
         #print(prylId)
         for record in prylTableList:
@@ -304,7 +313,7 @@ def skaffaPrylarUrPaket(paketId, prylTableList, paketTableList, personal = 0, pa
             
   #print(prylLista)
   #print(stop - start, svanisTime - start, paketRecursionTime - svanisTime, prylTime - paketRecursionTime)
-  print(prylLista)
+
   return {"prylLista": prylLista, "personal": personal, "svanis": svanis}
 
 
@@ -434,11 +443,11 @@ def everything():
         kalkylOutput["Riggtimmar"] = personalInfo["riggTimmar"]
         kalkylOutput["Totalt timmar"] = personalInfo["timBudget"]
         kalkylOutput["Prylpris"] = prylInfo["prylPris"]
-        print(kalkylOutput)
+        #print(kalkylOutput)
 
         kalkylOutput["debug"] = "`" + str([config, inputData, prylInfo, personalInfo, marginalInfo]) + "`"
         #print(kalkylOutput["debug"])
-        print(config, inputData, prylInfo, personalInfo, marginalInfo)
+        #print(config, inputData, prylInfo, personalInfo, marginalInfo)
         
         duplicateOrNot = False
 
@@ -458,4 +467,4 @@ areWeRunning = True
 if __name__ == '__main__':
     Thread(target = server).start()
     Thread(target = everything).start()
-    print("hello")
+    #print("hello")
