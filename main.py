@@ -5,12 +5,17 @@ import re
 import random
 from threading import Thread
 import copy
+import pandas as pd
+import math
+from flask import Flask, request
 
+#pd.set_option('display.max_colwidth', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
+
+#pd.set_option('display.width', 150)
 
 api_key = os.environ['api_key']
-import math
-
-from flask import Flask, request
 
 app = Flask(  # Create a flask app
 	__name__,
@@ -32,11 +37,79 @@ data = ["test0", "test1"]
 @app.route("/update", methods=["POST"]) 
 def update():
   global data
-  #print(data)
+  global runItNext
   data[1] = data[0] #Get new data and save the old
   data[0] = request.json
-  print(data[0]["Output table"], data[0]["Input data"])
+  inputDF = pd.DataFrame.from_dict(data[0]["Input data"], 'index')
+  configDF = pd.DataFrame.from_dict(data[0]["Config"])
+  prylPaketDF = pd.DataFrame.from_dict(data[0]["Pryl Paket"])
+  prylarDF = pd.DataFrame.from_dict(data[0]["Prylar"])
+  #print(prylarDF)
+  #inputDF.style
+  #print(configDF["andelRiggTimmar"])
+  #print(prylPaketDF)
+  totalPris = 0
+  for paketNamn in prylPaketDF:
+    pris = 0
+    #print(paketNamn)
+    paketet = prylPaketDF[str(paketNamn)]
+    if paketet["Prylar"]:
+      if isinstance(paketet["Prylar"], float) == False:
+        for pryl in paketet["Prylar"]:
+
+          if str(paketNamn) == "Direkttextning och postsynk":
+            print("i'm here")
+          if pd.isna(paketet["Antal Prylar"]) == False and paketet["Antal Prylar"] != 1:
+            if paketet["Antal Prylar"] != list:
+              if prylPaketDF[str(paketNamn)]["Prylar"].index(pryl) == 0:
+                pris += prylarDF[pryl["name"]]["pris"]*paketet["Antal Prylar"]
+                
+              else:
+                pris += prylarDF[pryl["name"]]["pris"]
+                
+            else:
+              prylListan = paketet["Antal Prylar"]
+              pris += prylarDF[pryl["name"]]["pris"]*prylListan[prylPaketDF[str(paketNamn)]["Prylar"].index(pryl)]
+             
+          else:
+            pris += prylarDF[pryl["name"]]["pris"]
+          print(pris, paketNamn)
+          totalPris += pris
+        #print(pris)
+        
+      else:
+        pass
+
+    paketet = prylPaketDF[str(paketNamn)]
+    paketIPaket = prylPaketDF[str(paketNamn)]["Paket i prylPaket"]
+    if isinstance(paketIPaket, list):
+      print(prylPaketDF[str(paketNamn)]["Paket i prylPaket"])
+      if isinstance(paketet["Prylar"], float) == False:
+        for pryl in paketet["Prylar"]:
+          if pd.isna(paketet["Antal Prylar"]) == False and paketet["Antal Prylar"] != 1:
+            if paketet["Antal Prylar"] != list:
+              if prylPaketDF[str(paketNamn)]["Prylar"].index(pryl) == 0:
+                pris += prylarDF[pryl["name"]]["pris"]*paketet["Antal Prylar"]
+              else:
+                pris += prylarDF[pryl["name"]]["pris"]
+            else:
+              prylListan = paketet["Antal Prylar"]
+              pris += prylarDF[pryl["name"]]["pris"]*prylListan[prylPaketDF[str(paketNamn)]["Prylar"].index(pryl)]
+            
+          else:
+            pris += prylarDF[pryl["name"]]["pris"]
+          print(pris, paketet["Antal Prylar"], paketet["Prylar"])
+        #print(pris)
+          totalPris += pris
+      else:
+        pass
+  print(f"Total priset är: {totalPris}!!!")
+
+  #print(data[0]["Output table"], data[0]["Input data"])
+  #Thread(target = everything).start()
   return "<3"
+
+
 
 def server():
     app.run(host='0.0.0.0')
@@ -60,9 +133,13 @@ def raknaPersonal(config, prylInfo, inputData):
     timPeng = math.floor(levandeVideoLön * (lönMarginal)/10)*10
     
     gigTimmar = round(dagLängd*personal*dagar)
-
-    riggTimmar = round(prylPris*andelRiggTimmar)
     
+    if inputData["specialRigg"] == True:
+      riggTimmar = inputData["riggTimmar"]
+    else:
+      riggTimmar = round(prylPris*andelRiggTimmar)
+    
+    print(riggTimmar)
     projektTimmar = round((gigTimmar+riggTimmar) * .3)
     if inputData["svanis"] == True:
       restid = personal * 2
@@ -101,7 +178,7 @@ def raknaPersonal(config, prylInfo, inputData):
 
 def raknaPryl(config, inputData):
   print("in raknaPryl", inputData["prylar"])
-  #Pris = Pris för kund ellie e best
+  #Pris = Pris för kund
   #Kostnad = Kostnad för levande video kooperativet!
   prylPris = 0
   dagar = inputData["dagar"]
@@ -342,11 +419,7 @@ configTable = Table(api_key, baseName, 'Config')
 isItRunning = False
 def everything():
   global isItRunning
-  if isItRunning == True:
-    return
-  else:
-    isItRunning = True
-  global paketFields
+  print("hello")
   global inputData
   global areWeRunning
   global svanis
@@ -355,7 +428,8 @@ def everything():
   personal = 0
   allPrylar = prylTable.all(fields=prylFields)
   allPaket = paketTable.all(fields=paketFields)
-  inputTableList = inputTable.all(fields=inputFields) 
+  inputTableList = inputTable.all(fields=inputFields)
+  
   #print(allPrylar)
   outputTableList = outputTable.all()
 
@@ -365,27 +439,23 @@ def everything():
   try:
       
     inputData = inputTableList[1]["fields"]
-    
+    print(inputData)
     #uppdatera översta "Input Data" table, och sedan ta bort det nya som var underst
     
-    inputTable.update(inputTableList[0]["id"], inputData)
-    inputTable.delete(inputTableList[1]["id"])
+    #inputTable.update(inputTableList[0]["id"], inputData)
+    #inputTable.delete(inputTableList[1]["id"])
     inputTableSaveOriginal = copy.deepcopy(inputData)
-    print("hello!", inputTableSaveOriginal)
+    #print("hello!", inputTableSaveOriginal)
 
     try:
       if inputTableSaveOriginal["prylPaket"] != list:
         inputTableSaveOriginal["prylPaket"] = [inputTableSaveOriginal["prylPaket"]]
     except KeyError:
       pass
-    try:
-      if inputTableSaveOriginal["extraPrylar"] != list:
-        inputTableSaveOriginal["extraPrylar"] = [inputTableSaveOriginal["extraPrylar"]]
-    except KeyError:
-      pass
-
+      
     dontRunAnyMore = False
-  except IndexError:
+  except IndexError as e: 
+    print(e)
     dontRunAnyMore = True
     isItRunning = False
     return
@@ -541,12 +611,20 @@ def everything():
       outputId = [outputId]
       projectTable.create({"Name": inputData["projekt"], "Leveranser": outputId})
     isItRunning = False
+    Thread(target = everything).stop()
 server()    
+while True:
+  if runItNext == True:
+    print("Hello")
+    runItNext = False
+    everything()
+  
 
-"""
 areWeRunning = True
 if __name__ == '__main__':
     Thread(target = server).start()
     Thread(target = everything).start()
     #print("hello")
-"""
+
+
+ 
