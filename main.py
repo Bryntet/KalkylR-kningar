@@ -8,7 +8,7 @@ import copy
 import pandas as pd
 import math
 from flask import Flask, request
-
+import json
 #pd.set_option('display.max_colwidth', None)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -23,6 +23,28 @@ app = Flask(  # Create a flask app
 	static_folder='static'  # Name of directory for static files
 )
 
+class prylOb:
+  def __init__(self, pris, name):
+    
+    self.name = name
+    self.pris = pris
+    #self.airtableID = dict["id"]
+
+class paketOb:
+  def __init__(self, prylar, paketPrylar, personal, name):
+    self.pris = 0
+    self.prylar = []
+    self.personal = personal
+    self.name = name
+    for pryl in paketPrylar:
+      
+      self.prylar.append(prylOb(prylar[pryl["name"]]["pris"], pryl["name"]))
+    
+    for pryl in self.prylar:
+      self.pris += pryl.pris
+    
+    print(self.name, " costs: ", self.pris)
+
 @app.route("/", methods=["GET"])
 def theBasics():
   return "Hello <3"
@@ -32,27 +54,57 @@ def home():
   print("ping")
   everything()
   return "hi"
+  
 data = ["test0", "test1"]
 
-@app.route("/update", methods=["POST"]) 
+#Route for updating the configurables
+@app.route("/update/config", methods=["POST"]) 
+def getPrylar():
+  #Save data to file
+  with open('prylar.json', 'w', encoding='utf-8') as f:
+    json.dump(request.json["Prylar"], f, ensure_ascii=False, indent=2)
+  with open('config.json', 'w', encoding='utf-8') as f:
+    json.dump(request.json["Config"], f, ensure_ascii=False, indent=2)
+  with open('paket.json', 'w', encoding='utf-8') as f:
+    json.dump(request.json["Pryl Paket"], f, ensure_ascii=False, indent=2)
+  prylarna = request.json["Prylar"]
+  paketen = request.json["Pryl Paket"]
+  print(paketen["Angela + H800-paket utan fotograf"])
+  testPaket = paketOb(prylarna, paketen["Angela + H800-paket utan fotograf"]["Prylar"], paketen["Angela + H800-paket utan fotograf"]["Personal"], "Angela + H800-paket utan fotograf")
+  for ind in range(len(paketen)):
+    pris = 0
+    #print(paketen[ind]["Prylar"][])
+    """
+    for pryl in paket.Prylar:
+      print(pryl)
+      pris += prylarDF[pryl["name"]].pris
+    print(pris)
+    paket.pris = pris
+    """
+  return "Tack"
+  
+@app.route("/update", methods=["POST"])
 def update():
   global data
   global runItNext
   data[1] = data[0] #Get new data and save the old
   data[0] = request.json
   inputDF = pd.DataFrame.from_dict(data[0]["Input data"], 'index')
-  configDF = pd.DataFrame.from_dict(data[0]["Config"])
-  prylPaketDF = pd.DataFrame.from_dict(data[0]["Pryl Paket"])
-  prylarDF = pd.DataFrame.from_dict(data[0]["Prylar"])
-  #print(prylarDF)
+  
+  
+  #Load dataframes from locally stored configs
+  prylarDF = pd.read_json('prylar.json')
+  configDF = pd.read_json('config.json')
+  paketDF = pd.read_json('paket.json')
+  print(prylarDF)
   #inputDF.style
   #print(configDF["andelRiggTimmar"])
-  #print(prylPaketDF)
+  #print(paketDF)
   totalPris = 0
-  for paketNamn in prylPaketDF:
+  for paketNamn in paketDF:
     pris = 0
     #print(paketNamn)
-    paketet = prylPaketDF[str(paketNamn)]
+    paketet = paketDF[str(paketNamn)]
     if paketet["Prylar"]:
       if isinstance(paketet["Prylar"], float) == False:
         for pryl in paketet["Prylar"]:
@@ -61,7 +113,7 @@ def update():
             print("i'm here")
           if pd.isna(paketet["Antal Prylar"]) == False and paketet["Antal Prylar"] != 1:
             if paketet["Antal Prylar"] != list:
-              if prylPaketDF[str(paketNamn)]["Prylar"].index(pryl) == 0:
+              if paketDF[str(paketNamn)]["Prylar"].index(pryl) == 0:
                 pris += prylarDF[pryl["name"]]["pris"]*paketet["Antal Prylar"]
                 
               else:
@@ -69,7 +121,7 @@ def update():
                 
             else:
               prylListan = paketet["Antal Prylar"]
-              pris += prylarDF[pryl["name"]]["pris"]*prylListan[prylPaketDF[str(paketNamn)]["Prylar"].index(pryl)]
+              pris += prylarDF[pryl["name"]]["pris"]*prylListan[paketDF[str(paketNamn)]["Prylar"].index(pryl)]
              
           else:
             pris += prylarDF[pryl["name"]]["pris"]
@@ -80,21 +132,21 @@ def update():
       else:
         pass
 
-    paketet = prylPaketDF[str(paketNamn)]
-    paketIPaket = prylPaketDF[str(paketNamn)]["Paket i prylPaket"]
+    paketet = paketDF[str(paketNamn)]
+    paketIPaket = paketDF[str(paketNamn)]["Paket i prylPaket"]
     if isinstance(paketIPaket, list):
-      print(prylPaketDF[str(paketNamn)]["Paket i prylPaket"])
+      print(paketDF[str(paketNamn)]["Paket i prylPaket"])
       if isinstance(paketet["Prylar"], float) == False:
         for pryl in paketet["Prylar"]:
           if pd.isna(paketet["Antal Prylar"]) == False and paketet["Antal Prylar"] != 1:
             if paketet["Antal Prylar"] != list:
-              if prylPaketDF[str(paketNamn)]["Prylar"].index(pryl) == 0:
+              if paketDF[str(paketNamn)]["Prylar"].index(pryl) == 0:
                 pris += prylarDF[pryl["name"]]["pris"]*paketet["Antal Prylar"]
               else:
                 pris += prylarDF[pryl["name"]]["pris"]
             else:
               prylListan = paketet["Antal Prylar"]
-              pris += prylarDF[pryl["name"]]["pris"]*prylListan[prylPaketDF[str(paketNamn)]["Prylar"].index(pryl)]
+              pris += prylarDF[pryl["name"]]["pris"]*prylListan[paketDF[str(paketNamn)]["Prylar"].index(pryl)]
             
           else:
             pris += prylarDF[pryl["name"]]["pris"]
@@ -103,6 +155,8 @@ def update():
           totalPris += pris
       else:
         pass
+  #print(prylarDF)
+  
   print(f"Total priset är: {totalPris}!!!")
 
   #print(data[0]["Output table"], data[0]["Input data"])

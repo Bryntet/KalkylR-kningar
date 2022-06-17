@@ -1,0 +1,29 @@
+{
+  "svanisMulti": {
+    "Siffra i decimal": 0.5
+  },
+  "prylKostnadMulti": {
+    "Siffra i decimal": 0.05
+  },
+  "dagTvåMulti": {
+    "Siffra i decimal": 0.75
+  },
+  "dagTreMulti": {
+    "Siffra i decimal": 0.5
+  },
+  "andelRiggTimmar": {
+    "Siffra i decimal": 0.0005
+  },
+  "levandeVideoLön": {
+    "Siffra i decimal": 300
+  },
+  "lönMarginal": {
+    "Siffra i decimal": 2.28
+  },
+  "hyrMulti": {
+    "Siffra i decimal": 0.2
+  },
+  "hyrMarginal": {
+    "Siffra i decimal": 0.5
+  }
+}
