@@ -1,218 +1,290 @@
 {
   "Trådlös mik Axient": {
-    "pris": 25233
+    "inPris": 25233,
+    "pris": 1260
   },
   "300d ii": {
-    "pris": 17552
+    "inPris": 17552,
+    "pris": 870
   },
   "ATEM Mini": {
-    "pris": 3032
+    "inPris": 3032,
+    "pris": 150
   },
   "avx": {
-    "pris": 5244
+    "inPris": 5244,
+    "pris": 260
   },
   "2st Lupo": {
-    "pris": 17792
+    "inPris": 17792,
+    "pris": 880
   },
   "Stativ Manfrotto 504HD": {
-    "pris": 5902
+    "inPris": 5902,
+    "pris": 290
   },
   "mbp": {
-    "pris": 8000
+    "inPris": 8000,
+    "pris": 400
   },
   "Decimator MD-HX": {
-    "pris": 3215
+    "inPris": 3215,
+    "pris": 160
   },
   "Z90": {
-    "pris": 25992
+    "inPris": 25992,
+    "pris": 1290
   },
   "A-racket": {
-    "pris": 165757
+    "inPris": 165757,
+    "pris": 8280
   },
   "Allt BNC": {
-    "pris": 15398
+    "inPris": 15398,
+    "pris": 760
   },
   "Amelia - Sennheiser ENG-kit EW 100 G3": {
-    "pris": 5044
+    "inPris": 5044,
+    "pris": 250
   },
   "Atem mini Extreme": {
-    "pris": 11089
+    "inPris": 11089,
+    "pris": 550
   },
   "Atem mini pro": {
-    "pris": 6229
+    "inPris": 6229,
+    "pris": 310
   },
   "bord och stolar": {
-    "pris": 3300
+    "inPris": 3300,
+    "pris": 160
   },
   "Claude - Jib": {
-    "pris": 14396
+    "inPris": 14396,
+    "pris": 710
   },
   "Constellation, Angela": {
-    "pris": 98000
+    "inPris": 98000,
+    "pris": 4900
   },
   "Cube 755": {
-    "pris": 31740
+    "inPris": 31740,
+    "pris": 1580
   },
   "Decklink Duo 2 m Sonnet": {
-    "pris": 5632
+    "inPris": 5632,
+    "pris": 280
   },
   "Dollys": {
-    "pris": 7699
+    "inPris": 7699,
+    "pris": 380
   },
   "Eartec Intercom": {
-    "pris": 7685
+    "inPris": 7685,
+    "pris": 380
   },
   "Eddie - 2st XLR-vindor": {
-    "pris": 5980
+    "inPris": 5980,
+    "pris": 290
   },
   "Eleanor - Pepwave MAX 700-router": {
-    "pris": 23504
+    "inPris": 23504,
+    "pris": 1170
   },
   "Elin - Sennheiser MKH 416 shotgun": {
-    "pris": 7200
+    "inPris": 7200,
+    "pris": 360
   },
   "Elizabeth C - Atem Television Studio HD": {
-    "pris": 8519
+    "inPris": 8519,
+    "pris": 420
   },
   "Elizabeth P - MicroCue 2 Clicker": {
-    "pris": 3775
+    "inPris": 3775,
+    "pris": 180
   },
   "Emmeline - Generator Honda eu20i": {
-    "pris": 13695
+    "inPris": 13695,
+    "pris": 680
   },
   "Farseeing FD-BP95L V-mountbatteri, v-lock": {
-    "pris": 3862
+    "inPris": 3862,
+    "pris": 190
   },
   "Fred H - BMD Video Assist 4k": {
-    "pris": 7992
+    "inPris": 7992,
+    "pris": 390
   },
   "Genelec 8010": {
-    "pris": 3600
+    "inPris": 3600,
+    "pris": 180
   },
   "Genelec 8030 i par": {
-    "pris": 8304
+    "inPris": 8304,
+    "pris": 410
   },
   "Green screen": {
-    "pris": 5428
+    "inPris": 5428,
+    "pris": 270
   },
   "Grå matta + ovalt bord + småbord": {
-    "pris": 7305
+    "inPris": 7305,
+    "pris": 360
   },
   "HD Mini": {
-    "pris": 4450
+    "inPris": 4450,
+    "pris": 220
   },
   "Janet - 2st BPHS1": {
-    "pris": 3200
+    "inPris": 3200,
+    "pris": 160
   },
   "Joe Server": {
-    "pris": 4394
+    "inPris": 4394,
+    "pris": 210
   },
   "Kabelinstallation Svanis": {
-    "pris": 186000
+    "inPris": 186000,
+    "pris": 9300
   },
   "Keller - Sony A6500": {
-    "pris": 23800
+    "inPris": 23800,
+    "pris": 1190
   },
   "Ki Pro Go": {
-    "pris": 31101
+    "inPris": 31101,
+    "pris": 1550
   },
   "Kontrollrum Svanis": {
-    "pris": 43830
+    "inPris": 43830,
+    "pris": 2190
   },
   "LED-barer": {
-    "pris": 5500
+    "inPris": 5500,
+    "pris": 270
   },
   "LiveU Solo+": {
-    "pris": 27155
+    "inPris": 27155,
+    "pris": 1350
   },
   "Lucy P - AJA HELO": {
-    "pris": 12080
+    "inPris": 12080,
+    "pris": 600
   },
   "Mac Mini": {
-    "pris": 10796
+    "inPris": 10796,
+    "pris": 530
   },
   "Marvel vMix-burk": {
-    "pris": 57619
+    "inPris": 57619,
+    "pris": 2880
   },
   "Medgar - Teradek Bolt": {
-    "pris": 22000
+    "inPris": 22000,
+    "pris": 1100
   },
   "Mipro-mikrofonerna 6st": {
-    "pris": 79651
+    "inPris": 79651,
+    "pris": 3980
   },
   "Mumia A&H SQ5": {
-    "pris": 22215
+    "inPris": 22215,
+    "pris": 1110
   },
   "Myles - Ifootage Shark Slider S1": {
-    "pris": 5192
+    "inPris": 5192,
+    "pris": 250
   },
   "N-racket": {
-    "pris": 77050
+    "inPris": 77050,
+    "pris": 3850
   },
   "Nekeisha Atem 2M/E": {
-    "pris": 37020
+    "inPris": 37020,
+    "pris": 1850
   },
   "Pausmusik": {
-    "pris": 5660
+    "inPris": 5660,
+    "pris": 280
   },
   "Prathia - Projektor Optoma": {
-    "pris": 11992
+    "inPris": 11992,
+    "pris": 590
   },
   "Prompter": {
-    "pris": 24778
+    "inPris": 24778,
+    "pris": 1230
   },
   "PTZOptics": {
-    "pris": 18952
+    "inPris": 18952,
+    "pris": 940
   },
   "Restream": {
-    "pris": 5000
+    "inPris": 5000,
+    "pris": 250
   },
   "Scen": {
-    "pris": 7000
+    "inPris": 7000,
+    "pris": 350
   },
   "Shockmount case": {
-    "pris": 9330
+    "inPris": 9330,
+    "pris": 460
   },
   "Skaarhoj Fly": {
-    "pris": 16600
+    "inPris": 16600,
+    "pris": 830
   },
   "Trossar m ljus Svanis": {
-    "pris": 34162
+    "inPris": 34162,
+    "pris": 1700
   },
   "TV 55\"": {
-    "pris": 40000
+    "inPris": 40000,
+    "pris": 2000
   },
   "Odyssey 7Q+": {
-    "pris": 20000
+    "inPris": 20000,
+    "pris": 1000
   },
   "ScottDixon-case": {
-    "pris": 3500
+    "inPris": 3500,
+    "pris": 170
   },
   "Gechic-skärm": {
-    "pris": 3927
+    "inPris": 3927,
+    "pris": 190
   },
   "PTZOptics paket": {
-    "pris": 73456
+    "inPris": 73456,
+    "pris": 3670
   },
   "2st 60d + domes": {
-    "pris": 10320
+    "inPris": 10320,
+    "pris": 510
   },
   "2st 120d II": {
-    "pris": 15992
+    "inPris": 15992,
+    "pris": 790
   },
   "LED-kanna-plattor": {
-    "pris": 18100
+    "inPris": 18100,
+    "pris": 900
   },
   "Motoriserad slider": {
-    "pris": 9000
+    "inPris": 9000,
+    "pris": 450
   },
   "Soundboks": {
-    "pris": 6462
+    "inPris": 6462,
+    "pris": 320
   },
   "BRC-H800 PTZ": {
-    "pris": 61500
+    "inPris": 61500,
+    "pris": 3070
   },
   "RM-IP500": {
-    "pris": 35600
+    "inPris": 35600,
+    "pris": 1780
   }
 }
