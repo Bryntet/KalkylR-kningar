@@ -1,0 +1,1298 @@
+{
+  "Output table": {
+    "Mitt test!": {
+      "Helpris": 48371.2,
+      "Marginal": 0.6494522465231765,
+      "Personal": 3,
+      "Projekttimmar": 6,
+      "Riggtimmar": 11,
+      "Totalt timmar": 26,
+      "Prylpris": 22890,
+      "projekt": [
+        {
+          "id": "rec6b86kShoRfJWPI",
+          "name": "det viktigaste! copy"
+        }
+      ],
+      "prylPaket": [
+        {
+          "id": "reckReXqASf2UK0zw",
+          "name": "Angela tvåkamera"
+        }
+      ],
+      "dagLängd": 3,
+      "dagar": 1,
+      "extraPersonal": 1,
+      "hyrKostnad": 1,
+      "Klar!!!": {
+        "label": "Run script",
+        "url": "https://airtable.com/tbl2JdL4S1Wl1jhdB/recQgCSd9LQEaOffJ?blocks=bliThjnp3mELwM2zk"
+      },
+      "börjaDatum": "2022-02-28",
+      "slutaDatum": "2022-03-04",
+      "Projektledare": [
+        {
+          "id": "recONrC1DjeuFBKda",
+          "name": "Tobias!!"
+        }
+      ]
+    },
+    "Mitt test! copy": {
+      "Helpris": 48371.2,
+      "Marginal": 0.6494522465231765,
+      "Personal": 3,
+      "Projekttimmar": 6,
+      "Riggtimmar": 11,
+      "Totalt timmar": 26,
+      "Prylpris": 22890,
+      "projekt": [
+        {
+          "id": "recPdH5y6Vwwgn3gY",
+          "name": "det viktigaste!"
+        }
+      ],
+      "prylPaket": [
+        {
+          "id": "reckReXqASf2UK0zw",
+          "name": "Angela tvåkamera"
+        }
+      ],
+      "dagLängd": 3,
+      "dagar": 1,
+      "extraPersonal": 1,
+      "hyrKostnad": 1,
+      "Klar!!!": {
+        "label": "Run script",
+        "url": "https://airtable.com/tbl2JdL4S1Wl1jhdB/recfLBt3Uvnaw23XA?blocks=bliThjnp3mELwM2zk"
+      },
+      "börjaDatum": "2022-02-28",
+      "slutaDatum": "2022-03-04",
+      "Projektledare": [
+        {
+          "id": "recONrC1DjeuFBKda",
+          "name": "Tobias!!"
+        }
+      ]
+    }
+  },
+  "Input data": {
+    "Mitt test!": {
+      "prylPaket": [
+        {
+          "id": "reckReXqASf2UK0zw",
+          "name": "Angela tvåkamera"
+        }
+      ],
+      "antalPaket": "2,1",
+      "antalPrylar": "1",
+      "dagLängd": 6,
+      "dagar": 3,
+      "extraPersonal": 1,
+      "hyrKostnad": 1,
+      "projekt": "det viktigaste!",
+      "Börja datum": "2022-03-09T05:00:00.000Z",
+      "Sluta datum": "2022-03-12",
+      "riggDag": "2020-02-15T05:00:00.000Z",
+      "specialRigg": 1,
+      "riggTimmar": 6
+    }
+  },
+  "Config": {
+    "svanisMulti": {
+      "Siffra i decimal": 0.5
+    },
+    "prylKostnadMulti": {
+      "Siffra i decimal": 0.05
+    },
+    "dagTvåMulti": {
+      "Siffra i decimal": 0.75
+    },
+    "dagTreMulti": {
+      "Siffra i decimal": 0.5
+    },
+    "andelRiggTimmar": {
+      "Siffra i decimal": 0.0005
+    },
+    "levandeVideoLön": {
+      "Siffra i decimal": 300
+    },
+    "lönMarginal": {
+      "Siffra i decimal": 2.28
+    },
+    "hyrMulti": {
+      "Siffra i decimal": 0.2
+    },
+    "hyrMarginal": {
+      "Siffra i decimal": 0.5
+    }
+  },
+  "Pryl Paket": {
+    "Fin tvåkamera komplett": {
+      "paketPrylar": [
+        {
+          "id": "recVvEX7SOfbCWHDZ",
+          "name": "N-racket"
+        },
+        {
+          "id": "recSFBsIgsgJzvXjI",
+          "name": "Z90"
+        },
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        },
+        {
+          "id": "recJjMQPE2iJb9wUa",
+          "name": "Decimator MD-HX"
+        },
+        {
+          "id": "rechHzpzo22EsAZVP",
+          "name": "Stativ Manfrotto 504HD"
+        },
+        {
+          "id": "recbhQonetEpcNqOT",
+          "name": "Fred H - BMD Video Assist 4k"
+        },
+        {
+          "id": "rec7fxGSoC9UN7O2J",
+          "name": "Gechic-skärm"
+        },
+        {
+          "id": "recLws3Ig6hq8F6j5",
+          "name": "ATEM Mini"
+        },
+        {
+          "id": "recthppGLpsi7Tzuc",
+          "name": "Genelec 8010"
+        }
+      ],
+      "antalAvPryl": "1,2,3,1,2,1,1,1,1",
+      "Personal": 2,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recnjR2UGOFi15OY0?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Fin tvåkamera utan fotograf": {
+      "paketIPrylPaket": [
+        {
+          "id": "recnjR2UGOFi15OY0",
+          "name": "Fin tvåkamera komplett"
+        }
+      ],
+      "Personal": 1,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recV10XYQWkB4CiIo?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Fintvåkamera plus kamera": {
+      "paketIPrylPaket": [
+        {
+          "id": "recnjR2UGOFi15OY0",
+          "name": "Fin tvåkamera komplett"
+        }
+      ],
+      "Personal": 2,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recef7ghqLrMfVRMP?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Extremetvåkamera utan fotograf": {
+      "paketPrylar": [
+        {
+          "id": "recSFBsIgsgJzvXjI",
+          "name": "Z90"
+        },
+        {
+          "id": "rechHzpzo22EsAZVP",
+          "name": "Stativ Manfrotto 504HD"
+        },
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        },
+        {
+          "id": "rec7fxGSoC9UN7O2J",
+          "name": "Gechic-skärm"
+        },
+        {
+          "id": "recykmFOvE84RXoDy",
+          "name": "Atem mini Extreme"
+        },
+        {
+          "id": "recthppGLpsi7Tzuc",
+          "name": "Genelec 8010"
+        }
+      ],
+      "antalAvPryl": "2,2,3,1,1,1,1",
+      "Personal": 1,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/rec2o1S8X90qfmt0m?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Angela tvåkamera": {
+      "paketPrylar": [
+        {
+          "id": "recSFBsIgsgJzvXjI",
+          "name": "Z90"
+        },
+        {
+          "id": "rechHzpzo22EsAZVP",
+          "name": "Stativ Manfrotto 504HD"
+        },
+        {
+          "id": "recMHUNSIbsOc7lue",
+          "name": "A-racket"
+        },
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        },
+        {
+          "id": "recbhQonetEpcNqOT",
+          "name": "Fred H - BMD Video Assist 4k"
+        },
+        {
+          "id": "recLws3Ig6hq8F6j5",
+          "name": "ATEM Mini"
+        },
+        {
+          "id": "rec7fxGSoC9UN7O2J",
+          "name": "Gechic-skärm"
+        },
+        {
+          "id": "recthppGLpsi7Tzuc",
+          "name": "Genelec 8010"
+        }
+      ],
+      "antalAvPryl": "2,2,1,4,1,1,1,1",
+      "Personal": 2,
+      "Input data": [
+        {
+          "id": "rec0EpmmuWZNvfLLp",
+          "name": "Mitt test!"
+        }
+      ],
+      "Output table": [
+        {
+          "id": "recQgCSd9LQEaOffJ",
+          "name": "Mitt test!"
+        },
+        {
+          "id": "recfLBt3Uvnaw23XA",
+          "name": "Mitt test! copy"
+        }
+      ],
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/reckReXqASf2UK0zw?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Angela tvåkam utan fotograf": {
+      "paketIPrylPaket": [
+        {
+          "id": "reckReXqASf2UK0zw",
+          "name": "Angela tvåkamera"
+        }
+      ],
+      "Personal": 1,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/rec0FZFaBDI6rSuPx?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Trekamera komplett": {
+      "paketIPrylPaket": [
+        {
+          "id": "reckReXqASf2UK0zw",
+          "name": "Angela tvåkamera"
+        }
+      ],
+      "Personal": 3,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/reco0mjZ0gKryU0S7?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Trekamera en fotograf": {
+      "paketIPrylPaket": [
+        {
+          "id": "reco0mjZ0gKryU0S7",
+          "name": "Trekamera komplett"
+        }
+      ],
+      "Personal": 2,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recXZJe7WNOKmUDo9?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Trekamera utan fotograf": {
+      "paketIPrylPaket": [
+        {
+          "id": "reco0mjZ0gKryU0S7",
+          "name": "Trekamera komplett"
+        }
+      ],
+      "Personal": 1,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recKUpHG4mZnzxAtS?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Ca vMix och 3st PTZOptics": {
+      "paketPrylar": [
+        {
+          "id": "recCedGH0QNFDK3mU",
+          "name": "Marvel vMix-burk"
+        },
+        {
+          "id": "recBG0NupjzGg1YO1",
+          "name": "BRC-H800 PTZ"
+        },
+        {
+          "id": "reciwsa9vpcI8xCtk",
+          "name": "RM-IP500"
+        }
+      ],
+      "antalAvPryl": "1,3,1",
+      "Personal": 2,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recrC7yRjvKduLwhA?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Helt digitalt event Angela": {
+      "paketPrylar": [
+        {
+          "id": "recMHUNSIbsOc7lue",
+          "name": "A-racket"
+        },
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        },
+        {
+          "id": "recthppGLpsi7Tzuc",
+          "name": "Genelec 8010"
+        },
+        {
+          "id": "rec7fxGSoC9UN7O2J",
+          "name": "Gechic-skärm"
+        },
+        {
+          "id": "recLws3Ig6hq8F6j5",
+          "name": "ATEM Mini"
+        }
+      ],
+      "antalAvPryl": "1,6,1,1,1",
+      "Personal": 2,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recmKbqQZwITOT5k9?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Helt digitalt event Extreme": {
+      "paketPrylar": [
+        {
+          "id": "recykmFOvE84RXoDy",
+          "name": "Atem mini Extreme"
+        },
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        },
+        {
+          "id": "recthppGLpsi7Tzuc",
+          "name": "Genelec 8010"
+        },
+        {
+          "id": "rec7fxGSoC9UN7O2J",
+          "name": "Gechic-skärm"
+        }
+      ],
+      "antalAvPryl": "1,4,1,1",
+      "Personal": 2,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recOdjqz2YSqG8FSd?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Bildproduktion utan kameror och fotografer": {
+      "paketPrylar": [
+        {
+          "id": "recVvEX7SOfbCWHDZ",
+          "name": "N-racket"
+        },
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        },
+        {
+          "id": "recbhQonetEpcNqOT",
+          "name": "Fred H - BMD Video Assist 4k"
+        },
+        {
+          "id": "rec7fxGSoC9UN7O2J",
+          "name": "Gechic-skärm"
+        },
+        {
+          "id": "recthppGLpsi7Tzuc",
+          "name": "Genelec 8010"
+        }
+      ],
+      "antalAvPryl": "1,3,1,1,1",
+      "Personal": 1,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recKUxh84xeJznlhw?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Bildproduktion mini": {
+      "paketPrylar": [
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        },
+        {
+          "id": "recDztmK4INMvSkaE",
+          "name": "Atem mini pro"
+        },
+        {
+          "id": "rec7fxGSoC9UN7O2J",
+          "name": "Gechic-skärm"
+        }
+      ],
+      "antalAvPryl": "2,1,1",
+      "Personal": 1,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/rec4JD1EBa5Cnm9Hf?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Bildproduktion Angela utan kameror och fotografer": {
+      "paketPrylar": [
+        {
+          "id": "recMHUNSIbsOc7lue",
+          "name": "A-racket"
+        },
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        },
+        {
+          "id": "recbhQonetEpcNqOT",
+          "name": "Fred H - BMD Video Assist 4k"
+        },
+        {
+          "id": "recDztmK4INMvSkaE",
+          "name": "Atem mini pro"
+        },
+        {
+          "id": "rec7fxGSoC9UN7O2J",
+          "name": "Gechic-skärm"
+        },
+        {
+          "id": "recthppGLpsi7Tzuc",
+          "name": "Genelec 8010"
+        }
+      ],
+      "antalAvPryl": "1,4,1,1,1,1",
+      "Personal": 1,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recvJZllgNKUH5TmF?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Storbildsproduktion": {
+      "paketPrylar": [
+        {
+          "id": "recLws3Ig6hq8F6j5",
+          "name": "ATEM Mini"
+        },
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        },
+        {
+          "id": "recVhlNpdy9HQ27v3",
+          "name": "Elizabeth P - MicroCue 2 Clicker"
+        }
+      ],
+      "antalAvPryl": "1,3,1",
+      "Personal": 1,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recgi9KcQSNjbuKWE?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Angela + H800-paket utan fotograf": {
+      "paketPrylar": [
+        {
+          "id": "recMHUNSIbsOc7lue",
+          "name": "A-racket"
+        },
+        {
+          "id": "recBG0NupjzGg1YO1",
+          "name": "BRC-H800 PTZ"
+        },
+        {
+          "id": "reciwsa9vpcI8xCtk",
+          "name": "RM-IP500"
+        },
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        },
+        {
+          "id": "recbhQonetEpcNqOT",
+          "name": "Fred H - BMD Video Assist 4k"
+        },
+        {
+          "id": "recLws3Ig6hq8F6j5",
+          "name": "ATEM Mini"
+        },
+        {
+          "id": "rec7fxGSoC9UN7O2J",
+          "name": "Gechic-skärm"
+        },
+        {
+          "id": "recthppGLpsi7Tzuc",
+          "name": "Genelec 8010"
+        }
+      ],
+      "antalAvPryl": "1,3,1,4,1,1,1,1",
+      "Personal": 1,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recZnSrFS5xEELioE?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Namnbrickor (m MBA)": {
+      "paketPrylar": [
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        }
+      ],
+      "antalAvPryl": "1",
+      "Personal": 0.4,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recysrFkUPqAVmYIn?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Redigering": {
+      "paketPrylar": [
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        }
+      ],
+      "antalAvPryl": "1",
+      "Personal": 1,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recEfNznJzrIzgZrZ?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "4+ Distanspersoner": {
+      "paketPrylar": [
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        }
+      ],
+      "antalAvPryl": "4",
+      "Personal": 0.4,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/rec0BEmh7YaqfkrTo?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Fotograf m Z90 och stativ": {
+      "Personal": 1,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recmwBT3odAEOD1ot?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Live-plattform": {
+      "paketPrylar": [
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        }
+      ],
+      "antalAvPryl": "1",
+      "Personal": 0.2,
+      "Hyreskostnad": 3200,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recolCCDbT4GFzFCh?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Test videokonferens 30 min": {
+      "paketPrylar": [
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        }
+      ],
+      "antalAvPryl": "1",
+      "Personal": 0.1,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/rectaFMopHzHFuwZm?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Ljudtekniker med digitalt mixerbord": {
+      "paketPrylar": [
+        {
+          "id": "recCqitqyOueABs99",
+          "name": "Mumia A&H SQ5"
+        }
+      ],
+      "antalAvPryl": "1",
+      "Personal": 1,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/rec0UozMaQmR1rlr3?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Direkttextning och postsynk": {
+      "paketPrylar": [
+        {
+          "id": "recDztmK4INMvSkaE",
+          "name": "Atem mini pro"
+        },
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        }
+      ],
+      "antalAvPryl": "1,1",
+      "Personal": 0.6,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recW90nbL4HWe0rT7?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "1 Distansperson": {
+      "paketPrylar": [
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        }
+      ],
+      "antalAvPryl": "1",
+      "Personal": 0.4,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recaWfa0w2xVvHGyM?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "2 Distanspersoner": {
+      "paketPrylar": [
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        }
+      ],
+      "antalAvPryl": "2",
+      "Personal": 0.4,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recfJdQzf75AjnkTr?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "3 Distanspersoner": {
+      "paketPrylar": [
+        {
+          "id": "recN7Vipzsy3L70Zt",
+          "name": "mbp"
+        }
+      ],
+      "antalAvPryl": "3",
+      "Personal": 0.4,
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recS63dKPKz8AaQ5k?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Z90 och stativ": {
+      "paketPrylar": [
+        {
+          "id": "recSFBsIgsgJzvXjI",
+          "name": "Z90"
+        },
+        {
+          "id": "rechHzpzo22EsAZVP",
+          "name": "Stativ Manfrotto 504HD"
+        }
+      ],
+      "antalAvPryl": "1,1",
+      "Uppdatera": {
+        "label": "Uppdatera!",
+        "url": "https://airtable.com/tblVThDQ16pIEkY9m/recSzrsgJXgoliZL5?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    }
+  },
+  "Prylar": {
+    "Trådlös mik Axient": {
+      "pris": 25233,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recejDJwJWrZP4mEe?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "300d ii": {
+      "pris": 17552,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/rec3YGpQDEBLk3jCf?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "ATEM Mini": {
+      "pris": 3032,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recLws3Ig6hq8F6j5?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "avx": {
+      "pris": 5244,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recuU5f9WicA0a8ul?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "2st Lupo": {
+      "pris": 17792,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recaq9EcFyu2wt47V?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Stativ Manfrotto 504HD": {
+      "pris": 5902,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/rechHzpzo22EsAZVP?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "mbp": {
+      "pris": 8000,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recN7Vipzsy3L70Zt?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Decimator MD-HX": {
+      "pris": 3215,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recJjMQPE2iJb9wUa?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Z90": {
+      "pris": 25992,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recSFBsIgsgJzvXjI?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "A-racket": {
+      "pris": 165757,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recMHUNSIbsOc7lue?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Allt BNC": {
+      "pris": 15398,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recgPD27YIPbDhg79?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Amelia - Sennheiser ENG-kit EW 100 G3": {
+      "pris": 5044,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recYolaSjnC00MDwK?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Atem mini Extreme": {
+      "pris": 11089,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recykmFOvE84RXoDy?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Atem mini pro": {
+      "pris": 6229,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recDztmK4INMvSkaE?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "bord och stolar": {
+      "pris": 3300,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recrsWY9KzzXlSpvw?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Claude - Jib": {
+      "pris": 14396,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recl5WCfV3SaKaF9w?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Constellation, Angela": {
+      "pris": 98000,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recrwJM9zG6KiZ0l6?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Cube 755": {
+      "pris": 31740,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recRpEG0rdiD1ivs3?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Decklink Duo 2 m Sonnet": {
+      "pris": 5632,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/rec4dVk623Aj14AFB?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Dollys": {
+      "pris": 7699,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recLUBpWcCod3Wybk?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Eartec Intercom": {
+      "pris": 7685,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recoOPw8A6EuD3IQp?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Eddie - 2st XLR-vindor": {
+      "pris": 5980,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/rec316PqnuNkYYSUi?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Eleanor - Pepwave MAX 700-router": {
+      "pris": 23504,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recDvHBLx4PEYy2Sp?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Elin - Sennheiser MKH 416 shotgun": {
+      "pris": 7200,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/rech3HlcMzZbYSq7X?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Elizabeth C - Atem Television Studio HD": {
+      "pris": 8519,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/reccS7SWAjHYYGyVo?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Elizabeth P - MicroCue 2 Clicker": {
+      "pris": 3775,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recVhlNpdy9HQ27v3?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Emmeline - Generator Honda eu20i": {
+      "pris": 13695,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recBe73i5SIflptON?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Farseeing FD-BP95L V-mountbatteri, v-lock": {
+      "pris": 3862,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/reczXuefWjkPWfjuA?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Fred H - BMD Video Assist 4k": {
+      "pris": 7992,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recbhQonetEpcNqOT?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Genelec 8010": {
+      "pris": 3600,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recthppGLpsi7Tzuc?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Genelec 8030 i par": {
+      "pris": 8304,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recBs57HduVGR0e14?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Green screen": {
+      "pris": 5428,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recprJUGT5GfalEmv?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Grå matta + ovalt bord + småbord": {
+      "pris": 7305,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recbQbn517lzDPd2H?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "HD Mini": {
+      "pris": 4450,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recZKHwREUqHEFXm3?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Janet - 2st BPHS1": {
+      "pris": 3200,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recKubfni5NzcE4FO?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Joe Server": {
+      "pris": 4394,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recKdYtnksMMz4Ann?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Kabelinstallation Svanis": {
+      "pris": 186000,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recPzMRtX1Ff0f4q7?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Keller - Sony A6500": {
+      "pris": 23800,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recypF5D6x0ALVtIZ?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Ki Pro Go": {
+      "pris": 31101,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recJVTo98Sa2BbXcL?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Kontrollrum Svanis": {
+      "pris": 43830,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recAmBAK3MeY86nBg?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "LED-barer": {
+      "pris": 5500,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recy6Wz72grj3p455?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "LiveU Solo+": {
+      "pris": 27155,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recYS2dkVNiDXVNOu?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Lucy P - AJA HELO": {
+      "pris": 12080,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recZlKRTSUlqMHGyL?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Mac Mini": {
+      "pris": 10796,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/rec2LHAh3j0y7rSTm?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Marvel vMix-burk": {
+      "pris": 57619,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recCedGH0QNFDK3mU?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Medgar - Teradek Bolt": {
+      "pris": 22000,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recctId1MQN2iuapo?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Mipro-mikrofonerna 6st": {
+      "pris": 79651,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recy2wH8Wo5d6fCfw?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Mumia A&H SQ5": {
+      "pris": 22215,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recCqitqyOueABs99?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Myles - Ifootage Shark Slider S1": {
+      "pris": 5192,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/reci9W2blGzaBWMdO?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "N-racket": {
+      "pris": 77050,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recVvEX7SOfbCWHDZ?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Nekeisha Atem 2M/E": {
+      "pris": 37020,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/rec6DtGIHlUh3Odiv?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Pausmusik": {
+      "pris": 5660,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recIhDVsg6hYrWyVO?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Prathia - Projektor Optoma": {
+      "pris": 11992,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recJmI7tm6bGhMn4m?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Prompter": {
+      "pris": 24778,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recEPpJD5legbZA1A?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "PTZOptics": {
+      "pris": 18952,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recvXorvljiFW5BSr?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Restream": {
+      "pris": 5000,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recawaE55VjccqtR9?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Scen": {
+      "pris": 7000,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recqTOJabJ1mq7u6G?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Shockmount case": {
+      "pris": 9330,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recH5ahX6zoBjne1U?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Skaarhoj Fly": {
+      "pris": 16600,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/rec5UdeQzB4kzmjEj?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Trossar m ljus Svanis": {
+      "pris": 34162,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recZefg4JaE6bX9TA?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "TV 55\"": {
+      "pris": 40000,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recZYnXte2bu2QEgg?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Odyssey 7Q+": {
+      "pris": 20000,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/reckJt2WkxNu314Tp?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "ScottDixon-case": {
+      "pris": 3500,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recq6llkFXpViBJhy?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Gechic-skärm": {
+      "pris": 3927,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/rec7fxGSoC9UN7O2J?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "PTZOptics paket": {
+      "pris": 73456,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/rec4I45BoGaDJTnry?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "2st 60d + domes": {
+      "pris": 10320,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recYqB3djWX8BvCrq?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "2st 120d II": {
+      "pris": 15992,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recK4HwIaYqCRnvzU?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "LED-kanna-plattor": {
+      "pris": 18100,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/rec7PcDAe3OtSAz3Z?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Motoriserad slider": {
+      "pris": 9000,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recL8PfAF3VuLLhgT?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "Soundboks": {
+      "pris": 6462,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recKD9cumGMD824Z7?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "BRC-H800 PTZ": {
+      "pris": 61500,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/recBG0NupjzGg1YO1?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    },
+    "RM-IP500": {
+      "pris": 35600,
+      "Uppdatera": {
+        "label": "Uppdatera prylar",
+        "url": "https://airtable.com/tblsxui7L2zsDDdiy/reciwsa9vpcI8xCtk?blocks=bliCyf2vjXq0sh5Gt"
+      }
+    }
+  },
+  "Projekt": {
+    "det viktigaste!": {
+      "Leveranser": [
+        {
+          "id": "recfLBt3Uvnaw23XA",
+          "name": "Mitt test! copy"
+        }
+      ],
+      "Projektledare": [
+        {
+          "id": "recONrC1DjeuFBKda",
+          "name": "Tobias!!"
+        }
+      ],
+      "Börja projekt": "2022-02-27",
+      "Avsluta projekt": "2022-03-10"
+    },
+    "det viktigaste! copy": {
+      "Leveranser": [
+        {
+          "id": "recQgCSd9LQEaOffJ",
+          "name": "Mitt test!"
+        }
+      ],
+      "Projektledare": [
+        {
+          "id": "recONrC1DjeuFBKda",
+          "name": "Tobias!!"
+        }
+      ],
+      "Börja projekt": "2022-02-27",
+      "Avsluta projekt": "2022-03-10"
+    }
+  },
+  "Människor!": {
+    "Tobias!!": {
+      "Projektledare för gig:": [
+        {
+          "id": "recPdH5y6Vwwgn3gY",
+          "name": "det viktigaste!"
+        },
+        {
+          "id": "rec6b86kShoRfJWPI",
+          "name": "det viktigaste! copy"
+        }
+      ]
+    }
+  }
+}
