@@ -106,6 +106,7 @@ class paketOb:
       outDict[tempDict["name"]]["paketIPrylPaket"] = bok
     except KeyError:
       pass
+      
     outDict[tempDict["name"]].pop('paketDict', None)
     outDict[tempDict["name"]].pop('Input data', None)
     outDict[tempDict["name"]].pop('Output table', None)
@@ -113,15 +114,111 @@ class paketOb:
     
     return outDict
     
+
+  
+class gig:
+  def __init__(self, iData, config, prylar, paketen, name):
+    self.gigPrylar = {}
+    self.preGigPrylar = []
+    self.name = name
+    self.iData = iData[self.name]
+    try:
+      self.checkPrylar(prylar)
+    except KeyError:
+      pass
+    try:
+      self.checkPaket(paketen)
+    except KeyError:
+      pass
+    #print(self.preGigPrylar, "hi")
+    self.countThem()
+    self.prisFunc()
+    self.rounding(config)
+    print(self.pris, self.inPris)
+    for pryl in self.gigPrylar:
+      print(f"{self.gigPrylar[pryl]['amount']}: {pryl}")
+  def checkPrylar(self, prylar):
+    for pryl in self.iData["extraPrylar"]:
+      print(pryl)
+      self.preGigPrylar.append({pryl:prylar[pryl]})
+  
+  def checkPaket(self, paketen):
+    for paket in self.iData["prylPaket"]:
+      for pryl in paketen[paket]["prylar"]:
+        
+        #print(pryl)
+        self.preGigPrylar.append({pryl:paketen[paket]["prylar"][pryl]})
+
+  def countThem(self):
+    print(self.preGigPrylar, "hi")
+    i = 0
+    for pryl in self.preGigPrylar:
+      for key in pryl:
+        #print(i, key, "\n", list(self.gigPrylar.keys()), "\n")
+        if key in list(self.gigPrylar.keys()):
+          self.gigPrylar[key]["amount"] += copy.deepcopy(self.preGigPrylar[i][key]["amount"])
+          print("hi", key, self.gigPrylar[key]["amount"])
+        else:
+          self.gigPrylar.update(copy.deepcopy(self.preGigPrylar[i]))
+      i += 1
+    print(self.gigPrylar)
+    
+  def prisFunc(self):
+    self.pris = 0
+    self.inPris = 0
+    for pryl in self.gigPrylar:
+      print(pryl)
+      self.inPris += self.gigPrylar[pryl]["inPris"]*self.gigPrylar[pryl]["amount"]
+    
+  def rounding(self, config):
+    self.pris = math.floor((float(self.inPris)*config["prylKostnadMulti"])/10)*10
 @app.route("/", methods=["GET"])
 def theBasics():
   return "Hello <3"
 
-@app.route("/hello", methods=["GET"])
-def home():
-  print("ping")
-  everything()
-  return "hi"
+@app.route("/start", methods=["POST"])
+def start():
+  iData = request.json["Input data"]
+  #Clean junk from data
+  for key in iData:
+    iDataName = key
+    prylList = []
+    paketList = []
+    try:
+      i = 0
+      for pryl in iData[key]["extraPrylar"]:
+        pryl.pop("id", None)
+        prylList.append(iData[key]["extraPrylar"][i]["name"])
+        i += 1
+      iData[key]["extraPrylar"] = prylList
+    except KeyError:
+      pass
+    try:
+      i = 0
+      for paket in iData[key]["prylPaket"]:
+        paket.pop("id", None)
+        paketList.append(iData[key]["prylPaket"][i]["name"])
+        i += 1
+      iData[key]["prylPaket"] = paketList
+    except KeyError:
+      pass
+    
+  #Save data just because
+  with open('input.json', 'w', encoding='utf-8') as f:
+    json.dump(iData, f, ensure_ascii=False, indent=2)
+
+  #Load all the important data
+  with open('config.json', 'r') as f:
+    config = json.load(f)
+  with open('paket.json', 'r') as f:
+    paket = json.load(f)
+  with open('prylar.json', 'r') as f:
+    prylar = json.load(f)
+
+  test = gig(iData, config, prylar, paket, iDataName)
+
+  
+  return "<3"
   
 data = ["test0", "test1"]
 
@@ -188,82 +285,8 @@ def getPrylar():
   
 @app.route("/update", methods=["POST"])
 def update():
-  global data
-  global runItNext
-  data[1] = data[0] #Get new data and save the old
-  data[0] = request.json
-  inputDF = pd.DataFrame.from_dict(data[0]["Input data"], 'index')
-  
-  
-  #Load dataframes from locally stored configs
-  prylarDF = pd.read_json('prylar.json')
-  configDF = pd.read_json('config.json')
-  paketDF = pd.read_json('paket.json')
-  print(prylarDF)
-  #inputDF.style
-  #print(configDF["andelRiggTimmar"])
-  #print(paketDF)
-  totalPris = 0
-  for paketNamn in paketDF:
-    pris = 0
-    #print(paketNamn)
-    paketet = paketDF[str(paketNamn)]
-    if paketet["prylar"]:
-      if isinstance(paketet["prylar"], float) == False:
-        for pryl in paketet["prylar"]:
-
-          if str(paketNamn) == "Direkttextning och postsynk":
-            print("i'm here")
-          if pd.isna(paketet["Antal Prylar"]) == False and paketet["Antal Prylar"] != 1:
-            if paketet["Antal Prylar"] != list:
-              if paketDF[str(paketNamn)]["prylar"].index(pryl) == 0:
-                pris += prylarDF[pryl["name"]]["pris"]*paketet["Antal Prylar"]
-                
-              else:
-                pris += prylarDF[pryl["name"]]["pris"]
-                
-            else:
-              prylListan = paketet["Antal Prylar"]
-              pris += prylarDF[pryl["name"]]["pris"]*prylListan[paketDF[str(paketNamn)]["prylar"].index(pryl)]
-             
-          else:
-            pris += prylarDF[pryl["name"]]["pris"]
-          print(pris, paketNamn)
-          totalPris += pris
-        #print(pris)
-        
-      else:
-        pass
-
-    paketet = paketDF[str(paketNamn)]
-    paketIPaket = paketDF[str(paketNamn)]["Paket i prylPaket"]
-    if isinstance(paketIPaket, list):
-      print(paketDF[str(paketNamn)]["Paket i prylPaket"])
-      if isinstance(paketet["prylar"], float) == False:
-        for pryl in paketet["prylar"]:
-          if pd.isna(paketet["Antal Prylar"]) == False and paketet["Antal Prylar"] != 1:
-            if paketet["Antal Prylar"] != list:
-              if paketDF[str(paketNamn)]["prylar"].index(pryl) == 0:
-                pris += prylarDF[pryl["name"]]["pris"]*paketet["Antal Prylar"]
-              else:
-                pris += prylarDF[pryl["name"]]["pris"]
-            else:
-              prylListan = paketet["Antal Prylar"]
-              pris += prylarDF[pryl["name"]]["pris"]*prylListan[paketDF[str(paketNamn)]["prylar"].index(pryl)]
-            
-          else:
-            pris += prylarDF[pryl["name"]]["pris"]
-          print(pris, paketet["Antal Prylar"], paketet["prylar"])
-        #print(pris)
-          totalPris += pris
-      else:
-        pass
-  #print(prylarDF)
-  
-  print(f"Total priset är: {totalPris}!!!")
-
-  #print(data[0]["Output table"], data[0]["Input data"])
-  #Thread(target = everything).start()
+  with open('everything.json', 'w', encoding='utf-8') as f:
+    json.dump(request.json, f, ensure_ascii=False, indent=2)
   return "<3"
 
 
