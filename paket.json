@@ -1,1591 +1,926 @@
 {
   "Fin tvåkamera komplett": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
-    ],
-    "Antal Prylar": 1,
-    "Personal": 2,
-    "name": "Fin tvåkamera komplett"
-  },
-  "Fin tvåkamera utan fotograf": {
-    "paketIPrylPaket": [
-      {
-        "id": "recnjR2UGOFi15OY0",
-        "name": "Fin tvåkamera komplett"
-      }
-    ],
-    "Personal": 1,
-    "name": "Fin tvåkamera utan fotograf"
-  },
-  "Fintvåkamera plus kamera": {
-    "paketIPrylPaket": [
-      {
-        "id": "recnjR2UGOFi15OY0",
-        "name": "Fin tvåkamera komplett"
-      },
-      {
-        "id": "recjB4WA9NOPDVJNO",
-        "name": "Z90 och stativ"
-      }
-    ],
-    "Personal": 2,
-    "Input data": [
-      {
-        "id": "rec0EpmmuWZNvfLLp",
-        "name": "Mitt test!"
-      },
-      {
-        "id": "recHSCtracizpKy1t",
-        "name": "Mitt test!"
-      }
-    ],
-    "name": "Fintvåkamera plus kamera"
-  },
-  "Extremetvåkamera utan fotograf": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
-    ],
-    "Antal Prylar": 2,
-    "Personal": 1,
-    "name": "Extremetvåkamera utan fotograf"
-  },
-  "Angela tvåkamera": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
-    ],
-    "Antal Prylar": 2,
-    "Personal": 2,
-    "Input data": [
-      {
-        "id": "rec0EpmmuWZNvfLLp",
-        "name": "Mitt test!"
-      },
-      {
-        "id": "recHSCtracizpKy1t",
-        "name": "Mitt test!"
-      }
-    ],
-    "Output table": [
-      {
-        "id": "recQgCSd9LQEaOffJ",
-        "name": "Mitt test!"
-      },
-      {
-        "id": "recfLBt3Uvnaw23XA",
-        "name": "Mitt test! copy"
-      }
-    ],
-    "name": "Angela tvåkamera"
-  },
-  "Angela tvåkam utan fotograf": {
-    "paketIPrylPaket": [
-      {
-        "id": "reckReXqASf2UK0zw",
-        "name": "Angela tvåkamera"
-      }
-    ],
-    "Personal": 1,
-    "name": "Angela tvåkam utan fotograf"
-  },
-  "Trekamera komplett": {
-    "paketIPrylPaket": [
-      {
-        "id": "reckReXqASf2UK0zw",
-        "name": "Angela tvåkamera"
-      },
-      {
-        "id": "recjB4WA9NOPDVJNO",
-        "name": "Z90 och stativ"
-      }
+    "antalAvPryl": [
+      "1",
+      "2",
+      "3",
+      "1",
+      "2",
+      "1",
+      "1",
+      "1",
+      "1"
     ],
     "Personal": 3,
-    "name": "Trekamera komplett"
+    "pris": 9280,
+    "prylar": {
+      "N-racket": {
+        "inPris": 77050,
+        "amount": 1,
+        "pris": 3850
+      },
+      "Z90": {
+        "inPris": 25992,
+        "amount": 2,
+        "pris": 1290
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 3,
+        "pris": 400
+      },
+      "Decimator MD-HX": {
+        "inPris": 3215,
+        "amount": 1,
+        "pris": 160
+      },
+      "Stativ Manfrotto 504HD": {
+        "inPris": 5902,
+        "amount": 2,
+        "pris": 290
+      },
+      "Fred H - BMD Video Assist 4k": {
+        "inPris": 7992,
+        "amount": 1,
+        "pris": 390
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      },
+      "ATEM Mini": {
+        "inPris": 3032,
+        "amount": 1,
+        "pris": 150
+      },
+      "Genelec 8010": {
+        "inPris": 3600,
+        "amount": 1,
+        "pris": 180
+      }
+    }
+  },
+  "Fin tvåkamera utan fotograf": {
+    "paketIPrylPaket": {
+      "name": "Fin tvåkamera komplett"
+    },
+    "Personal": 1,
+    "pris": 9280,
+    "prylar": {
+      "N-racket": {
+        "inPris": 77050,
+        "amount": 1,
+        "pris": 3850
+      },
+      "Z90": {
+        "inPris": 25992,
+        "amount": 2,
+        "pris": 1290
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 3,
+        "pris": 400
+      },
+      "Decimator MD-HX": {
+        "inPris": 3215,
+        "amount": 1,
+        "pris": 160
+      },
+      "Stativ Manfrotto 504HD": {
+        "inPris": 5902,
+        "amount": 2,
+        "pris": 290
+      },
+      "Fred H - BMD Video Assist 4k": {
+        "inPris": 7992,
+        "amount": 1,
+        "pris": 390
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      },
+      "ATEM Mini": {
+        "inPris": 3032,
+        "amount": 1,
+        "pris": 150
+      },
+      "Genelec 8010": {
+        "inPris": 3600,
+        "amount": 1,
+        "pris": 180
+      }
+    }
+  },
+  "Fintvåkamera plus kamera": {
+    "paketIPrylPaket": {
+      "name": "Fin tvåkamera komplett"
+    },
+    "Personal": 2,
+    "pris": 9280,
+    "prylar": {
+      "N-racket": {
+        "inPris": 77050,
+        "amount": 1,
+        "pris": 3850
+      },
+      "Z90": {
+        "inPris": 25992,
+        "amount": 2,
+        "pris": 1290
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 3,
+        "pris": 400
+      },
+      "Decimator MD-HX": {
+        "inPris": 3215,
+        "amount": 1,
+        "pris": 160
+      },
+      "Stativ Manfrotto 504HD": {
+        "inPris": 5902,
+        "amount": 2,
+        "pris": 290
+      },
+      "Fred H - BMD Video Assist 4k": {
+        "inPris": 7992,
+        "amount": 1,
+        "pris": 390
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      },
+      "ATEM Mini": {
+        "inPris": 3032,
+        "amount": 1,
+        "pris": 150
+      },
+      "Genelec 8010": {
+        "inPris": 3600,
+        "amount": 1,
+        "pris": 180
+      }
+    }
+  },
+  "Extremetvåkamera utan fotograf": {
+    "antalAvPryl": [
+      "2",
+      "2",
+      "3",
+      "1",
+      "1",
+      "1",
+      "1"
+    ],
+    "Personal": 1,
+    "pris": 5280,
+    "prylar": {
+      "Z90": {
+        "inPris": 25992,
+        "amount": 2,
+        "pris": 1290
+      },
+      "Stativ Manfrotto 504HD": {
+        "inPris": 5902,
+        "amount": 2,
+        "pris": 290
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 3,
+        "pris": 400
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      },
+      "Atem mini Extreme": {
+        "inPris": 11089,
+        "amount": 1,
+        "pris": 550
+      },
+      "Genelec 8010": {
+        "inPris": 3600,
+        "amount": 1,
+        "pris": 180
+      }
+    }
+  },
+  "Angela tvåkamera": {
+    "antalAvPryl": [
+      "2",
+      "2",
+      "1",
+      "4",
+      "1",
+      "1",
+      "1",
+      "1"
+    ],
+    "Personal": 2,
+    "pris": 13950,
+    "prylar": {
+      "Z90": {
+        "inPris": 25992,
+        "amount": 2,
+        "pris": 1290
+      },
+      "Stativ Manfrotto 504HD": {
+        "inPris": 5902,
+        "amount": 2,
+        "pris": 290
+      },
+      "A-racket": {
+        "inPris": 165757,
+        "amount": 1,
+        "pris": 8280
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 4,
+        "pris": 400
+      },
+      "Fred H - BMD Video Assist 4k": {
+        "inPris": 7992,
+        "amount": 1,
+        "pris": 390
+      },
+      "ATEM Mini": {
+        "inPris": 3032,
+        "amount": 1,
+        "pris": 150
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      },
+      "Genelec 8010": {
+        "inPris": 3600,
+        "amount": 1,
+        "pris": 180
+      }
+    }
+  },
+  "Angela tvåkam utan fotograf": {
+    "paketIPrylPaket": {
+      "name": "Angela tvåkamera"
+    },
+    "Personal": 1,
+    "pris": 13950,
+    "prylar": {
+      "Z90": {
+        "inPris": 25992,
+        "amount": 2,
+        "pris": 1290
+      },
+      "Stativ Manfrotto 504HD": {
+        "inPris": 5902,
+        "amount": 2,
+        "pris": 290
+      },
+      "A-racket": {
+        "inPris": 165757,
+        "amount": 1,
+        "pris": 8280
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 4,
+        "pris": 400
+      },
+      "Fred H - BMD Video Assist 4k": {
+        "inPris": 7992,
+        "amount": 1,
+        "pris": 390
+      },
+      "ATEM Mini": {
+        "inPris": 3032,
+        "amount": 1,
+        "pris": 150
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      },
+      "Genelec 8010": {
+        "inPris": 3600,
+        "amount": 1,
+        "pris": 180
+      }
+    }
+  },
+  "Trekamera komplett": {
+    "paketIPrylPaket": {
+      "name": "Angela tvåkamera"
+    },
+    "Personal": 3,
+    "pris": 13950,
+    "prylar": {
+      "Z90": {
+        "inPris": 25992,
+        "amount": 2,
+        "pris": 1290
+      },
+      "Stativ Manfrotto 504HD": {
+        "inPris": 5902,
+        "amount": 2,
+        "pris": 290
+      },
+      "A-racket": {
+        "inPris": 165757,
+        "amount": 1,
+        "pris": 8280
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 4,
+        "pris": 400
+      },
+      "Fred H - BMD Video Assist 4k": {
+        "inPris": 7992,
+        "amount": 1,
+        "pris": 390
+      },
+      "ATEM Mini": {
+        "inPris": 3032,
+        "amount": 1,
+        "pris": 150
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      },
+      "Genelec 8010": {
+        "inPris": 3600,
+        "amount": 1,
+        "pris": 180
+      }
+    }
   },
   "Trekamera en fotograf": {
-    "paketIPrylPaket": [
-      {
-        "id": "reco0mjZ0gKryU0S7",
-        "name": "Trekamera komplett"
-      }
-    ],
+    "paketIPrylPaket": {
+      "name": "Trekamera komplett"
+    },
     "Personal": 2,
-    "name": "Trekamera en fotograf"
+    "pris": 13950,
+    "prylar": {
+      "Z90": {
+        "inPris": 25992,
+        "amount": 2,
+        "pris": 1290
+      },
+      "Stativ Manfrotto 504HD": {
+        "inPris": 5902,
+        "amount": 2,
+        "pris": 290
+      },
+      "A-racket": {
+        "inPris": 165757,
+        "amount": 1,
+        "pris": 8280
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 4,
+        "pris": 400
+      },
+      "Fred H - BMD Video Assist 4k": {
+        "inPris": 7992,
+        "amount": 1,
+        "pris": 390
+      },
+      "ATEM Mini": {
+        "inPris": 3032,
+        "amount": 1,
+        "pris": 150
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      },
+      "Genelec 8010": {
+        "inPris": 3600,
+        "amount": 1,
+        "pris": 180
+      }
+    }
   },
   "Trekamera utan fotograf": {
-    "paketIPrylPaket": [
-      {
-        "id": "reco0mjZ0gKryU0S7",
-        "name": "Trekamera komplett"
-      }
-    ],
+    "paketIPrylPaket": {
+      "name": "Trekamera komplett"
+    },
     "Personal": 1,
-    "name": "Trekamera utan fotograf"
+    "pris": 13950,
+    "prylar": {
+      "Z90": {
+        "inPris": 25992,
+        "amount": 2,
+        "pris": 1290
+      },
+      "Stativ Manfrotto 504HD": {
+        "inPris": 5902,
+        "amount": 2,
+        "pris": 290
+      },
+      "A-racket": {
+        "inPris": 165757,
+        "amount": 1,
+        "pris": 8280
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 4,
+        "pris": 400
+      },
+      "Fred H - BMD Video Assist 4k": {
+        "inPris": 7992,
+        "amount": 1,
+        "pris": 390
+      },
+      "ATEM Mini": {
+        "inPris": 3032,
+        "amount": 1,
+        "pris": 150
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      },
+      "Genelec 8010": {
+        "inPris": 3600,
+        "amount": 1,
+        "pris": 180
+      }
+    }
   },
   "Ca vMix och 3st PTZOptics": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "1",
+      "3",
+      "1"
     ],
-    "Antal Prylar": 1,
     "Personal": 2,
-    "name": "Ca vMix och 3st PTZOptics"
+    "pris": 13870,
+    "prylar": {
+      "Marvel vMix-burk": {
+        "inPris": 57619,
+        "amount": 1,
+        "pris": 2880
+      },
+      "BRC-H800 PTZ": {
+        "inPris": 61500,
+        "amount": 3,
+        "pris": 3070
+      },
+      "RM-IP500": {
+        "inPris": 35600,
+        "amount": 1,
+        "pris": 1780
+      }
+    }
   },
   "Helt digitalt event Angela": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "1",
+      "6",
+      "1",
+      "1",
+      "1"
     ],
-    "Antal Prylar": 1,
     "Personal": 2,
-    "name": "Helt digitalt event Angela"
+    "pris": 11200,
+    "prylar": {
+      "A-racket": {
+        "inPris": 165757,
+        "amount": 1,
+        "pris": 8280
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 6,
+        "pris": 400
+      },
+      "Genelec 8010": {
+        "inPris": 3600,
+        "amount": 1,
+        "pris": 180
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      },
+      "ATEM Mini": {
+        "inPris": 3032,
+        "amount": 1,
+        "pris": 150
+      }
+    }
   },
   "Helt digitalt event Extreme": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "1",
+      "4",
+      "1",
+      "1"
     ],
-    "Antal Prylar": 1,
     "Personal": 2,
-    "name": "Helt digitalt event Extreme"
+    "pris": 2520,
+    "prylar": {
+      "Atem mini Extreme": {
+        "inPris": 11089,
+        "amount": 1,
+        "pris": 550
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 4,
+        "pris": 400
+      },
+      "Genelec 8010": {
+        "inPris": 3600,
+        "amount": 1,
+        "pris": 180
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      }
+    }
   },
   "Bildproduktion utan kameror och fotografer": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "1",
+      "3",
+      "1",
+      "1",
+      "1"
     ],
-    "Antal Prylar": 1,
     "Personal": 1,
-    "name": "Bildproduktion utan kameror och fotografer"
+    "pris": 5810,
+    "prylar": {
+      "N-racket": {
+        "inPris": 77050,
+        "amount": 1,
+        "pris": 3850
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 3,
+        "pris": 400
+      },
+      "Fred H - BMD Video Assist 4k": {
+        "inPris": 7992,
+        "amount": 1,
+        "pris": 390
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      },
+      "Genelec 8010": {
+        "inPris": 3600,
+        "amount": 1,
+        "pris": 180
+      }
+    }
   },
   "Bildproduktion mini": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "2",
+      "1",
+      "1"
     ],
-    "Antal Prylar": 2,
     "Personal": 1,
-    "name": "Bildproduktion mini"
+    "pris": 1300,
+    "prylar": {
+      "mbp": {
+        "inPris": 8000,
+        "amount": 2,
+        "pris": 400
+      },
+      "Atem mini pro": {
+        "inPris": 6229,
+        "amount": 1,
+        "pris": 310
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      }
+    }
   },
   "Bildproduktion Angela utan kameror och fotografer": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "1",
+      "4",
+      "1",
+      "1",
+      "1",
+      "1"
     ],
-    "Antal Prylar": 1,
     "Personal": 1,
-    "name": "Bildproduktion Angela utan kameror och fotografer"
+    "pris": 10950,
+    "prylar": {
+      "A-racket": {
+        "inPris": 165757,
+        "amount": 1,
+        "pris": 8280
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 4,
+        "pris": 400
+      },
+      "Fred H - BMD Video Assist 4k": {
+        "inPris": 7992,
+        "amount": 1,
+        "pris": 390
+      },
+      "Atem mini pro": {
+        "inPris": 6229,
+        "amount": 1,
+        "pris": 310
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      },
+      "Genelec 8010": {
+        "inPris": 3600,
+        "amount": 1,
+        "pris": 180
+      }
+    }
   },
   "Storbildsproduktion": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "1",
+      "3",
+      "1"
     ],
-    "Antal Prylar": 1,
     "Personal": 1,
-    "name": "Storbildsproduktion"
+    "pris": 1530,
+    "prylar": {
+      "ATEM Mini": {
+        "inPris": 3032,
+        "amount": 1,
+        "pris": 150
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 3,
+        "pris": 400
+      },
+      "Elizabeth P - MicroCue 2 Clicker": {
+        "inPris": 3775,
+        "amount": 1,
+        "pris": 180
+      }
+    }
   },
   "Angela + H800-paket utan fotograf": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "1",
+      "3",
+      "1",
+      "4",
+      "1",
+      "1",
+      "1",
+      "1"
     ],
-    "Antal Prylar": 1,
     "Personal": 1,
-    "name": "Angela + H800-paket utan fotograf"
+    "pris": 21780,
+    "prylar": {
+      "A-racket": {
+        "inPris": 165757,
+        "amount": 1,
+        "pris": 8280
+      },
+      "BRC-H800 PTZ": {
+        "inPris": 61500,
+        "amount": 3,
+        "pris": 3070
+      },
+      "RM-IP500": {
+        "inPris": 35600,
+        "amount": 1,
+        "pris": 1780
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 4,
+        "pris": 400
+      },
+      "Fred H - BMD Video Assist 4k": {
+        "inPris": 7992,
+        "amount": 1,
+        "pris": 390
+      },
+      "ATEM Mini": {
+        "inPris": 3032,
+        "amount": 1,
+        "pris": 150
+      },
+      "Gechic-skärm": {
+        "inPris": 3927,
+        "amount": 1,
+        "pris": 190
+      },
+      "Genelec 8010": {
+        "inPris": 3600,
+        "amount": 1,
+        "pris": 180
+      }
+    }
   },
   "Namnbrickor (m MBA)": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "1"
     ],
-    "Antal Prylar": 1,
     "Personal": 0.4,
-    "name": "Namnbrickor (m MBA)"
+    "pris": 400,
+    "prylar": {
+      "mbp": {
+        "inPris": 8000,
+        "amount": 1,
+        "pris": 400
+      }
+    }
   },
   "Redigering": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "1"
     ],
-    "Antal Prylar": 1,
     "Personal": 1,
-    "name": "Redigering"
+    "pris": 400,
+    "prylar": {
+      "mbp": {
+        "inPris": 8000,
+        "amount": 1,
+        "pris": 400
+      }
+    }
   },
   "4+ Distanspersoner": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "4"
     ],
-    "Antal Prylar": 2,
     "Personal": 0.4,
-    "name": "4+ Distanspersoner"
+    "pris": 1600,
+    "prylar": {
+      "mbp": {
+        "inPris": 8000,
+        "amount": 4,
+        "pris": 400
+      }
+    }
   },
   "Fotograf m Z90 och stativ": {
-    "paketIPrylPaket": [
-      {
-        "id": "recjB4WA9NOPDVJNO",
-        "name": "Z90 och stativ"
-      }
-    ],
     "Personal": 1,
-    "name": "Fotograf m Z90 och stativ"
-  },
-  "Z90 och stativ": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
-    ],
-    "Antal Prylar": 1,
-    "name": "Z90 och stativ"
+    "pris": 0,
+    "prylar": {}
   },
   "Live-plattform": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "1"
     ],
-    "Antal Prylar": 1,
     "Personal": 0.2,
     "Hyreskostnad": 3200,
-    "name": "Live-plattform"
+    "pris": 400,
+    "prylar": {
+      "mbp": {
+        "inPris": 8000,
+        "amount": 1,
+        "pris": 400
+      }
+    }
   },
   "Test videokonferens 30 min": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "1"
     ],
-    "Antal Prylar": 1,
     "Personal": 0.1,
-    "name": "Test videokonferens 30 min"
+    "pris": 400,
+    "prylar": {
+      "mbp": {
+        "inPris": 8000,
+        "amount": 1,
+        "pris": 400
+      }
+    }
   },
   "Ljudtekniker med digitalt mixerbord": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "1"
     ],
-    "Antal Prylar": 1,
     "Personal": 1,
-    "name": "Ljudtekniker med digitalt mixerbord"
+    "pris": 1110,
+    "prylar": {
+      "Mumia A&H SQ5": {
+        "inPris": 22215,
+        "amount": 1,
+        "pris": 1110
+      }
+    }
   },
   "Direkttextning och postsynk": {
-    "paketPrylar": [
-      "N-racket",
-      "Z90",
-      "mbp",
-      "Decimator MD-HX",
-      "Stativ Manfrotto 504HD",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Gechic-skärm",
-      "Atem mini Extreme",
-      "Genelec 8010",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "Marvel vMix-burk",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "A-racket",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "ATEM Mini",
-      "Atem mini Extreme",
-      "mbp",
-      "Genelec 8010",
-      "Gechic-skärm",
-      "N-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "A-racket",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "Atem mini pro",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "ATEM Mini",
-      "mbp",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Gechic-skärm",
-      "A-racket",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "mbp",
-      "Fred H - BMD Video Assist 4k",
-      "ATEM Mini",
-      "Gechic-skärm",
-      "Genelec 8010",
-      "mbp",
-      "mbp",
-      "mbp",
-      "Z90",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "mbp",
-      "Mumia A&H SQ5",
-      "Atem mini pro",
-      "mbp"
+    "antalAvPryl": [
+      "1",
+      "1"
     ],
     "Personal": 0.6,
-    "name": "Direkttextning och postsynk"
+    "pris": 710,
+    "prylar": {
+      "Atem mini pro": {
+        "inPris": 6229,
+        "amount": 1,
+        "pris": 310
+      },
+      "mbp": {
+        "inPris": 8000,
+        "amount": 1,
+        "pris": 400
+      }
+    }
+  },
+  "1 Distansperson": {
+    "antalAvPryl": [
+      "1"
+    ],
+    "Personal": 0.4,
+    "pris": 400,
+    "prylar": {
+      "mbp": {
+        "inPris": 8000,
+        "amount": 1,
+        "pris": 400
+      }
+    }
+  },
+  "2 Distanspersoner": {
+    "antalAvPryl": [
+      "2"
+    ],
+    "Personal": 0.4,
+    "pris": 800,
+    "prylar": {
+      "mbp": {
+        "inPris": 8000,
+        "amount": 2,
+        "pris": 400
+      }
+    }
+  },
+  "3 Distanspersoner": {
+    "antalAvPryl": [
+      "3"
+    ],
+    "Personal": 0.4,
+    "pris": 1200,
+    "prylar": {
+      "mbp": {
+        "inPris": 8000,
+        "amount": 3,
+        "pris": 400
+      }
+    }
+  },
+  "Z90 och stativ": {
+    "antalAvPryl": [
+      "1",
+      "1"
+    ],
+    "pris": 1580,
+    "prylar": {
+      "Z90": {
+        "inPris": 25992,
+        "amount": 1,
+        "pris": 1290
+      },
+      "Stativ Manfrotto 504HD": {
+        "inPris": 5902,
+        "amount": 1,
+        "pris": 290
+      }
+    }
   }
 }

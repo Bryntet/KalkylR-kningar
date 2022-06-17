@@ -35,7 +35,7 @@ class prylOb:
     #Current args: name, inPris, pris
     for argName, value in kwargs.items():
       self.__dict__.update({argName:value})
-      
+    self.amount = 1
   def rounding(self, config):
     #Convert to lower price as a percentage of the buy price
     self.pris = math.floor((float(self.inPris)*config["prylKostnadMulti"])/10)*10
@@ -45,38 +45,72 @@ class prylOb:
     outDict = {tempDict["name"]:tempDict}
     outDict[tempDict["name"]].pop('name', None)
     return outDict
+  def amountCalc(self, ind, antalAvPryl):
+    self.amount = antalAvPryl[ind]
   
 class paketOb:
   def __init__(self, config, prylar, args):
     #Gets all kwargs provided and adds them to self
     #Current kwargs:
-    #print(kwargs, "test")
+    #print(args, "test")
     for argName, value in args.items():
+      #print(argName, value)
       self.__dict__.update({argName:value})
-    #print(vars(self))
+      
+    
     
     self.pris = 0
     self.prylar = {}
     #print(prylar)
-    #Add pryl objects to self list of all prylar in paket
     try:
-      
-      for pryl in self.paketPrylar:
-        #print(pryl)
-        self.prylar.update({pryl:prylar[pryl]})
-      #print(self.prylar[0].name)
-  
-      #Set total price of prylar in paket
-      for pryl in self.prylar:
-        self.pris += prylar[pryl]["pris"]
-      
-      print(self.name, "costs:", self.pris)
+      if self.paketIPrylPaket:
+        for paket in self.paketIPrylPaket:
+          print(paket, self.paketDict[paket["name"]])
+          for pryl in self.paketDict[paket["name"]]["prylar"]:
+            if pryl in self.prylar.keys():
+              self.prylar[pryl]["amount"] += 1
+            else:
+              self.prylar[pryl] = copy.deepcopy(self.paketDict[paket["name"]]["prylar"][pryl])
+          
+        
     except AttributeError:
-      pass
+      
+      try:
+        #Add pryl objects to self list of all prylar in paket
+        self.antalAvPryl = str(self.antalAvPryl).split(",")
+        for pryl in self.paketPrylar:
+          
+          ind = self.paketPrylar.index(pryl)
+          
+          self.prylar.update({pryl:copy.deepcopy(prylar[pryl])})
+          self.prylar[pryl]["amount"] = int(self.antalAvPryl[ind])
+          
+        #print(self.prylar, "\n\n\n\n")
+      except AttributeError:
+        pass
+    #Set total price of prylar in paket
+    for pryl in self.prylar:
+      self.pris += (self.prylar[pryl]["pris"]*self.prylar[pryl]["amount"])
+      
+      
+
+    
   def dictMake(self):
     tempDict = vars(self)
     outDict = {tempDict["name"]:tempDict}
+    outDict[tempDict["name"]].pop('paketPrylar', None)
+    bok = {}
+    try:
+      for dubbelPaket in outDict[tempDict["name"]]["paketIPrylPaket"][0]:
+        bok.update({"name":outDict[tempDict["name"]]["paketIPrylPaket"][0][dubbelPaket]})
+      outDict[tempDict["name"]]["paketIPrylPaket"] = bok
+    except KeyError:
+      pass
+    outDict[tempDict["name"]].pop('paketDict', None)
+    outDict[tempDict["name"]].pop('Input data', None)
+    outDict[tempDict["name"]].pop('Output table', None)
     outDict[tempDict["name"]].pop('name', None)
+    
     return outDict
     
 @app.route("/", methods=["GET"])
@@ -110,9 +144,11 @@ def getPrylar():
     pryl.rounding(config)
     prylDict.update(pryl.dictMake())
 
-  lista = []
+  
   paketen = request.json["Pryl Paket"]
+  paketDict = {}
   for paket in paketen:
+    lista = []
     paketen[paket]["name"] = paket
     try:
       for pryl in paketen[paket]["paketPrylar"]:
@@ -121,11 +157,10 @@ def getPrylar():
       paketen[paket]["paketPrylar"] = lista
     except KeyError:
       pass
-    testPaket = paketOb(config, prylDict, paketen[paket])
-  #print(paketen["Angela + H800-paket utan fotograf"])
-  
-  #testPaket = paketOb(prylDict, paketen["Angela + H800-paket utan fotograf"]["prylar"], paketen["Angela + H800-paket utan fotograf"]["Personal"], "Angela + H800-paket utan fotograf", config)
-  #print(testPaket.dictMake())
+    paketen[paket]["paketDict"] = paketDict
+    paket = paketOb(config, prylDict, paketen[paket])
+    paketDict.update(paket.dictMake())
+  print(paketDict)
   
   #Save data to file
   with open('prylar.json', 'w', encoding='utf-8') as f:
@@ -135,7 +170,7 @@ def getPrylar():
   with open('config.json', 'w', encoding='utf-8') as f:
     json.dump(request.json["Config"], f, ensure_ascii=False, indent=2)
   with open('paket.json', 'w', encoding='utf-8') as f:
-    json.dump(request.json["Pryl Paket"], f, ensure_ascii=False, indent=2)
+    json.dump(paketDict, f, ensure_ascii=False, indent=2)
 
   
   
