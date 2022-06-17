@@ -22,29 +22,59 @@ app = Flask(  # Create a flask app
 	template_folder='templates',  # Name of html file folder
 	static_folder='static'  # Name of directory for static files
 )
+try:
+  with open('config.json', 'r') as f:
+    config = json.load(f)
+except Exception:
+  print(Exception)
+
 
 class prylOb:
-  def __init__(self, pris, name):
+  def __init__(self, config, **kwargs):
+    #Gets all attributes provided and adds them to self
+    #Current args: name, inPris, pris
+    for argName, value in kwargs.items():
+      self.__dict__.update({argName:value})
+      
+  def rounding(self, config):
+    #Convert to lower price as a percentage of the buy price
+    self.pris = math.floor((float(self.inPris)*config["prylKostnadMulti"])/10)*10
     
-    self.name = name
-    self.pris = pris
-    #self.airtableID = dict["id"]
-
+  def dictMake(self):
+    tempDict = vars(self)
+    outDict = {tempDict["name"]:tempDict}
+    outDict[tempDict["name"]].pop('name', None)
+    return outDict
+  
 class paketOb:
-  def __init__(self, prylar, paketPrylar, personal, name):
+  def __init__(self, prylar, paketPrylar, personal, name, config, **kwargs):
+    #Gets all kwargs provided and adds them to self
+    #Current kwargs:
+    for argName, value in kwargs.items():
+      self.__dict__.update({argName:value})
+    
     self.pris = 0
-    self.prylar = []
+    self.prylar = {}
     self.personal = personal
     self.name = name
+    
+    #Add pryl objects to self list of all prylar in paket
     for pryl in paketPrylar:
-      
-      self.prylar.append(prylOb(prylar[pryl["name"]]["pris"], pryl["name"]))
-    
-    for pryl in self.prylar:
-      self.pris += pryl.pris
-    
-    print(self.name, " costs: ", self.pris)
+      self.prylar.update({pryl["name"]:prylar[pryl["name"]]})
+    #print(self.prylar[0].name)
 
+    #Set total price of prylar in paket
+    for pryl in self.prylar:
+      self.pris += prylar[pryl]["pris"]
+    
+    print(self.name, "costs:", self.pris)
+
+  def dictMake(self):
+    tempDict = vars(self)
+    outDict = {tempDict["name"]:tempDict}
+    outDict[tempDict["name"]].pop('name', None)
+    return outDict
+    
 @app.route("/", methods=["GET"])
 def theBasics():
   return "Hello <3"
@@ -60,17 +90,39 @@ data = ["test0", "test1"]
 #Route for updating the configurables
 @app.route("/update/config", methods=["POST"]) 
 def getPrylar():
+
+  #Make the key of configs go directly to the value
+  for configurable in request.json["Config"]:
+    request.json["Config"][configurable] = request.json["Config"][configurable]["Siffra i decimal"]
+
+
+  config = request.json["Config"]
+  
+  #Format prylar better
+  prylarna = request.json["Prylar"]
+  prylDict = {}
+  for prylNamn in prylarna:
+    pryl = prylOb(config, inPris=prylarna[prylNamn]["pris"], name=prylNamn)
+    pryl.rounding(config)
+    prylDict.update(pryl.dictMake())
+
+  
+  paketen = request.json["Pryl Paket"]
+  testPaket = paketOb(prylDict, paketen["Angela + H800-paket utan fotograf"]["Prylar"], paketen["Angela + H800-paket utan fotograf"]["Personal"], "Angela + H800-paket utan fotograf", config)
+  print(testPaket.dictMake())
+  
   #Save data to file
   with open('prylar.json', 'w', encoding='utf-8') as f:
-    json.dump(request.json["Prylar"], f, ensure_ascii=False, indent=2)
+    json.dump(prylDict, f, ensure_ascii=False, indent=2)
+  
+
   with open('config.json', 'w', encoding='utf-8') as f:
     json.dump(request.json["Config"], f, ensure_ascii=False, indent=2)
   with open('paket.json', 'w', encoding='utf-8') as f:
     json.dump(request.json["Pryl Paket"], f, ensure_ascii=False, indent=2)
-  prylarna = request.json["Prylar"]
-  paketen = request.json["Pryl Paket"]
-  print(paketen["Angela + H800-paket utan fotograf"])
-  testPaket = paketOb(prylarna, paketen["Angela + H800-paket utan fotograf"]["Prylar"], paketen["Angela + H800-paket utan fotograf"]["Personal"], "Angela + H800-paket utan fotograf")
+
+  
+  
   for ind in range(len(paketen)):
     pris = 0
     #print(paketen[ind]["Prylar"][])
@@ -240,11 +292,7 @@ def raknaPryl(config, inputData):
   dagTvåMulti = config["dagTvåMulti"]
 
 
-  try:
-    for pryl in inputData["prylar"]:
-      prylPris += round((float(pryl["pris"])*prylKostnadMulti)/10)*10
-  except TypeError:
-    prylPris = 0
+
   if inputData["svanis"] == True:
     prylPris *= config["svanisMulti"]
 
