@@ -47,28 +47,32 @@ class prylOb:
     return outDict
   
 class paketOb:
-  def __init__(self, prylar, paketPrylar, personal, name, config, **kwargs):
+  def __init__(self, config, prylar, args):
     #Gets all kwargs provided and adds them to self
     #Current kwargs:
-    for argName, value in kwargs.items():
+    #print(kwargs, "test")
+    for argName, value in args.items():
       self.__dict__.update({argName:value})
+    #print(vars(self))
     
     self.pris = 0
     self.prylar = {}
-    self.personal = personal
-    self.name = name
-    
+    #print(prylar)
     #Add pryl objects to self list of all prylar in paket
-    for pryl in paketPrylar:
-      self.prylar.update({pryl["name"]:prylar[pryl["name"]]})
-    #print(self.prylar[0].name)
-
-    #Set total price of prylar in paket
-    for pryl in self.prylar:
-      self.pris += prylar[pryl]["pris"]
-    
-    print(self.name, "costs:", self.pris)
-
+    try:
+      
+      for pryl in self.paketPrylar:
+        #print(pryl)
+        self.prylar.update({pryl:prylar[pryl]})
+      #print(self.prylar[0].name)
+  
+      #Set total price of prylar in paket
+      for pryl in self.prylar:
+        self.pris += prylar[pryl]["pris"]
+      
+      print(self.name, "costs:", self.pris)
+    except AttributeError:
+      pass
   def dictMake(self):
     tempDict = vars(self)
     outDict = {tempDict["name"]:tempDict}
@@ -106,10 +110,22 @@ def getPrylar():
     pryl.rounding(config)
     prylDict.update(pryl.dictMake())
 
-  
+  lista = []
   paketen = request.json["Pryl Paket"]
-  testPaket = paketOb(prylDict, paketen["Angela + H800-paket utan fotograf"]["Prylar"], paketen["Angela + H800-paket utan fotograf"]["Personal"], "Angela + H800-paket utan fotograf", config)
-  print(testPaket.dictMake())
+  for paket in paketen:
+    paketen[paket]["name"] = paket
+    try:
+      for pryl in paketen[paket]["paketPrylar"]:
+        lista.append(pryl["name"])
+    
+      paketen[paket]["paketPrylar"] = lista
+    except KeyError:
+      pass
+    testPaket = paketOb(config, prylDict, paketen[paket])
+  #print(paketen["Angela + H800-paket utan fotograf"])
+  
+  #testPaket = paketOb(prylDict, paketen["Angela + H800-paket utan fotograf"]["prylar"], paketen["Angela + H800-paket utan fotograf"]["Personal"], "Angela + H800-paket utan fotograf", config)
+  #print(testPaket.dictMake())
   
   #Save data to file
   with open('prylar.json', 'w', encoding='utf-8') as f:
@@ -125,7 +141,7 @@ def getPrylar():
   
   for ind in range(len(paketen)):
     pris = 0
-    #print(paketen[ind]["Prylar"][])
+    #print(paketen[ind]["prylar"][])
     """
     for pryl in paket.Prylar:
       print(pryl)
@@ -157,15 +173,15 @@ def update():
     pris = 0
     #print(paketNamn)
     paketet = paketDF[str(paketNamn)]
-    if paketet["Prylar"]:
-      if isinstance(paketet["Prylar"], float) == False:
-        for pryl in paketet["Prylar"]:
+    if paketet["prylar"]:
+      if isinstance(paketet["prylar"], float) == False:
+        for pryl in paketet["prylar"]:
 
           if str(paketNamn) == "Direkttextning och postsynk":
             print("i'm here")
           if pd.isna(paketet["Antal Prylar"]) == False and paketet["Antal Prylar"] != 1:
             if paketet["Antal Prylar"] != list:
-              if paketDF[str(paketNamn)]["Prylar"].index(pryl) == 0:
+              if paketDF[str(paketNamn)]["prylar"].index(pryl) == 0:
                 pris += prylarDF[pryl["name"]]["pris"]*paketet["Antal Prylar"]
                 
               else:
@@ -173,7 +189,7 @@ def update():
                 
             else:
               prylListan = paketet["Antal Prylar"]
-              pris += prylarDF[pryl["name"]]["pris"]*prylListan[paketDF[str(paketNamn)]["Prylar"].index(pryl)]
+              pris += prylarDF[pryl["name"]]["pris"]*prylListan[paketDF[str(paketNamn)]["prylar"].index(pryl)]
              
           else:
             pris += prylarDF[pryl["name"]]["pris"]
@@ -188,21 +204,21 @@ def update():
     paketIPaket = paketDF[str(paketNamn)]["Paket i prylPaket"]
     if isinstance(paketIPaket, list):
       print(paketDF[str(paketNamn)]["Paket i prylPaket"])
-      if isinstance(paketet["Prylar"], float) == False:
-        for pryl in paketet["Prylar"]:
+      if isinstance(paketet["prylar"], float) == False:
+        for pryl in paketet["prylar"]:
           if pd.isna(paketet["Antal Prylar"]) == False and paketet["Antal Prylar"] != 1:
             if paketet["Antal Prylar"] != list:
-              if paketDF[str(paketNamn)]["Prylar"].index(pryl) == 0:
+              if paketDF[str(paketNamn)]["prylar"].index(pryl) == 0:
                 pris += prylarDF[pryl["name"]]["pris"]*paketet["Antal Prylar"]
               else:
                 pris += prylarDF[pryl["name"]]["pris"]
             else:
               prylListan = paketet["Antal Prylar"]
-              pris += prylarDF[pryl["name"]]["pris"]*prylListan[paketDF[str(paketNamn)]["Prylar"].index(pryl)]
+              pris += prylarDF[pryl["name"]]["pris"]*prylListan[paketDF[str(paketNamn)]["prylar"].index(pryl)]
             
           else:
             pris += prylarDF[pryl["name"]]["pris"]
-          print(pris, paketet["Antal Prylar"], paketet["Prylar"])
+          print(pris, paketet["Antal Prylar"], paketet["prylar"])
         #print(pris)
           totalPris += pris
       else:
@@ -446,12 +462,12 @@ def skaffaPrylarUrPaket(paketId, prylTableList, paketTableList, personal = 0, pa
         if antalPrylar[-1] == "":
           del antalPrylar[-1]
         
-        for prylId in paketIdPlace["fields"]["Prylar"]:
+        for prylId in paketIdPlace["fields"]["prylar"]:
           for record in prylTableList:
             #print(item["id"], prylId)
             if record["id"] == prylId:
               pryl = prylTableList[int(prylTableList.index(record))+1]
-              platsILista = paketIdPlace["fields"]["Prylar"].index(prylId)
+              platsILista = paketIdPlace["fields"]["prylar"].index(prylId)
               #print(prylId, platsILista)
               
               for i in range(0, platsILista):
@@ -460,7 +476,7 @@ def skaffaPrylarUrPaket(paketId, prylTableList, paketTableList, personal = 0, pa
               
       except KeyError:# as e:
         #print(e)
-        for prylId in paketIdPlace["fields"]["Prylar"]:
+        for prylId in paketIdPlace["fields"]["prylar"]:
           for record in prylTableList:
             if record == prylId:
               pryl = prylTableList[int(prylTableList.index(record))+1]
