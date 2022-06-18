@@ -134,12 +134,14 @@ class gig:
     self.countThem()
     self.prisFunc()
     self.rounding(config)
-    print(self.pris, self.inPris)
+    print(f"Total: {self.pris}")
+    print(f"Total inköp: {self.inPris}")
     for pryl in self.gigPrylar:
-      print(f"{self.gigPrylar[pryl]['amount']}: {pryl}")
+      print(f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['amount']*self.gigPrylar[pryl]['pris']} kr")
+
   def checkPrylar(self, prylar):
     for pryl in self.iData["extraPrylar"]:
-      print(pryl)
+      #print(pryl)
       self.preGigPrylar.append({pryl:prylar[pryl]})
   
   def checkPaket(self, paketen):
@@ -150,24 +152,24 @@ class gig:
         self.preGigPrylar.append({pryl:paketen[paket]["prylar"][pryl]})
 
   def countThem(self):
-    print(self.preGigPrylar, "hi")
+    #print(self.preGigPrylar, "hi")
     i = 0
     for pryl in self.preGigPrylar:
       for key in pryl:
         #print(i, key, "\n", list(self.gigPrylar.keys()), "\n")
         if key in list(self.gigPrylar.keys()):
           self.gigPrylar[key]["amount"] += copy.deepcopy(self.preGigPrylar[i][key]["amount"])
-          print("hi", key, self.gigPrylar[key]["amount"])
+          #print("hi", key, self.gigPrylar[key]["amount"])
         else:
           self.gigPrylar.update(copy.deepcopy(self.preGigPrylar[i]))
       i += 1
-    print(self.gigPrylar)
+    #print(self.gigPrylar)
     
   def prisFunc(self):
     self.pris = 0
     self.inPris = 0
     for pryl in self.gigPrylar:
-      print(pryl)
+      #print(pryl)
       self.inPris += self.gigPrylar[pryl]["inPris"]*self.gigPrylar[pryl]["amount"]
     
   def rounding(self, config):
@@ -180,29 +182,33 @@ def theBasics():
 def start():
   iData = request.json["Input data"]
   #Clean junk from data
-  for key in iData:
-    iDataName = key
-    prylList = []
-    paketList = []
-    try:
-      i = 0
-      for pryl in iData[key]["extraPrylar"]:
-        pryl.pop("id", None)
-        prylList.append(iData[key]["extraPrylar"][i]["name"])
-        i += 1
-      iData[key]["extraPrylar"] = prylList
-    except KeyError:
-      pass
-    try:
-      i = 0
-      for paket in iData[key]["prylPaket"]:
-        paket.pop("id", None)
-        paketList.append(iData[key]["prylPaket"][i]["name"])
-        i += 1
-      iData[key]["prylPaket"] = paketList
-    except KeyError:
-      pass
-    
+  try:
+    if request.json["key"]:
+      key = request.json["key"]
+  except KeyError:
+    key = list(iData.keys())[-1]
+  iDataName = key
+  prylList = []
+  paketList = []
+  try:
+    i = 0
+    for pryl in iData[key]["extraPrylar"]:
+      pryl.pop("id", None)
+      prylList.append(iData[key]["extraPrylar"][i]["name"])
+      i += 1
+    iData[key]["extraPrylar"] = prylList
+  except KeyError:
+    pass
+  try:
+    i = 0
+    for paket in iData[key]["prylPaket"]:
+      paket.pop("id", None)
+      paketList.append(iData[key]["prylPaket"][i]["name"])
+      i += 1
+    iData[key]["prylPaket"] = paketList
+  except KeyError:
+    pass
+  
   #Save data just because
   with open('input.json', 'w', encoding='utf-8') as f:
     json.dump(iData, f, ensure_ascii=False, indent=2)

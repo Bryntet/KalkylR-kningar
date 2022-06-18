@@ -1,109 +1,20 @@
 {
   "Mitt test!": {
     "prylPaket": [
-      "Z90 och stativ",
-      "Angela tvåkamera",
-      "Fin tvåkamera komplett",
-      "Fin tvåkamera utan fotograf",
-      "Extremetvåkamera utan fotograf",
-      "Angela tvåkam utan fotograf",
-      "Ca vMix och 3st PTZOptics",
-      "Helt digitalt event Angela",
-      "Helt digitalt event Extreme",
-      "Bildproduktion utan kameror och fotografer",
-      "Bildproduktion mini",
-      "Bildproduktion Angela utan kameror och fotografer",
-      "Storbildsproduktion",
-      "Angela + H800-paket utan fotograf",
-      "Namnbrickor (m MBA)",
-      "Redigering",
-      "1 Distansperson",
-      "2 Distanspersoner",
-      "3 Distanspersoner",
-      "4+ Distanspersoner",
-      "Fotograf m Z90 och stativ",
-      "Fintvåkamera plus kamera",
-      "Trekamera komplett",
-      "Trekamera en fotograf",
-      "Trekamera utan fotograf",
-      "Live-plattform",
-      "Test videokonferens 30 min",
-      "Ljudtekniker med digitalt mixerbord",
-      "Direkttextning och postsynk"
+      {
+        "id": "recSzrsgJXgoliZL5",
+        "name": "Z90 och stativ"
+      },
+      {
+        "id": "reckReXqASf2UK0zw",
+        "name": "Angela tvåkamera"
+      }
     ],
     "extraPrylar": [
-      "300d ii",
-      "ATEM Mini",
-      "Trådlös mik Axient",
-      "avx",
-      "Stativ Manfrotto 504HD",
-      "mbp",
-      "Decimator MD-HX",
-      "Z90",
-      "A-racket",
-      "Allt BNC",
-      "Amelia - Sennheiser ENG-kit EW 100 G3",
-      "Atem mini Extreme",
-      "Atem mini pro",
-      "bord och stolar",
-      "Claude - Jib",
-      "Constellation, Angela",
-      "Cube 755",
-      "Decklink Duo 2 m Sonnet",
-      "Dollys",
-      "Eartec Intercom",
-      "Eddie - 2st XLR-vindor",
-      "Eleanor - Pepwave MAX 700-router",
-      "Elin - Sennheiser MKH 416 shotgun",
-      "Elizabeth C - Atem Television Studio HD",
-      "Elizabeth P - MicroCue 2 Clicker",
-      "Emmeline - Generator Honda eu20i",
-      "Farseeing FD-BP95L V-mountbatteri, v-lock",
-      "Fred H - BMD Video Assist 4k",
-      "Genelec 8010",
-      "Genelec 8030 i par",
-      "Green screen",
-      "Grå matta + ovalt bord + småbord",
-      "HD Mini",
-      "Janet - 2st BPHS1",
-      "Joe Server",
-      "Kabelinstallation Svanis",
-      "Keller - Sony A6500",
-      "Ki Pro Go",
-      "Kontrollrum Svanis",
-      "LED-barer",
-      "LiveU Solo+",
-      "Lucy P - AJA HELO",
-      "Mac Mini",
-      "Marvel vMix-burk",
-      "Medgar - Teradek Bolt",
-      "Mipro-mikrofonerna 6st",
-      "Mumia A&H SQ5",
-      "Myles - Ifootage Shark Slider S1",
-      "N-racket",
-      "Nekeisha Atem 2M/E",
-      "Pausmusik",
-      "Prathia - Projektor Optoma",
-      "Prompter",
-      "PTZOptics",
-      "Restream",
-      "Scen",
-      "Shockmount case",
-      "Skaarhoj Fly",
-      "Trossar m ljus Svanis",
-      "TV 55\"",
-      "Odyssey 7Q+",
-      "ScottDixon-case",
-      "Gechic-skärm",
-      "PTZOptics paket",
-      "2st 60d + domes",
-      "2st 120d II",
-      "LED-kanna-plattor",
-      "Motoriserad slider",
-      "Soundboks",
-      "BRC-H800 PTZ",
-      "RM-IP500",
-      "2st Lupo"
+      {
+        "id": "rec3YGpQDEBLk3jCf",
+        "name": "300d ii"
+      }
     ],
     "antalPaket": "2,1",
     "antalPrylar": "1",
@@ -117,6 +28,64 @@
     "riggDag": "2020-02-15T05:00:00.000Z",
     "specialRigg": 1,
     "riggTimmar": 6,
-    "tekniker": 4
+    "tekniker": 4,
+    "wrongIndex": 1,
+    "index": 0
+  },
+  "Mitt test! copy": {
+    "prylPaket": [
+      {
+        "id": "recSzrsgJXgoliZL5",
+        "name": "Z90 och stativ"
+      },
+      {
+        "id": "recnjR2UGOFi15OY0",
+        "name": "Fin tvåkamera komplett"
+      }
+    ],
+    "extraPrylar": [
+      {
+        "id": "rec3YGpQDEBLk3jCf",
+        "name": "300d ii"
+      }
+    ],
+    "antalPaket": "2,1",
+    "antalPrylar": "1",
+    "dagLängd": 6,
+    "dagar": 3,
+    "extraPersonal": 1,
+    "hyrKostnad": 1,
+    "projekt": "det viktigaste!",
+    "Börja datum": "2022-03-09T05:00:00.000Z",
+    "Sluta datum": "2022-03-12",
+    "riggDag": "2020-02-15T05:00:00.000Z",
+    "specialRigg": 1,
+    "riggTimmar": 6,
+    "tekniker": 4,
+    "wrongIndex": 2,
+    "index": 1
+  },
+  "Test": {
+    "prylPaket": [
+      "Z90 och stativ",
+      "Angela tvåkamera"
+    ],
+    "extraPrylar": [
+      "300d ii"
+    ],
+    "dagLängd": {
+      "error": "#ERROR!"
+    },
+    "dagar": {
+      "specialValue": "NaN"
+    },
+    "projekt": "rrr",
+    "specialRigg": 0,
+    "riggTimmar": {
+      "error": "#ERROR!"
+    },
+    "tekniker": 1,
+    "wrongIndex": 3,
+    "index": 2
   }
 }
