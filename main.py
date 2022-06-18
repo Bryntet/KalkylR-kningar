@@ -123,6 +123,12 @@ class gig:
     self.name = name
     self.iData = iData[self.name]
     try:
+      if iData["svanis"]:
+        self.svanis = True
+    except KeyError:
+      self.svanis = False
+    
+    try:
       self.checkPrylar(prylar)
     except KeyError:
       pass
@@ -132,25 +138,30 @@ class gig:
       pass
     #print(self.preGigPrylar, "hi")
     self.countThem()
-    self.prisFunc()
-    self.rounding(config)
+    self.prisFunc(config)
+    
     print(f"Total: {self.pris}")
     print(f"Total inköp: {self.inPris}")
     for pryl in self.gigPrylar:
-      print(f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['amount']*self.gigPrylar[pryl]['pris']} kr")
+      print(f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['mod']} kr")
 
   def checkPrylar(self, prylar):
     for pryl in self.iData["extraPrylar"]:
-      #print(pryl)
+      #Add pryl from prylar to prylList
       self.preGigPrylar.append({pryl:prylar[pryl]})
   
   def checkPaket(self, paketen):
     for paket in self.iData["prylPaket"]:
-      for pryl in paketen[paket]["prylar"]:
-        
-        #print(pryl)
+      #Check svanis
+      try:
+        if paketen[paket]["svanis"]:
+          self.svanis = True
+      except KeyError:
+        pass
+      for pryl in paketen[paket]["prylar"]:  
+        #Add pryl from paket to prylList
         self.preGigPrylar.append({pryl:paketen[paket]["prylar"][pryl]})
-
+        
   def countThem(self):
     #print(self.preGigPrylar, "hi")
     i = 0
@@ -165,15 +176,26 @@ class gig:
       i += 1
     #print(self.gigPrylar)
     
-  def prisFunc(self):
+  def prisFunc(self, config):
     self.pris = 0
     self.inPris = 0
     for pryl in self.gigPrylar:
-      #print(pryl)
-      self.inPris += self.gigPrylar[pryl]["inPris"]*self.gigPrylar[pryl]["amount"]
-    
-  def rounding(self, config):
-    self.pris = math.floor((float(self.inPris)*config["prylKostnadMulti"])/10)*10
+      self.inPris += self.gigPrylar[pryl]["inPris"]
+
+      #Make new pryl attribute "mod" where price modifications happen
+      self.gigPrylar[pryl]["mod"] = copy.deepcopy(self.gigPrylar[pryl]["pris"])
+      modPryl = self.gigPrylar[pryl]["mod"]
+
+      #Mult price by amount of pryl
+      modPryl *= self.gigPrylar[pryl]["amount"]
+
+      #If svanis, mult by svanis multi
+      if self.svanis:
+        modPryl *= config["svanisMulti"]
+
+      self.gigPrylar[pryl]["mod"] = modPryl
+      self.pris += modPryl
+      
 @app.route("/", methods=["GET"])
 def theBasics():
   return "Hello <3"
