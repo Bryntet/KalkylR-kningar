@@ -154,11 +154,44 @@ class gig:
       print(f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['mod']} kr - {self.gigPrylar[pryl]['dagarMod']} kr pga {self.iData['dagar']} dagar")
 
   def checkPrylar(self, prylar):
+    try:
+      if self.iData["antalPrylar"]:
+        try:
+          int(self.iData["antalPrylar"])
+          self.iData["antalPrylar"] = [self.iData["antalPrylar"]]
+        except ValueError:
+          self.iData["antalPrylar"] = self.iData["antalPrylar"].split(",")
+        
+        antal = True
+          
+    except KeyError:
+      antal = False
+    i = 0
     for pryl in self.iData["extraPrylar"]:
-      #Add pryl from prylar to prylList
-      self.preGigPrylar.append({pryl:prylar[pryl]})
-  
+      if antal:
+
+        try:
+          for j in range(int(self.iData["antalPrylar"][i])):
+            self.preGigPrylar.append({pryl:prylar[pryl]})
+        except IndexError:
+          self.preGigPrylar.append({pryl:prylar[pryl]})
+      else:
+        #Add pryl from prylar to prylList
+        self.preGigPrylar.append({pryl:prylar[pryl]})
+      i += 1
   def checkPaket(self, paketen):
+    try:
+      if self.iData["antalPaket"]:
+
+        try:
+          int(self.iData["antalPaket"])
+          self.iData["antalPaket"] = [self.iData["antalPaket"]]
+        except ValueError:
+          self.iData["antalPaket"] = self.iData["antalPaket"].split(",")
+        antal = True
+          
+    except KeyError:
+      antal = False
     for paket in self.iData["prylPaket"]:
       #Check svanis
       try:
@@ -166,9 +199,20 @@ class gig:
           self.svanis = True
       except KeyError:
         pass
-      for pryl in paketen[paket]["prylar"]:  
-        #Add pryl from paket to prylList
-        self.preGigPrylar.append({pryl:paketen[paket]["prylar"][pryl]})
+      i = 0
+      
+        
+      for pryl in paketen[paket]["prylar"]:
+        if antal:
+          try:
+            for j in range(int(self.iData["antalPaket"][i])):
+              self.preGigPrylar.append({pryl:paketen[paket]["prylar"][pryl]})
+          except IndexError:
+            self.preGigPrylar.append({pryl:paketen[paket]["prylar"][pryl]})
+        else:
+          #Add pryl from paket to prylList
+          self.preGigPrylar.append({pryl:paketen[paket]["prylar"][pryl]})
+      i += 1
         
   def countThem(self):
     #print(self.preGigPrylar, "hi")
@@ -215,15 +259,12 @@ class gig:
     dagTvåMulti = config["dagTvåMulti"]
     dagTreMulti = config["dagTreMulti"]
     tempPris = copy.deepcopy(pris)
-    print(tempPris)
     if dagar < 1:
       tempPris = 0
     elif dagar >= 2:
       tempPris *= (1 + dagTvåMulti)
-      print(tempPris, "dag 2")
     if dagar >= 3:
       tempPris += pris*config["dagTreMulti"]*(dagar-2)
-      print(tempPris, "dag 3")
     return tempPris
 
 
@@ -237,30 +278,32 @@ def start():
   #Clean junk from data
   try:
     if request.json["key"]:
-      key = request.json["key"]
+      iDataName = request.json["key"]
   except KeyError:
-    key = list(iData.keys())[-1]
-  iDataName = key
-  prylList = []
-  paketList = []
-  try:
-    i = 0
-    for pryl in iData[key]["extraPrylar"]:
-      pryl.pop("id", None)
-      prylList.append(iData[key]["extraPrylar"][i]["name"])
-      i += 1
-    iData[key]["extraPrylar"] = prylList
-  except KeyError:
-    pass
-  try:
-    i = 0
-    for paket in iData[key]["prylPaket"]:
-      paket.pop("id", None)
-      paketList.append(iData[key]["prylPaket"][i]["name"])
-      i += 1
-    iData[key]["prylPaket"] = paketList
-  except KeyError:
-    pass
+    iDataName = list(iData.keys())[-1]
+  
+
+  for key in iData:
+    prylList = []
+    paketList = []
+    try:
+      i = 0
+      for pryl in iData[key]["extraPrylar"]:
+        pryl.pop("id", None)
+        prylList.append(iData[key]["extraPrylar"][i]["name"])
+        i += 1
+      iData[key]["extraPrylar"] = prylList
+    except KeyError:
+      pass
+    try:
+      i = 0
+      for paket in iData[key]["prylPaket"]:
+        paket.pop("id", None)
+        paketList.append(iData[key]["prylPaket"][i]["name"])
+        i += 1
+      iData[key]["prylPaket"] = paketList
+    except KeyError:
+      pass
   
   #Save data just because
   with open('input.json', 'w', encoding='utf-8') as f:
