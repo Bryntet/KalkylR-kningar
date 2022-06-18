@@ -122,28 +122,36 @@ class gig:
     self.preGigPrylar = []
     self.name = name
     self.iData = iData[self.name]
+    self.pris = 0
+    self.inPris = 0
+    
     try:
       if iData["svanis"]:
         self.svanis = True
     except KeyError:
       self.svanis = False
-    
+
+      
+    #Take all prylar and put them inside a list
     try:
       self.checkPrylar(prylar)
     except KeyError:
       pass
+    #Take all prylar from paket and put them inside a list
     try:
       self.checkPaket(paketen)
     except KeyError:
       pass
-    #print(self.preGigPrylar, "hi")
+    #Add accurate count to all prylar and compile them from list to dict
     self.countThem()
-    self.prisFunc(config)
-    
+    #Modify prylPris based on factors such as svanis
+    self.prylMod(config)
+    #Get the total modpris and inPris from all the prylar
+    self.getPris()
     print(f"Total: {self.pris}")
     print(f"Total inköp: {self.inPris}")
     for pryl in self.gigPrylar:
-      print(f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['mod']} kr")
+      print(f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['mod']} kr - {self.gigPrylar[pryl]['dagarMod']} kr pga {self.iData['dagar']} dagar")
 
   def checkPrylar(self, prylar):
     for pryl in self.iData["extraPrylar"]:
@@ -176,9 +184,9 @@ class gig:
       i += 1
     #print(self.gigPrylar)
     
-  def prisFunc(self, config):
-    self.pris = 0
-    self.inPris = 0
+
+  def prylMod(self, config):
+
     for pryl in self.gigPrylar:
       self.inPris += self.gigPrylar[pryl]["inPris"]
 
@@ -193,9 +201,32 @@ class gig:
       if self.svanis:
         modPryl *= config["svanisMulti"]
 
-      self.gigPrylar[pryl]["mod"] = modPryl
-      self.pris += modPryl
+      self.gigPrylar[pryl]["dagarMod"] = self.dagar(config, modPryl)
+    
       
+      self.gigPrylar[pryl]["mod"] = modPryl
+  def getPris(self):
+    for pryl in self.gigPrylar:
+      self.inPris += self.gigPrylar[pryl]["inPris"]
+      self.pris += self.gigPrylar[pryl]["mod"]
+      
+  def dagar(self, config, pris):
+    dagar = self.iData["dagar"]
+    dagTvåMulti = config["dagTvåMulti"]
+    dagTreMulti = config["dagTreMulti"]
+    tempPris = copy.deepcopy(pris)
+    print(tempPris)
+    if dagar < 1:
+      tempPris = 0
+    elif dagar >= 2:
+      tempPris *= (1 + dagTvåMulti)
+      print(tempPris, "dag 2")
+    if dagar >= 3:
+      tempPris += pris*config["dagTreMulti"]*(dagar-2)
+      print(tempPris, "dag 3")
+    return tempPris
+
+
 @app.route("/", methods=["GET"])
 def theBasics():
   return "Hello <3"
@@ -384,34 +415,6 @@ def raknaPersonal(config, prylInfo, inputData):
     }
   return personalInfo
 
-def raknaPryl(config, inputData):
-  print("in raknaPryl", inputData["prylar"])
-  #Pris = Pris för kund
-  #Kostnad = Kostnad för levande video kooperativet!
-  prylPris = 0
-  dagar = inputData["dagar"]
-  prylKostnadMulti = config["prylKostnadMulti"]
-  dagTvåMulti = config["dagTvåMulti"]
-
-
-
-  if inputData["svanis"] == True:
-    prylPris *= config["svanisMulti"]
-
-  if dagar < 1:
-    prylPris = 0
-  elif dagar == 2:
-    prylPris *= 1 + dagTvåMulti
-  elif dagar >= 3:
-    prylPris = prylPris*(1 + dagTvåMulti) + prylPris*config["dagTreMulti"]*(dagar-2)
-
-  
-  prylKostnad = prylPris * .4
-  prylInfo = {
-    "prylPris": prylPris,
-    "prylKostnad": prylKostnad
-  }
-  return prylInfo
 
 
 def raknaMarginal(config, prylInfo, personalInfo, inputData):
