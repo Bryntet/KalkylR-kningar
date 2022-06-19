@@ -116,6 +116,13 @@ class paketOb:
 
 class gig:
     def __init__(self, iData, config, prylar, paketen, name):
+        self.slitKostnad = None
+        self.marginal = None
+        self.avkastning = None
+        self.prylMarginal = None
+        self.personalMarginal = None
+        self.kostnad = None
+        self.prylKostnad = None
         self.hyrPris = None
         self.personalKostnad = None
         self.personalPris = None
@@ -129,6 +136,7 @@ class gig:
         self.preGigPrylar = []
         self.name = name
         self.iData = iData[self.name]
+        self.prylPris = 0
         self.pris = 0
         self.inPris = 0
         try:
