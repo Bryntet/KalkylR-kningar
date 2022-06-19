@@ -308,7 +308,7 @@ class gig:
         elif dagar >= 2:
             tempPris *= (1 + dagTvaMulti)
         if dagar >= 3:
-            tempPris += pris * config["dagTreMulti"] * (dagar - 2)
+            tempPris += pris * dagTreMulti * (dagar - 2)
         return tempPris
 
     def personalRakna(self, config):
