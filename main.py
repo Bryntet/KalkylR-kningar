@@ -48,8 +48,8 @@ class prylOb:
         out_dict[temp_dict["name"]].pop('name', None)
         return out_dict
 
-    def amount_calc(self, ind, antalAvPryl):
-        self.amount = antalAvPryl[ind]
+    def amount_calc(self, ind, antal_av_pryl):
+        self.amount = antal_av_pryl[ind]
 
 
 class paketOb:
@@ -115,6 +115,8 @@ class paketOb:
 
 class gig:
     def __init__(self, iData, config, prylar, paketen, name):
+        self.gigTimmar = None
+        self.timPeng = None
         self.gigPrylar = {}
         self.preGigPrylar = []
         self.name = name
@@ -317,7 +319,8 @@ def start():
     # Clean junk from data
     try:
         if request.json["key"]:
-            iDataName = request.json["key"]
+            pass
+        iDataName = request.json["key"]
     except KeyError:
         iDataName = list(iData.keys())[-1]
 
@@ -506,15 +509,12 @@ def raknaTillganglighetsTjanster(inputData):
   return tillganglighetsInfo
 """
 
-
-
-
 inputFields = ["gigNamn", "prylPaket", "dagLängd", "extraPrylar", "dagLängd", "dagar", "extraPersonal", "hyrKostnad",
                "antalPaket", "antalPrylar", "extraPrylar", "projekt"]
 paketFields = ["Paket Namn", "Paket i prylPaket", "Prylar", "Antal Prylar", "Personal", "Svanis", "Hyreskostnad"]
 prylFields = ["Pryl Namn", "pris"]
 
-config = {}
+# config = {}
 baseName = "appG1QEArAVGABdjm"
 inputTable = Table(api_key, baseName, 'Input data')
 paketTable = Table(api_key, baseName, 'Pryl Paket')
@@ -525,7 +525,7 @@ isItRunning = False
 
 
 def everything():
-    global isItRunning
+    global isItRunning, prylarUrPaket, outputId
     print("hello")
     global inputData
     global areWeRunning
@@ -693,7 +693,7 @@ def everything():
         if duplicateOrNot == False:
             print(kalkylOutput)
             outputId = outputTable.create(kalkylOutput)
-            outputId = re.findall(r"(?:.*{'id': ')(\w+)(?:', 'fields': {'Gig Namn': '.*', 'Helpris')", str(outputId))[0]
+            outputId = re.findall(r".*{'id': '(\w+)', 'fields': {'Gig Namn': '.*', 'Helpris'", str(outputId))[0]
             print(outputId)
         svanis = False
         stop = time.time()
@@ -717,16 +717,3 @@ def everything():
         isItRunning = False
         Thread(target=everything).stop()
 
-
-server()
-while True:
-    if runItNext == True:
-        print("Hello")
-        runItNext = False
-        everything()
-
-areWeRunning = True
-if __name__ == '__main__':
-    Thread(target=server).start()
-    Thread(target=everything).start()
-    # print("hello")
