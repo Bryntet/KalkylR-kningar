@@ -10,6 +10,19 @@ import math
 from flask import Flask, request
 import json
 
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 # pd.set_option('display.max_colwidth', None)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -117,7 +130,6 @@ class paketOb:
 class gig:
     def __init__(self, iData, config, prylar, paketen, name):
         self.slitKostnad = None
-        self.marginal = None
         self.avkastning = None
         self.prylMarginal = None
         self.personalMarginal = None
@@ -132,6 +144,7 @@ class gig:
         self.projektTimmar = None
         self.gigTimmar = None
         self.timPeng = None
+        self.marginal = 0
         self.gigPrylar = {}
         self.preGigPrylar = []
         self.name = name
@@ -172,7 +185,10 @@ class gig:
         print(f"Personal kostnad: {self.personalPris}")
         print(f"Total: {self.pris}")
         print(f"Avkastning: {self.avkastning}")
-        print(f"Marginal: {self.marginal}%")
+        if self.marginal > 65:
+            print(f"Marginal: {bcolors.OKGREEN+str(self.marginal)}%{bcolors.ENDC}")
+        else:
+            print(f"Marginal: {bcolors.FAIL + str(self.marginal)}%{bcolors.ENDC}")
         self.gigPrylar = dict(sorted(self.gigPrylar.items(), key=lambda item: -1 * item[1]["amount"]))
         for pryl in self.gigPrylar:
             print(
@@ -355,10 +371,11 @@ class gig:
         self.marginal = round(
             self.avkastning / (
                 self.pris - self.iData["hyrKostnad"] * (
-                    1 - config["hyrMulti"] * config["hyrMarginal"]
+                1 - config["hyrMulti"] * config["hyrMarginal"]
                 )
             )
-            * 10000)/100
+            * 10000) / 100
+
 
 
 @app.route("/", methods=["GET"])
