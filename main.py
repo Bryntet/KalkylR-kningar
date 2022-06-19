@@ -23,11 +23,14 @@ app = Flask(  # Create a flask app
     template_folder='templates',  # Name of html file folder
     static_folder='static'  # Name of directory for static files
 )
+
+print(api_key)
 try:
     with open('config.json', 'r') as f:
         config = json.load(f)
-except OSError:
-    print(Exception)
+except OSError as e:
+    print(e)
+print("hi")
 
 
 class prylOb:
@@ -115,6 +118,13 @@ class paketOb:
 
 class gig:
     def __init__(self, iData, config, prylar, paketen, name):
+        self.hyrPris = None
+        self.personalKostnad = None
+        self.personalPris = None
+        self.timBudget = None
+        self.restid = None
+        self.riggTimmar = None
+        self.projektTimmar = None
         self.gigTimmar = None
         self.timPeng = None
         self.gigPrylar = {}
@@ -271,6 +281,7 @@ class gig:
         dagTvaMulti = config["dagTvåMulti"]
         dagTreMulti = config["dagTreMulti"]
         tempPris = copy.deepcopy(pris)
+
         if dagar < 1:
             tempPris = 0
         elif dagar >= 2:
@@ -351,11 +362,11 @@ def start():
         json.dump(iData, f, ensure_ascii=False, indent=2)
 
     # Load all the important data
-    with open('config.json', 'r') as f:
+    with open('config.json', 'r', encoding='utf-8') as f:
         config = json.load(f)
-    with open('paket.json', 'r') as f:
+    with open('paket.json', 'r', encoding='utf-8') as f:
         paket = json.load(f)
-    with open('prylar.json', 'r') as f:
+    with open('prylar.json', 'r', encoding='utf-8') as f:
         prylar = json.load(f)
 
     test = gig(iData, config, prylar, paket, iDataName)
@@ -711,9 +722,11 @@ def everything():
                     projectExists = True
         except KeyError:
             projectExists = False
-        if projectExists == False:
+        if not projectExists:
             outputId = [outputId]
             projectTable.create({"Name": inputData["projekt"], "Leveranser": outputId})
         isItRunning = False
         Thread(target=everything).stop()
 
+
+server()
