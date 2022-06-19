@@ -1,9 +1,7 @@
-from pyairtable import Table
 import copy
 import json
 import math
 import os
-
 import pandas as pd
 from flask import Flask, request
 
@@ -34,15 +32,9 @@ app = Flask(  # Create a flask app
     static_folder='static'  # Name of directory for static files
 )
 
-try:
-    with open('config.json', 'r') as f:
-        config = json.load(f)
-except OSError as e:
-    print(e)
-
 
 class prylOb:
-    def __init__(self, config, **kwargs):
+    def __init__(self, **kwargs):
         # Gets all attributes provided and adds them to self
         # Current args: name, inPris, pris
         self.pris = None
@@ -65,7 +57,7 @@ class prylOb:
 
 
 class paketOb:
-    def __init__(self, config, prylar, args):
+    def __init__(self, prylar, args):
         # Gets all kwargs provided and adds them to self
         # Current kwargs:
         # print(args, "test")
@@ -367,9 +359,8 @@ class gig:
             self.avkastning / (
                 self.pris - self.iData["hyrKostnad"] * (
                     1 - config["hyrMulti"] * config["hyrMarginal"]
-                )
-            )
-            * 10000) / 100
+                )) * 10000
+        ) / 100
 
 
 @app.route("/", methods=["GET"])
@@ -443,7 +434,7 @@ def get_prylar():
     prylarna = request.json["Prylar"]
     prylDict = {}
     for prylNamn in prylarna:
-        pryl = prylOb(config, inPris=prylarna[prylNamn]["pris"], name=prylNamn)
+        pryl = prylOb(inPris=prylarna[prylNamn]["pris"], name=prylNamn)
         pryl.rounding(config)
         prylDict.update(pryl.dict_make())
 
@@ -460,7 +451,7 @@ def get_prylar():
         except KeyError:
             pass
         paketen[paket]["paketDict"] = paketDict
-        paket = paketOb(config, prylDict, paketen[paket])
+        paket = paketOb(prylDict, paketen[paket])
         paketDict.update(paket.dictMake())
     # print(paketDict)
 
@@ -489,10 +480,6 @@ def server():
 personal = 0
 
 svanis = False
-
-
-
-
 
 # prylLista = prylarOchPersonalAvPaket({"prylPaket": ["id0"]})
 
