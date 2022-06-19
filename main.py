@@ -491,43 +491,7 @@ personal = 0
 svanis = False
 
 
-def raknaMarginal(config, prylInfo, personalInfo, inputData):
-    hyrMulti = config["hyrMulti"]
-    hyrKostnad = inputData["hyrKostnad"]
-    prylPris = prylInfo["prylPris"]
-    prylKostnad = prylInfo["prylKostnad"]
-    personalPris = personalInfo["personalPris"]
-    personalKostnad = personalInfo["personalKostnad"]
-    hyrPris = hyrKostnad * (1 + hyrMulti)
-    hyrMarginal = config["hyrMarginal"]
-    helPris = prylPris + personalPris + hyrPris
 
-    helKostnad = prylKostnad + personalKostnad + hyrKostnad
-
-    try:
-        personalMarginal = (personalPris - personalKostnad) / personalPris
-    except ZeroDivisionError:
-        personalMarginal = 0
-    try:
-        prylMarginal = (prylPris - prylKostnad) / prylPris
-    except ZeroDivisionError:
-        prylMarginal = 0
-
-    print(prylInfo, personalInfo)
-
-    avkastning = helPris - prylKostnad - personalKostnad - hyrKostnad
-    marginal = avkastning / (helPris - hyrKostnad * (1 - hyrMulti * hyrMarginal))
-
-    marginalInfo = {
-        "Helpris": helPris,
-        "Helkostnad": helKostnad,
-        "Personal Marginal": personalMarginal,
-        "Pryl Marginal": prylMarginal,
-        "Marginal": marginal,
-        "Avkastning": avkastning,
-        "HyrPris": hyrPris
-    }
-    return marginalInfo
 
 
 # prylLista = prylarOchPersonalAvPaket({"prylPaket": ["id0"]})
