@@ -302,10 +302,10 @@ class gig:
 
         self.personalKostnad = self.timBudget * config["levandeVideoLön"]
         self.pris += self.personalPris
-        print(self.timBudget, self.restid, self.projektTimmar, self.gigTimmar, self.riggTimmar, self.svanis)
+        # print(self.timBudget, self.restid, self.projektTimmar, self.gigTimmar, self.riggTimmar, self.svanis)
+    def marginal(self, config):
+        self.hyrPris = self.iData["hyrKostnad"] * (1 + config["hyrMulti"])
 
-  def marginal(self, config):
-    self.hyrPris = self.iData["hyrKostnad"] * (1 + config["hyrMulti"])
 @app.route("/", methods=["GET"])
 def the_basics():
     return "Hello <3"
