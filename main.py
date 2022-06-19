@@ -24,13 +24,11 @@ app = Flask(  # Create a flask app
     static_folder='static'  # Name of directory for static files
 )
 
-print(api_key)
 try:
     with open('config.json', 'r') as f:
         config = json.load(f)
 except OSError as e:
     print(e)
-print("hi")
 
 
 class prylOb:
