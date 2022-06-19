@@ -12,3 +12,4 @@ poetry.lock
 /.idea/poetry.xml
 /.idea/inspectionProfiles/profiles_settings.xml
 /.idea/vcs.xml
+test.py
