@@ -60,7 +60,6 @@ class paketOb:
         for argName, value in args.items():
             # print(argName, value)
             self.__dict__.update({argName: value})
-      
 
         self.pris = 0
         self.prylar = {}
@@ -68,7 +67,7 @@ class paketOb:
         try:
             if self.paketIPrylPaket:
                 for paket in self.paketIPrylPaket:
-                    #print(paket, self.paketDict[paket["name"]])
+                    # print(paket, self.paketDict[paket["name"]])
                     for pryl in self.paketDict[paket["name"]]["prylar"]:
                         if pryl in self.prylar.keys():
                             self.prylar[pryl]["amount"] += 1
@@ -123,9 +122,9 @@ class gig:
         self.pris = 0
         self.inPris = 0
         try:
-          self.personal = self.iData["extraPersonal"]
+            self.personal = self.iData["extraPersonal"]
         except KeyError:
-          self.personal = 0
+            self.personal = 0
         try:
             if iData["svanis"]:
                 self.svanis = True
@@ -153,9 +152,10 @@ class gig:
         print(f"Total inköp: {self.inPris}")
         print(f"Personal kostnad: {self.personalPris}")
         print(f"Total: {self.pris}")
-        self.gigPrylar = dict(sorted(self.gigPrylar.items(), key=lambda item: -1*item[1]["amount"]))
+        self.gigPrylar = dict(sorted(self.gigPrylar.items(), key=lambda item: -1 * item[1]["amount"]))
         for pryl in self.gigPrylar:
-            print(f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['mod']} kr - {self.gigPrylar[pryl]['dagarMod']} kr pga {self.iData['dagar']} dagar")
+            print(
+                f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['mod']} kr - {self.gigPrylar[pryl]['dagarMod']} kr pga {self.iData['dagar']} dagar")
 
     def checkPrylar(self, prylar):
         try:
@@ -204,12 +204,12 @@ class gig:
                     self.svanis = True
             except KeyError:
                 pass
-            #Get personal
+            # Get personal
             try:
-              if paketen[paket]["Personal"]:
-                self.personal += paketen[paket]["Personal"]
+                if paketen[paket]["Personal"]:
+                    self.personal += paketen[paket]["Personal"]
             except KeyError:
-              pass
+                pass
             i = 0
 
             for pryl in paketen[paket]["prylar"]:
@@ -258,6 +258,7 @@ class gig:
 
             self.gigPrylar[pryl]["mod"] = modPryl
             print(modPryl)
+
     def get_pris(self):
         for pryl in self.gigPrylar:
             self.inPris += self.gigPrylar[pryl]["inPris"]
@@ -276,35 +277,34 @@ class gig:
             tempPris += pris * config["dagTreMulti"] * (dagar - 2)
         return tempPris
 
-
-  
     def personalRakna(self, config):
-        self.timPeng = math.floor(config["levandeVideoLön"] * (config["lönJustering"])/10)*10
+        self.timPeng = math.floor(config["levandeVideoLön"] * (config["lönJustering"]) / 10) * 10
 
-        self.gigTimmar = round(self.iData["dagLängd"]*self.personal*self.iData["dagar"])
-
+        self.gigTimmar = round(self.iData["dagLängd"] * self.personal * self.iData["dagar"])
 
         if self.iData["specialRigg"]:
-          self.riggTimmar = self.iData["riggTimmar"]
+            self.riggTimmar = self.iData["riggTimmar"]
         else:
-          self.riggTimmar = math.floor(self.pris*config["andelRiggTimmar"])
+            self.riggTimmar = math.floor(self.pris * config["andelRiggTimmar"])
 
-        self.projektTimmar = math.ceil((self.gigTimmar+self.riggTimmar) * config["projektTid"])
+        self.projektTimmar = math.ceil((self.gigTimmar + self.riggTimmar) * config["projektTid"])
 
         if self.svanis:
-          self.restid = 0
+            self.restid = 0
         else:
-          self.restid = self.personal * self.iData["dagar"] * config["restid"]
+            self.restid = self.personal * self.iData["dagar"] * config["restid"]
 
         self.timBudget = self.gigTimmar + self.riggTimmar + self.projektTimmar + self.restid
-        #Timmar gånger peng per timme
+        # Timmar gånger peng per timme
         self.personalPris = self.timBudget * self.timPeng
 
         self.personalKostnad = self.timBudget * config["levandeVideoLön"]
         self.pris += self.personalPris
         # print(self.timBudget, self.restid, self.projektTimmar, self.gigTimmar, self.riggTimmar, self.svanis)
+
     def marginal(self, config):
         self.hyrPris = self.iData["hyrKostnad"] * (1 + config["hyrMulti"])
+
 
 @app.route("/", methods=["GET"])
 def the_basics():
@@ -395,7 +395,7 @@ def get_prylar():
         paketen[paket]["paketDict"] = paketDict
         paket = paketOb(config, prylDict, paketen[paket])
         paketDict.update(paket.dictMake())
-  #print(paketDict)
+    # print(paketDict)
 
     # Save data to file
     with open('prylar.json', 'w', encoding='utf-8') as f:
@@ -433,8 +433,6 @@ def server():
 personal = 0
 
 svanis = False
-
-
 
 
 def raknaMarginal(config, prylInfo, personalInfo, inputData):
@@ -509,119 +507,6 @@ def raknaTillganglighetsTjanster(inputData):
 """
 
 
-def skaffaPrylarUrPaket(paketId, prylTableList, paketTableList, personal=0, paket=True, svanis=False, **prylar):
-    # print("in skaffaPrylarUrPaket")
-    global inputData
-    # print(prylar)
-    # print(prylTableList)
-    if paket == True:
-        for record in paketTableList:
-            # print(record["id"], paketId)
-            if paketId == record["id"]:
-                paketIdPlace = record
-                break
-
-        # print(paketIdPlace)
-        personal += int(paketIdPlace["fields"]["Personal"])
-        # print(personal)
-        try:
-            if paketIdPlace["fields"]["Svanis"]:
-                svanis = True
-        except KeyError:  # as e:
-            # print(e)
-            pass
-
-    # print(prylTableList)
-
-    prylLista = []
-
-    # prelPrylLista = []
-
-    # Recursion med möjliga paket i prylpaket, output till lista
-    prelPrylLista = []
-    if paket == True:
-        # print("hello")
-        try:
-            for paketPaketId in paketIdPlace["fields"]["Paket i prylPaket"]:
-                # print(prylTableList[0], paketTableList[0])
-                output = skaffaPrylarUrPaket(paketPaketId, prylTableList, paketTableList, personal, paket=True)
-                # print(output["prylLista"])
-                prelPrylLista.append(output["prylLista"])
-                # prylLista.append(output["prylLista"])
-
-            for pryl in prelPrylLista[0]:
-                prylLista.append(pryl)
-
-        except KeyError:  # as e:
-            # print(e)
-            pass
-        # Kolla efter alla prylar
-        try:
-            try:
-
-                antalPrylar = str(paketIdPlace["fields"]["Antal Prylar"]) + ","
-                antalPrylar = antalPrylar.split(",")
-                if antalPrylar[-1] == "":
-                    del antalPrylar[-1]
-
-                for prylId in paketIdPlace["fields"]["prylar"]:
-                    for record in prylTableList:
-                        # print(item["id"], prylId)
-                        if record["id"] == prylId:
-                            pryl = prylTableList[int(prylTableList.index(record)) + 1]
-                            platsILista = paketIdPlace["fields"]["prylar"].index(prylId)
-                            # print(prylId, platsILista)
-
-                            for i in range(0, platsILista):
-                                prylLista.append(record["fields"])
-                            break
-
-            except KeyError:  # as e:
-                # print(e)
-                for prylId in paketIdPlace["fields"]["prylar"]:
-                    for record in prylTableList:
-                        if record == prylId:
-                            pryl = prylTableList[int(prylTableList.index(record)) + 1]
-                            prylLista.append(pryl["fields"])
-
-                # pryl = prylTable.get(prylId)
-
-
-        except KeyError:  # as e:
-            # print(e)
-            pass
-    if prylar:
-        try:
-            antalPrylar = str(inputData["antalPrylar"]) + ","
-            antalPrylar = antalPrylar.split(",")
-            if antalPrylar[-1] == "":
-                del antalPrylar[-1]
-
-            # print(antalPrylar)
-            for prylId in prylar["prylar"]:
-                for record in prylTableList:
-                    if record["id"] == prylId:
-
-                        pryl = prylTableList[int(prylTableList.index(record)) + 1]
-                        platsILista = prylar["prylar"].index(prylId)
-                        # print(antalPrylar[int(platsILista)])
-                        for i in range(0, int(antalPrylar[platsILista])):
-                            prylLista.append(record["fields"])
-
-
-        except KeyError:  # as e:
-            # print(e)
-            for prylId in prylar["prylar"]:
-                # print(prylId)
-                for record in prylTableList:
-                    # print(item)
-                    if record["id"] == prylId:
-                        prylLista.append(record["fields"])
-
-    # print(prylLista)
-    # print(stop - start, svanisTime - start, paketRecursionTime - svanisTime, prylTime - paketRecursionTime)
-
-    return {"prylLista": prylLista, "personal": personal, "svanis": svanis}
 
 
 inputFields = ["gigNamn", "prylPaket", "dagLängd", "extraPrylar", "dagLängd", "dagar", "extraPersonal", "hyrKostnad",
@@ -845,6 +730,3 @@ if __name__ == '__main__':
     Thread(target=server).start()
     Thread(target=everything).start()
     # print("hello")
-
-
- 
