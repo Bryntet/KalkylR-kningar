@@ -65,7 +65,7 @@ class paketOb:
     try:
       if self.paketIPrylPaket:
         for paket in self.paketIPrylPaket:
-          print(paket, self.paketDict[paket["name"]])
+          #print(paket, self.paketDict[paket["name"]])
           for pryl in self.paketDict[paket["name"]]["prylar"]:
             if pryl in self.prylar.keys():
               self.prylar[pryl]["amount"] += 1
@@ -124,7 +124,10 @@ class gig:
     self.iData = iData[self.name]
     self.pris = 0
     self.inPris = 0
-    
+    try:
+      self.personal = self.iData["extraPersonal"]
+    except KeyError:
+      self.personal = 0
     try:
       if iData["svanis"]:
         self.svanis = True
@@ -148,11 +151,15 @@ class gig:
     self.prylMod(config)
     #Get the total modpris and inPris from all the prylar
     self.getPris()
-    print(f"Total: {self.pris}")
+    self.personalRakna(config)
+    
     print(f"Total inköp: {self.inPris}")
+    print(f"Personal kostnad: {self.personalPris}")
+    print(f"Total: {self.pris}")
+    self.gigPrylar = dict(sorted(self.gigPrylar.items(), key=lambda item: -1*item[1]["amount"]))
     for pryl in self.gigPrylar:
       print(f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['mod']} kr - {self.gigPrylar[pryl]['dagarMod']} kr pga {self.iData['dagar']} dagar")
-
+   
   def checkPrylar(self, prylar):
     try:
       if self.iData["antalPrylar"]:
@@ -197,6 +204,12 @@ class gig:
       try:
         if paketen[paket]["svanis"]:
           self.svanis = True
+      except KeyError:
+        pass
+      #Get personal
+      try:
+        if paketen[paket]["Personal"]:
+          self.personal += paketen[paket]["Personal"]
       except KeyError:
         pass
       i = 0
@@ -249,10 +262,11 @@ class gig:
     
       
       self.gigPrylar[pryl]["mod"] = modPryl
+      print(modPryl)
   def getPris(self):
     for pryl in self.gigPrylar:
       self.inPris += self.gigPrylar[pryl]["inPris"]
-      self.pris += self.gigPrylar[pryl]["mod"]
+      self.pris += self.gigPrylar[pryl]["dagarMod"]
       
   def dagar(self, config, pris):
     dagar = self.iData["dagar"]
@@ -268,6 +282,38 @@ class gig:
     return tempPris
 
 
+  
+  def personalRakna(self, config):
+    
+
+    
+    self.timPeng = math.floor(config["levandeVideoLön"] * (config["lönJustering"])/10)*10
+    
+    self.gigTimmar = round(self.iData["dagLängd"]*self.personal*self.iData["dagar"])
+    
+    
+    if self.iData["specialRigg"]:
+      self.riggTimmar = self.iData["riggTimmar"]
+    else:
+      self.riggTimmar = math.floor(self.pris*config["andelRiggTimmar"])
+      
+    self.projektTimmar = math.ceil((self.gigTimmar+self.riggTimmar) * config["projektTid"]) 
+    
+    if self.svanis:
+      self.restid = 0
+    else:
+      self.restid = self.personal * self.iData["dagar"] * config["restid"]
+
+    self.timBudget = self.gigTimmar + self.riggTimmar + self.projektTimmar + self.restid
+    #Timmar gånger peng per timme
+    self.personalPris = self.timBudget * self.timPeng
+
+    self.personalKostnad = self.timBudget * config["levandeVideoLön"]
+    self.pris += self.personalPris
+    print(self.timBudget, self.restid, self.projektTimmar, self.gigTimmar, self.riggTimmar, self.svanis)
+
+  def marginal(self, config):
+    self.hyrPris = self.iData["hyrKostnad"] * (1 + config["hyrMulti"])
 @app.route("/", methods=["GET"])
 def theBasics():
   return "Hello <3"
@@ -359,7 +405,7 @@ def getPrylar():
     paketen[paket]["paketDict"] = paketDict
     paket = paketOb(config, prylDict, paketen[paket])
     paketDict.update(paket.dictMake())
-  print(paketDict)
+  #print(paketDict)
   
   #Save data to file
   with open('prylar.json', 'w', encoding='utf-8') as f:
@@ -397,9 +443,6 @@ def server():
     app.run(host='0.0.0.0')
 
 
-personal = 0
-
-svanis = False
 
 def raknaPersonal(config, prylInfo, inputData):
   levandeVideoLön = config["levandeVideoLön"]
@@ -412,25 +455,18 @@ def raknaPersonal(config, prylInfo, inputData):
 
   if personal > 0:
     
-    timPeng = math.floor(levandeVideoLön * (lönMarginal)/10)*10
+    #timPeng = math.floor(levandeVideoLön * (lönMarginal)/10)*10
     
-    gigTimmar = round(dagLängd*personal*dagar)
+    #gigTimmar = round(dagLängd*personal*dagar)
     
-    if inputData["specialRigg"] == True:
-      riggTimmar = inputData["riggTimmar"]
-    else:
-      riggTimmar = round(prylPris*andelRiggTimmar)
+    
     
     print(riggTimmar)
-    projektTimmar = round((gigTimmar+riggTimmar) * .3)
-    if inputData["svanis"] == True:
-      restid = personal * 2
-    else:
-      restid = 0
+   
     
-    timBudget = gigTimmar + riggTimmar + projektTimmar + restid
+    #timBudget = gigTimmar + riggTimmar + projektTimmar + restid
     
-    personalPris = timBudget * timPeng
+    #personalPris = timBudget * timPeng
 
     personalKostnad = timBudget * levandeVideoLön
     personalInfo = {
