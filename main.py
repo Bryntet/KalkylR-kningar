@@ -166,10 +166,13 @@ class gig:
         # Get the total modPris and inPris from all the prylar
         self.get_pris()
         self.personalRakna(config)
+        self.marginalRakna(config)
         print(f"Total: {self.pris}")
         print(f"Total inköp: {self.inPris}")
         print(f"Personal kostnad: {self.personalPris}")
         print(f"Total: {self.pris}")
+        print(f"Avkastning: {self.avkastning}")
+        print(f"Marginal: {self.marginal}%")
         self.gigPrylar = dict(sorted(self.gigPrylar.items(), key=lambda item: -1 * item[1]["amount"]))
         for pryl in self.gigPrylar:
             print(
@@ -275,7 +278,6 @@ class gig:
             self.gigPrylar[pryl]["dagarMod"] = self.dagar(config, modPryl)
 
             self.gigPrylar[pryl]["mod"] = modPryl
-            print(modPryl)
 
     def get_pris(self):
         for pryl in self.gigPrylar:
@@ -323,8 +325,40 @@ class gig:
         self.pris += self.personalPris
         # print(self.timBudget, self.restid, self.projektTimmar, self.gigTimmar, self.riggTimmar, self.svanis)
 
-    def marginal(self, config):
+    def marginalRakna(self, config):
         self.hyrPris = self.iData["hyrKostnad"] * (1 + config["hyrMulti"])
+
+        self.kostnad = self.prylKostnad + self.personalKostnad + self.iData["hyrKostnad"]
+        self.pris += self.hyrPris
+
+        # Prevent div by 0
+        if self.personalPris != 0:
+            self.personalMarginal = (self.personalPris - self.personalKostnad) / self.personalPris
+        else:
+            self.personalMarginal = 0
+
+        # Prevent div by 0
+        if self.prylPris != 0:
+            self.prylMarginal = (self.prylPris - self.prylKostnad) / self.prylPris
+        else:
+            self.prylMarginal = 0
+        # TODO
+        #  Add resekostnader
+        #  F19, F20 i arket
+
+        self.slitKostnad = self.prylPris * config["prylSlit"]
+
+        self.avkastning = round(
+            self.pris - self.slitKostnad - self.personalKostnad - self.iData["hyrKostnad"]
+        )
+
+        self.marginal = round(
+            self.avkastning / (
+                self.pris - self.iData["hyrKostnad"] * (
+                    1 - config["hyrMulti"] * config["hyrMarginal"]
+                )
+            )
+            * 10000)/100
 
 
 @app.route("/", methods=["GET"])
