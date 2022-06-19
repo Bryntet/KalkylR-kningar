@@ -280,7 +280,9 @@ class gig:
     def get_pris(self):
         for pryl in self.gigPrylar:
             self.inPris += self.gigPrylar[pryl]["inPris"]
+            self.prylPris += self.gigPrylar[pryl]["dagarMod"]
             self.pris += self.gigPrylar[pryl]["dagarMod"]
+        self.prylKostnad = self.prylPris * 0.4
 
     def dagar(self, config, pris):
         dagar = self.iData["dagar"]
