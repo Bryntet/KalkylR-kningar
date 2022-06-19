@@ -1,14 +1,11 @@
-import os
-import time
 from pyairtable import Table
-import re
-# import random
-from threading import Thread
 import copy
-import pandas as pd
-import math
-from flask import Flask, request
 import json
+import math
+import os
+
+import pandas as pd
+from flask import Flask, request
 
 
 class bcolors:
@@ -30,7 +27,7 @@ pd.set_option('display.max_rows', None)
 # pd.set_option('display.width', 150)
 
 api_key = os.environ['api_key']
-
+base_name = os.environ['base_id']
 app = Flask(  # Create a flask app
     __name__,
     template_folder='templates',  # Name of html file folder
@@ -48,6 +45,7 @@ class prylOb:
     def __init__(self, config, **kwargs):
         # Gets all attributes provided and adds them to self
         # Current args: name, inPris, pris
+        self.pris = None
         for argName, value in kwargs.items():
             self.__dict__.update({argName: value})
         self.amount = 1
@@ -87,10 +85,7 @@ class paketOb:
                             self.prylar[pryl]["amount"] += 1
                         else:
                             self.prylar[pryl] = copy.deepcopy(self.paketDict[paket["name"]]["prylar"][pryl])
-
-
         except AttributeError:
-
             try:
                 # Add pryl objects to self list of all prylar in paket
                 self.antalAvPryl = str(self.antalAvPryl).split(",")
@@ -186,7 +181,7 @@ class gig:
         print(f"Total: {self.pris}")
         print(f"Avkastning: {self.avkastning}")
         if self.marginal > 65:
-            print(f"Marginal: {bcolors.OKGREEN+str(self.marginal)}%{bcolors.ENDC}")
+            print(f"Marginal: {bcolors.OKGREEN + str(self.marginal)}%{bcolors.ENDC}")
         else:
             print(f"Marginal: {bcolors.FAIL + str(self.marginal)}%{bcolors.ENDC}")
         self.gigPrylar = dict(sorted(self.gigPrylar.items(), key=lambda item: -1 * item[1]["amount"]))
@@ -371,11 +366,10 @@ class gig:
         self.marginal = round(
             self.avkastning / (
                 self.pris - self.iData["hyrKostnad"] * (
-                1 - config["hyrMulti"] * config["hyrMarginal"]
+                    1 - config["hyrMulti"] * config["hyrMarginal"]
                 )
             )
             * 10000) / 100
-
 
 
 @app.route("/", methods=["GET"])
@@ -428,7 +422,7 @@ def start():
     with open('prylar.json', 'r', encoding='utf-8') as f:
         prylar = json.load(f)
 
-    test = gig(iData, config, prylar, paket, iDataName)
+    gig(iData, config, prylar, paket, iDataName)
 
     return "<3"
 
@@ -478,17 +472,6 @@ def get_prylar():
         json.dump(request.json["Config"], f, ensure_ascii=False, indent=2)
     with open('paket.json', 'w', encoding='utf-8') as f:
         json.dump(paketDict, f, ensure_ascii=False, indent=2)
-
-    for ind in range(len(paketen)):
-        pris = 0
-        # print(paketen[ind]["prylar"][])
-        """
-    for pryl in paket.Prylar:
-      print(pryl)
-      pris += prylarDF[pryl["name"]].pris
-    print(pris)
-    paket.pris = pris
-    """
     return "Tack"
 
 
@@ -585,8 +568,6 @@ paketFields = ["Paket Namn", "Paket i prylPaket", "Prylar", "Antal Prylar", "Per
 prylFields = ["Pryl Namn", "pris"]
 
 # config = {}
-baseName = "appG1QEArAVGABdjm"
-
 
 
 server()
