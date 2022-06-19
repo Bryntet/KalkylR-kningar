@@ -5,3 +5,10 @@ paket.json
 prylar.json
 poetry.lock
 .breakpoints
+/.idea/.gitignore
+/.idea/KalkylR-kningar.iml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/poetry.xml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/vcs.xml
