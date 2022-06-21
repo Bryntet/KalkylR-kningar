@@ -1,3 +1,5 @@
+
+
 import copy
 import json
 import math
@@ -368,16 +370,24 @@ def the_basics():
     return "Hello <3"
 
 
-@app.route("/start", methods=["POST"])
+@app.route("/start", methods=["POST", "GET"])
 def start():
-    iData = request.json["Input data"]
-    # Clean junk from data
-    try:
-        if request.json["key"]:
-            pass
-        iDataName = request.json["key"]
-    except KeyError:
+    debug = os.environ["debug"]
+    if debug:
+        with open("input.json", "r", encoding="utf-8") as f:
+            iData = json.load(f)
+            print(iData)
         iDataName = list(iData.keys())[-1]
+    else:
+        iData = request.json["Input data"]
+    # Clean junk from data
+        try:
+            if request.json["key"]:
+                pass
+            iDataName = request.json["key"]
+        except KeyError:
+            iDataName = list(iData.keys())[-1]
+
 
     for key in iData:
         prylList = []
@@ -389,7 +399,7 @@ def start():
                 prylList.append(iData[key]["extraPrylar"][i]["name"])
                 i += 1
             iData[key]["extraPrylar"] = prylList
-        except KeyError:
+        except (KeyError, AttributeError):
             pass
         try:
             i = 0
@@ -398,7 +408,7 @@ def start():
                 paketList.append(iData[key]["prylPaket"][i]["name"])
                 i += 1
             iData[key]["prylPaket"] = paketList
-        except KeyError:
+        except (KeyError, AttributeError):
             pass
 
     # Save data just because
