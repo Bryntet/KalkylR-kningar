@@ -4,6 +4,8 @@ import math
 import os
 import pandas as pd
 from flask import Flask, request
+from pyairtable import Table
+import time
 
 
 class bcolors:
@@ -25,7 +27,17 @@ pd.set_option('display.max_rows', None)
 # pd.set_option('display.width', 150)
 
 api_key = os.environ['api_key']
-base_name = os.environ['base_id']
+base_id = os.environ['base_id']
+
+output_table = Table(api_key, base_id, 'Output table')
+
+# time.sleep(10)
+
+beforeTime = time.time()
+output_tables = []
+
+print(time.time() - beforeTime)
+
 app = Flask(__name__)
 
 
@@ -112,6 +124,7 @@ class paketOb:
 
 class gig:
     def __init__(self, iData, config, prylar, paketen, name):
+        self.outputTable = Table(api_key, base_id, 'Output table')
         self.slitKostnad = None
         self.avkastning = None
         self.prylMarginal = None
@@ -163,19 +176,7 @@ class gig:
         self.get_pris()
         self.personalRakna(config)
         self.marginalRakna(config)
-        print(f"Total: {self.pris}")
-        print(f"Total inköp: {self.inPris}")
-        print(f"Personal kostnad: {self.personalPris}")
-        print(f"Total: {self.pris}")
-        print(f"Avkastning: {self.avkastning}")
-        if self.marginal > 65:
-            print(f"Marginal: {bcolors.OKGREEN + str(self.marginal)}%{bcolors.ENDC}")
-        else:
-            print(f"Marginal: {bcolors.FAIL + str(self.marginal)}%{bcolors.ENDC}")
-        self.gigPrylar = dict(sorted(self.gigPrylar.items(), key=lambda item: -1 * item[1]["amount"]))
-        for pryl in self.gigPrylar:
-            print(
-                f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['mod']} kr - {self.gigPrylar[pryl]['dagarMod']} kr pga {self.iData['dagar']} dagar")
+        self.output()
 
     def checkPrylar(self, prylar):
         try:
@@ -357,6 +358,36 @@ class gig:
             ) * 10000
         ) / 100
 
+    def output(self):
+        print(f"Total: {self.pris}")
+        print(f"Total inköp: {self.inPris}")
+        print(f"Personal kostnad: {self.personalPris}")
+        print(f"Total: {self.pris}")
+        print(f"Avkastning: {self.avkastning}")
+
+        if self.marginal > 65:
+            print(f"Marginal: {bcolors.OKGREEN + str(self.marginal)}%{bcolors.ENDC}")
+        else:
+            print(f"Marginal: {bcolors.FAIL + str(self.marginal)}%{bcolors.ENDC}")
+
+        self.gigPrylar = dict(sorted(self.gigPrylar.items(), key=lambda item: -1 * item[1]["amount"]))
+
+        for pryl in self.gigPrylar:
+            print(
+                f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['mod']} kr - {self.gigPrylar[pryl]['dagarMod']} kr pga {self.iData['dagar']} dagar")
+
+        self.outputTable.create({
+            "Gig namn": self.name,
+            "Pris": self.pris,
+            "Marginal": self.marginal / 100,
+            "Personal": self.personal,
+            "Projekt timmar": self.gigTimmar,
+            "Rigg timmar": self.riggTimmar,
+            "Totalt timmar": self.timBudget,
+            "Pryl pris": self.prylPris,
+            "prylPaket": ["Angela tvåkamera"]
+        })
+
 
 @app.route("/", methods=["GET"])
 def the_basics():
@@ -426,6 +457,7 @@ data = ["test0", "test1"]
 # Route for updating the configurables
 @app.route("/update/config", methods=["POST"])
 def get_prylar():
+    global api_key, base_id
     # Make the key of configs go directly to the value
     for configurable in request.json["Config"]:
         request.json["Config"][configurable] = request.json["Config"][configurable]["Siffra i decimal"]
@@ -455,7 +487,11 @@ def get_prylar():
         paketen[paket]["paketDict"] = paketDict
         paket = paketOb(prylDict, paketen[paket])
         paketDict.update(paket.dictMake())
-    # print(paketDict)
+
+    prylarTable = Table(api_key, base_id, "Prylar")
+
+    for record in prylarTable.all():
+        prylDict[str(record["fields"]["Pryl Namn"])].update({"id": record["id"]})
 
     # Save data to file
     with open('prylar.json', 'w', encoding='utf-8') as f:

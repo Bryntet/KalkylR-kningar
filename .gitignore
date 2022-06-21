@@ -13,3 +13,4 @@ poetry.lock
 /.idea/inspectionProfiles/profiles_settings.xml
 /.idea/vcs.xml
 test.py
+output.json
