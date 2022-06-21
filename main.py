@@ -3,6 +3,7 @@ import json
 import math
 import os
 import pandas as pd
+import requests
 from flask import Flask, request
 from pyairtable import Table
 import time
@@ -140,6 +141,8 @@ class gig:
         self.projektTimmar = None
         self.gigTimmar = None
         self.timPeng = None
+        self.personal = None
+        self.paketen = paketen
         self.marginal = 0
         self.gigPrylar = {}
         self.preGigPrylar = []
@@ -149,7 +152,10 @@ class gig:
         self.pris = 0
         self.inPris = 0
         try:
-            self.personal = self.iData["extraPersonal"]
+            if self.iData["extraPersonal"] is not None:
+                self.personal = self.iData["extraPersonal"]
+            else:
+                self.personal = 0
         except KeyError:
             self.personal = 0
         try:
@@ -165,7 +171,7 @@ class gig:
             pass
         # Take all prylar from paket and put them inside a list
         try:
-            self.check_paket(paketen)
+            self.check_paket()
         except KeyError:
             pass
         # Add accurate count to all prylar and compile them from list to dict
@@ -174,6 +180,7 @@ class gig:
         self.pryl_mod(config)
         # Get the total modPris and inPris from all the prylar
         self.get_pris()
+
         self.personalRakna(config)
         self.marginalRakna(config)
         self.output()
@@ -186,9 +193,10 @@ class gig:
                     self.iData["antalPrylar"] = [self.iData["antalPrylar"]]
                 except ValueError:
                     self.iData["antalPrylar"] = self.iData["antalPrylar"].split(",")
-
-            antal = True
-
+            if self.iData["antalPrylar"] is not None:
+                antal = True
+            else:
+                antal = False
         except KeyError:
             antal = False
         i = 0
@@ -205,7 +213,7 @@ class gig:
                 self.preGigPrylar.append({pryl: prylar[pryl]})
             i += 1
 
-    def check_paket(self, paketen):
+    def check_paket(self):
         try:
             if self.iData["antalPaket"]:
 
@@ -214,35 +222,38 @@ class gig:
                     self.iData["antalPaket"] = [self.iData["antalPaket"]]
                 except ValueError:
                     self.iData["antalPaket"] = self.iData["antalPaket"].split(",")
-            antal = True
-
+            if self.iData["antalPaket"] is not None:
+                antal = True
+            else:
+                antal = False
         except KeyError:
             antal = False
+
         for paket in self.iData["prylPaket"]:
             # Check svanis
             try:
-                if paketen[paket]["svanis"]:
+                if self.paketen[paket]["svanis"]:
                     self.svanis = True
             except KeyError:
                 pass
             # Get personal
             try:
-                if paketen[paket]["Personal"]:
-                    self.personal += paketen[paket]["Personal"]
-            except KeyError:
+                if self.paketen[paket]["Personal"]:
+                    self.personal += self.paketen[paket]["Personal"]
+            except (KeyError, TypeError):
                 pass
             i = 0
 
-            for pryl in paketen[paket]["prylar"]:
+            for pryl in self.paketen[paket]["prylar"]:
                 if antal:
                     try:
                         for j in range(int(self.iData["antalPaket"][i])):
-                            self.preGigPrylar.append({pryl: paketen[paket]["prylar"][pryl]})
+                            self.preGigPrylar.append({pryl: self.paketen[paket]["prylar"][pryl]})
                     except IndexError:
-                        self.preGigPrylar.append({pryl: paketen[paket]["prylar"][pryl]})
+                        self.preGigPrylar.append({pryl: self.paketen[paket]["prylar"][pryl]})
                 else:
                     # Add pryl from paket to prylList
-                    self.preGigPrylar.append({pryl: paketen[paket]["prylar"][pryl]})
+                    self.preGigPrylar.append({pryl: self.paketen[paket]["prylar"][pryl]})
             i += 1
 
     def count_them(self):
@@ -303,7 +314,7 @@ class gig:
     def personalRakna(self, config):
         self.timPeng = math.floor(config["levandeVideoLön"] * (config["lönJustering"]) / 10) * 10
 
-        self.gigTimmar = round(self.iData["dagLängd"] * self.personal * self.iData["dagar"])
+        self.gigTimmar = round(int(self.iData["dagLängd"]["name"]) * self.personal * self.iData["dagar"])
 
         if self.iData["specialRigg"]:
             self.riggTimmar = self.iData["riggTimmar"]
@@ -326,8 +337,13 @@ class gig:
         # print(self.timBudget, self.restid, self.projektTimmar, self.gigTimmar, self.riggTimmar, self.svanis)
 
     def marginalRakna(self, config):
-        self.hyrPris = self.iData["hyrKostnad"] * (1 + config["hyrMulti"])
+        try:
+            if self.iData["hyrKostnad"] is None:
+                self.iData["hyrKostnad"] = 0
+        except (KeyError):
+            self.iData["hyrKostnad"] = 0
 
+        self.hyrPris = self.iData["hyrKostnad"] * (1 + config["hyrMulti"])
         self.kostnad = self.prylKostnad + self.personalKostnad + self.iData["hyrKostnad"]
         self.pris += self.hyrPris
 
@@ -359,9 +375,8 @@ class gig:
         ) / 100
 
     def output(self):
-        print(f"Total: {self.pris}")
-        print(f"Total inköp: {self.inPris}")
-        print(f"Personal kostnad: {self.personalPris}")
+        print(f"Pryl: {self.prylPris}")
+        print(f"Personal: {self.personalPris}")
         print(f"Total: {self.pris}")
         print(f"Avkastning: {self.avkastning}")
 
@@ -376,7 +391,23 @@ class gig:
             print(
                 f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['mod']} kr - {self.gigPrylar[pryl]['dagarMod']} kr pga {self.iData['dagar']} dagar")
 
-        self.outputTable.create({
+        paketIdList = []
+        prylIdList = []
+        # print(self.paketen)
+        try:
+            for paket in self.iData["prylPaket"]:
+                paketIdList.append(self.paketen[paket]["id"])
+        except KeyError:
+            pass
+
+        with open("prylar.json", "r", encoding="utf-8") as f:
+            prylarList = json.load(f)
+        try:
+            for pryl in self.gigPrylar:
+                prylIdList.append(prylarList[pryl]["id"])
+        except KeyError:
+            pass
+        output = {
             "Gig namn": self.name,
             "Pris": self.pris,
             "Marginal": self.marginal / 100,
@@ -385,8 +416,31 @@ class gig:
             "Rigg timmar": self.riggTimmar,
             "Totalt timmar": self.timBudget,
             "Pryl pris": self.prylPris,
-            "prylPaket": ["Angela tvåkamera"]
-        })
+            "prylPaket": paketIdList,
+            "extraPrylar": prylIdList
+        }
+
+        print(output)
+        requests.post(
+            url="https://hooks.airtable.com/workflows/v1/genericWebhook/appG1QEArAVGABdjm/wflcP4lYCTDwmSs4g/wtrzRoN98kiDzdU05",
+            json=output)
+        # self.outputTable.create(output)
+
+
+@app.route("/airtable", methods=["POST"])
+def fuck_yeah():
+    iData = request.json
+    # Load all the important data
+    with open('config.json', 'r', encoding='utf-8') as f:
+        config = json.load(f)
+    with open('paket.json', 'r', encoding='utf-8') as f:
+        paket = json.load(f)
+    with open('prylar.json', 'r', encoding='utf-8') as f:
+        prylar = json.load(f)
+    iDataName = list(iData.keys())[-1]
+
+    gig(iData, config, prylar, paket, iDataName)
+    return "<3"
 
 
 @app.route("/", methods=["GET"])
@@ -396,21 +450,14 @@ def the_basics():
 
 @app.route("/start", methods=["POST", "GET"])
 def start():
-    debug = os.environ["debug"]
-    if debug:
-        with open("input.json", "r", encoding="utf-8") as f:
-            iData = json.load(f)
-            print(iData)
+    iData = request.json["Input data"]
+    # Clean junk from data
+    try:
+        if request.json["key"]:
+            pass
+        iDataName = request.json["key"]
+    except KeyError:
         iDataName = list(iData.keys())[-1]
-    else:
-        iData = request.json["Input data"]
-        # Clean junk from data
-        try:
-            if request.json["key"]:
-                pass
-            iDataName = request.json["key"]
-        except KeyError:
-            iDataName = list(iData.keys())[-1]
 
     for key in iData:
         prylList = []
