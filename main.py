@@ -1,5 +1,3 @@
-
-
 import copy
 import json
 import math
@@ -28,11 +26,7 @@ pd.set_option('display.max_rows', None)
 
 api_key = os.environ['api_key']
 base_name = os.environ['base_id']
-app = Flask(  # Create a flask app
-    __name__,
-    template_folder='templates',  # Name of html file folder
-    static_folder='static'  # Name of directory for static files
-)
+app = Flask(__name__)
 
 
 class prylOb:
@@ -359,9 +353,8 @@ class gig:
 
         self.marginal = round(
             self.avkastning / (
-                self.pris - self.iData["hyrKostnad"] * (
-                    1 - config["hyrMulti"] * config["hyrMarginal"]
-                )) * 10000
+                    self.pris - self.iData["hyrKostnad"] * (1 - config["hyrMulti"] * config["hyrMarginal"])
+            ) * 10000
         ) / 100
 
 
@@ -380,14 +373,13 @@ def start():
         iDataName = list(iData.keys())[-1]
     else:
         iData = request.json["Input data"]
-    # Clean junk from data
+        # Clean junk from data
         try:
             if request.json["key"]:
                 pass
             iDataName = request.json["key"]
         except KeyError:
             iDataName = list(iData.keys())[-1]
-
 
     for key in iData:
         prylList = []
