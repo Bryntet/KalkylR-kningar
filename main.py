@@ -489,9 +489,11 @@ def get_prylar():
         paketDict.update(paket.dictMake())
 
     prylarTable = Table(api_key, base_id, "Prylar")
-
+    paketTable = Table(api_key, base_id, "Pryl Paket")
     for record in prylarTable.all():
         prylDict[str(record["fields"]["Pryl Namn"])].update({"id": record["id"]})
+    for record in paketTable.all():
+        paketDict[str(record["fields"]["Paket Namn"])].update({"id": record["id"]})
 
     # Save data to file
     with open('prylar.json', 'w', encoding='utf-8') as f:
