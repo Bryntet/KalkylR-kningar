@@ -49,11 +49,16 @@ class prylOb:
         self.pris = None
         for argName, value in kwargs.items():
             self.__dict__.update({argName: value})
-        self.amount = 1
 
+        self.amount = 1
+        self.mult = 145
+        self.mult -= self.livsLängd * 15
+        self.mult /= 100
+
+        print(self.mult)
     def rounding(self, config):
         # Convert to lower price as a percentage of the buy price
-        self.pris = math.floor((float(self.inPris) * config["prylKostnadMulti"]) / 10) * 10
+        self.pris = math.floor((float(self.inPris) * config["prylKostnadMulti"]) / 10 * self.mult) * 10
 
     def dict_make(self):
         temp_dict = vars(self)
@@ -543,7 +548,8 @@ def get_prylar():
     prylarna = request.json["Prylar"]
     prylDict = {}
     for prylNamn in prylarna:
-        pryl = prylOb(inPris=prylarna[prylNamn]["pris"], name=prylNamn)
+        pryl = prylOb(inPris=prylarna[prylNamn]["pris"], name=prylNamn,
+                      livsLängd=int(prylarna[prylNamn]["livsLängd"]["name"]))
         pryl.rounding(config)
         prylDict.update(pryl.dict_make())
 
