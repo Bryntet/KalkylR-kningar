@@ -143,6 +143,7 @@ class gig:
         self.timPeng = None
         self.personal = None
         self.paketen = paketen
+        self.prylar = prylar
         self.marginal = 0
         self.gigPrylar = {}
         self.preGigPrylar = []
@@ -151,6 +152,7 @@ class gig:
         self.prylPris = 0
         self.pris = 0
         self.inPris = 0
+
         try:
             if self.iData["extraPersonal"] is not None:
                 self.personal = self.iData["extraPersonal"]
@@ -302,7 +304,10 @@ class gig:
         dagTvaMulti = config["dagTvåMulti"]
         dagTreMulti = config["dagTreMulti"]
         tempPris = copy.deepcopy(pris)
-
+        if type(dagar) is dict:
+            dagar = 1
+            self.iData["dagar"] = 1
+            print(dagar)
         if dagar < 1:
             tempPris = 0
         elif dagar >= 2:
@@ -313,7 +318,7 @@ class gig:
 
     def personalRakna(self, config):
         self.timPeng = math.floor(config["levandeVideoLön"] * (config["lönJustering"]) / 10) * 10
-
+        print(self.iData["dagLängd"], self.personal, self.iData["dagar"])
         self.gigTimmar = round(int(self.iData["dagLängd"]["name"]) * self.personal * self.iData["dagar"])
 
         if self.iData["specialRigg"]:
@@ -340,7 +345,7 @@ class gig:
         try:
             if self.iData["hyrKostnad"] is None:
                 self.iData["hyrKostnad"] = 0
-        except (KeyError):
+        except KeyError:
             self.iData["hyrKostnad"] = 0
 
         self.hyrPris = self.iData["hyrKostnad"] * (1 + config["hyrMulti"])
@@ -393,6 +398,7 @@ class gig:
 
         paketIdList = []
         prylIdList = []
+
         # print(self.paketen)
         try:
             for paket in self.iData["prylPaket"]:
@@ -400,24 +406,46 @@ class gig:
         except KeyError:
             pass
 
-        with open("prylar.json", "r", encoding="utf-8") as f:
-            prylarList = json.load(f)
         try:
-            for pryl in self.gigPrylar:
-                prylIdList.append(prylarList[pryl]["id"])
+            for pryl in self.iData["extraPrylar"]:
+                prylIdList.append(self.prylar[pryl]["id"])
+
         except KeyError:
             pass
+        antalString = ""
+
+        try:
+            for antal in self.iData["antalPrylar"]:
+                if antalString == "":
+                    antalString += antal
+                else:
+                    antalString += "," + antal
+        except (KeyError, TypeError):
+            pass
+        antalPaketString = ""
+        try:
+            for antal in self.iData["antalPaket"]:
+                if antalPaketString == "":
+                    antalPaketString += antal
+                else:
+                    antalPaketString += "," + antal
+        except (KeyError, TypeError):
+            pass
+
         output = {
             "Gig namn": self.name,
             "Pris": self.pris,
-            "Marginal": self.marginal / 100,
+            "Marginal": str(self.marginal) + "%",
+            "marginalSecret": self.marginal,
             "Personal": self.personal,
             "Projekt timmar": self.gigTimmar,
             "Rigg timmar": self.riggTimmar,
             "Totalt timmar": self.timBudget,
             "Pryl pris": self.prylPris,
             "prylPaket": paketIdList,
-            "extraPrylar": prylIdList
+            "extraPrylar": prylIdList,
+            "antalPrylar": antalString,
+            "antalPaket": antalPaketString
         }
 
         print(output)
