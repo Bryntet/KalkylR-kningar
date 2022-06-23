@@ -454,8 +454,22 @@ class Gig:
             rec_id = self.i_data["uppdateraProjekt"][0]["id"]
         else:
             rec_id = None
+
+        try:
+            with open("output.json", "r", encoding="utf-8") as f:
+                old_output = json.load(f)
+            with open("log.json", "r", encoding="utf-8") as f:
+                log = json.load(f)
+        except OSError:
+            old_output = {}
+            log = []
+        leverans_nummer = 1
+        for key in old_output:
+            if old_output[key]["Projekt"] == self.name:
+                leverans_nummer += 1
+
         output = {
-            "Gig namn": self.name,
+            "Gig namn": f"{self.name} #{leverans_nummer}",
             "Pris": self.pris,
             "Marginal": str(self.marginal) + "%",
             "marginalSecret": self.marginal,
@@ -469,14 +483,28 @@ class Gig:
             "antalPrylar": antal_string,
             "antalPaket": antal_paket_string,
             "update": self.update,
-            "recID": rec_id
+            "recID": rec_id,
+            "Projekt": self.name,
+            "start": self.i_data["Börja datum"],
+            "slut": self.i_data["Sluta datum"]
         }
-
-        # print(output)
         requests.post(
             url="https://hooks.airtable.com/workflows/v1/genericWebhook/appG1QEArAVGABdjm/wflcP4lYCTDwmSs4g"
                 "/wtrzRoN98kiDzdU05",
             json=output)
+        output_to_json = {
+            f"{self.name} #{leverans_nummer}": output
+        }
+
+        print(output_to_json)
+        with open("output.json", "w", encoding="utf-8") as f:
+            old_output.update(output_to_json)
+            json.dump(old_output, f, ensure_ascii=False, indent=2)
+        with open("log.json", "w", encoding="utf-8") as f:
+            log.append(output_to_json)
+            json.dump(log, f, ensure_ascii=False, indent=2)
+        # print(output)
+
         # self.output_table.create(output)
 
 
@@ -494,6 +522,46 @@ def fuck_yeah():
 
     Gig(i_data, config, prylar, paket, i_data_name)
     return "<3"
+
+
+@app.route("/delete", methods=["POST"])
+def delete():
+    record_name = request.json["content"]
+    # Load all the important data
+    with open('output.json', 'r', encoding='utf-8') as f:
+        output = json.load(f)
+
+    with open('output_backup.json', 'w', encoding='utf-8') as f:
+        json.dump(output[record_name], f, ensure_ascii=False, indent=2)
+
+    output.pop(record_name, None)
+
+    with open('output.json', 'w', encoding='utf-8') as f:
+        json.dump(output, f, ensure_ascii=False, indent=2)
+
+    return "<3"
+
+
+@app.route("/ifuckedup", methods=["POST"])
+def take_back():
+    with open("output_backup.json", "r", encoding="utf-8") as f:
+        backup = json.load(f)
+    try:
+        with open("output.json", "r", encoding="utf-8") as f:
+            output = json.load(f)
+    except OSError:
+        output = {}
+
+    key = list(backup.keys())[0]
+
+    requests.post(
+        url="https://hooks.airtable.com/workflows/v1/genericWebhook/appG1QEArAVGABdjm/wflcP4lYCTDwmSs4g"
+            "/wtrzRoN98kiDzdU05",
+        json=backup[key])
+
+    with open("output.json", "w", encoding="utf-8") as f:
+        output.update(backup)
+        json.dump(output, f, ensure_ascii=False, indent=2)
 
 
 @app.route("/", methods=["GET"])
