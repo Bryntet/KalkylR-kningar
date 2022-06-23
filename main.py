@@ -9,7 +9,7 @@ from pyairtable import Table
 import time
 
 
-class bcolors:
+class Bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKCYAN = '\033[96m'
@@ -42,11 +42,11 @@ print(time.time() - beforeTime)
 app = Flask(__name__)
 
 
-class prylOb:
+class Prylob:
     def __init__(self, **kwargs):
         # Gets all attributes provided and adds them to self
         # Current args: name, in_pris, pris
-        self.inPris = None
+        self.in_pris = None
         self.livsLängd = 3
         self.pris = None
         for argName, value in kwargs.items():
@@ -61,7 +61,7 @@ class prylOb:
 
     def rounding(self, config):
         # Convert to lower price as a percentage of the buy price
-        self.pris = math.floor((float(self.inPris) * config["prylKostnadMulti"]) / 10 * self.mult) * 10
+        self.pris = math.floor((float(self.in_pris) * config["prylKostnadMulti"]) / 10 * self.mult) * 10
 
     def dict_make(self):
         temp_dict = vars(self)
@@ -73,15 +73,15 @@ class prylOb:
         self.amount = antal_av_pryl[ind]
 
 
-class paketOb:
+class Paketob:
     def __init__(self, prylar, args):
         # Gets all kwargs provided and adds them to self
         # Current kwargs:
         # print(args, "test")
-        self.paketPrylar = []
-        self.antalAvPryl = None
-        self.paketDict = {}
-        self.paketIPrylPaket = None
+        self.paket_prylar = []
+        self.antal_av_pryl = None
+        self.paket_dict = {}
+        self.paket_i_pryl_paket = None
         for argName, value in args.items():
             # print(argName, value)
             self.__dict__.update({argName: value})
@@ -90,23 +90,23 @@ class paketOb:
         self.prylar = {}
         # print(prylar)
 
-        if self.paketIPrylPaket is not None:
-            for paket in self.paketIPrylPaket:
-                # print(paket, self.paketDict[paket["name"]])
-                for pryl in self.paketDict[paket["name"]]["prylar"]:
+        if self.paket_i_pryl_paket is not None:
+            for paket in self.paket_i_pryl_paket:
+                # print(paket, self.paket_dict[paket["name"]])
+                for pryl in self.paket_dict[paket["name"]]["prylar"]:
                     if pryl in self.prylar.keys():
                         self.prylar[pryl]["amount"] += 1
                     else:
-                        self.prylar[pryl] = copy.deepcopy(self.paketDict[paket["name"]]["prylar"][pryl])
+                        self.prylar[pryl] = copy.deepcopy(self.paket_dict[paket["name"]]["prylar"][pryl])
         else:
             try:
                 # Add pryl objects to self list of all prylar in paket
-                self.antalAvPryl = str(self.antalAvPryl).split(",")
-                for pryl in self.paketPrylar:
-                    ind = self.paketPrylar.index(pryl)
+                self.antal_av_pryl = str(self.antal_av_pryl).split(",")
+                for pryl in self.paket_prylar:
+                    ind = self.paket_prylar.index(pryl)
 
                     self.prylar.update({pryl: copy.deepcopy(prylar[pryl])})
-                    self.prylar[pryl]["amount"] = int(self.antalAvPryl[ind])
+                    self.prylar[pryl]["amount"] = int(self.antal_av_pryl[ind])
 
                 # print(self.prylar, "\n\n\n\n")
             except AttributeError:
@@ -117,22 +117,22 @@ class paketOb:
 
     def dict_make(self):
         temp_dict = vars(self)
-        outDict = {temp_dict["name"]: temp_dict}
-        outDict[temp_dict["name"]].pop('paketPrylar', None)
+        out_dict = {temp_dict["name"]: temp_dict}
+        out_dict[temp_dict["name"]].pop('paket_prylar', None)
         bok = {}
         try:
-            for dubbelPaket in outDict[temp_dict["name"]]["paketIPrylPaket"][0]:
-                bok.update({"name": outDict[temp_dict["name"]]["paketIPrylPaket"][0][dubbelPaket]})
-            outDict[temp_dict["name"]]["paketIPrylPaket"] = bok
+            for dubbelPaket in out_dict[temp_dict["name"]]["paket_i_pryl_paket"][0]:
+                bok.update({"name": out_dict[temp_dict["name"]]["paket_i_pryl_paket"][0][dubbelPaket]})
+            out_dict[temp_dict["name"]]["paket_i_pryl_paket"] = bok
         except KeyError:
             pass
 
-        outDict[temp_dict["name"]].pop('paketDict', None)
-        outDict[temp_dict["name"]].pop('Input data', None)
-        outDict[temp_dict["name"]].pop('Output table', None)
-        outDict[temp_dict["name"]].pop('name', None)
+        out_dict[temp_dict["name"]].pop('paket_dict', None)
+        out_dict[temp_dict["name"]].pop('Input data', None)
+        out_dict[temp_dict["name"]].pop('Output table', None)
+        out_dict[temp_dict["name"]].pop('name', None)
 
-        return outDict
+        return out_dict
 
 
 class Gig:
@@ -297,18 +297,18 @@ class Gig:
 
             # Make new pryl attribute "mod" where price modifications happen
             self.gig_prylar[pryl]["mod"] = copy.deepcopy(self.gig_prylar[pryl]["pris"])
-            modPryl = self.gig_prylar[pryl]["mod"]
+            mod_pryl = self.gig_prylar[pryl]["mod"]
 
             # Mult price by amount of pryl
-            modPryl *= self.gig_prylar[pryl]["amount"]
+            mod_pryl *= self.gig_prylar[pryl]["amount"]
 
             # If svanis, mult by svanis multi
             if self.svanis:
-                modPryl *= config["svanisMulti"]
+                mod_pryl *= config["svanisMulti"]
 
-            self.gig_prylar[pryl]["dagarMod"] = self.dagar(config, modPryl)
+            self.gig_prylar[pryl]["dagarMod"] = self.dagar(config, mod_pryl)
 
-            self.gig_prylar[pryl]["mod"] = modPryl
+            self.gig_prylar[pryl]["mod"] = mod_pryl
 
     def get_pris(self):
         for pryl in self.gig_prylar:
@@ -319,20 +319,20 @@ class Gig:
 
     def dagar(self, config, pris):
         dagar = self.i_data["dagar"]
-        dagTvaMulti = config["dagTvåMulti"]
-        dagTreMulti = config["dagTreMulti"]
-        tempPris = copy.deepcopy(pris)
+        dag_tva_multi = config["dagTvåMulti"]
+        dag_tre_multi = config["dagTreMulti"]
+        temp_pris = copy.deepcopy(pris)
         if type(dagar) is dict:
             dagar = 1
             self.i_data["dagar"] = 1
             print(dagar)
         if dagar < 1:
-            tempPris = 0
+            temp_pris = 0
         elif dagar >= 2:
-            tempPris *= (1 + dagTvaMulti)
+            temp_pris *= (1 + dag_tva_multi)
         if dagar >= 3:
-            tempPris += pris * dagTreMulti * (dagar - 2)
-        return tempPris
+            temp_pris += pris * dag_tre_multi * (dagar - 2)
+        return temp_pris
 
     def personal_rakna(self, config):
         self.tim_peng = math.floor(config["levandeVideoLön"] * (config["lönJustering"]) / 10) * 10
@@ -404,9 +404,9 @@ class Gig:
         print(f"Avkastning: {self.avkastning}")
 
         if self.marginal > 65:
-            print(f"Marginal: {bcolors.OKGREEN + str(self.marginal)}%{bcolors.ENDC}")
+            print(f"Marginal: {Bcolors.OKGREEN + str(self.marginal)}%{Bcolors.ENDC}")
         else:
-            print(f"Marginal: {bcolors.FAIL + str(self.marginal)}%{bcolors.ENDC}")
+            print(f"Marginal: {Bcolors.FAIL + str(self.marginal)}%{Bcolors.ENDC}")
 
         self.gig_prylar = dict(sorted(self.gig_prylar.items(), key=lambda item: -1 * item[1]["amount"]))
 
@@ -415,45 +415,45 @@ class Gig:
                 f"\t{self.gig_prylar[pryl]['amount']}st {pryl} - {self.gig_prylar[pryl]['mod']} kr ",
                 f"- {self.gig_prylar[pryl]['dagarMod']} kr pga {self.i_data['dagar']} dagar")
 
-        paketIdList = []
-        prylIdList = []
+        paket_id_list = []
+        pryl_id_list = []
 
         # print(self.paketen)
         try:
             for paket in self.i_data["prylPaket"]:
-                paketIdList.append(self.paketen[paket]["id"])
+                paket_id_list.append(self.paketen[paket]["id"])
         except KeyError:
             pass
 
         try:
             for pryl in self.i_data["extraPrylar"]:
-                prylIdList.append(self.prylar[pryl]["id"])
+                pryl_id_list.append(self.prylar[pryl]["id"])
 
         except KeyError:
             pass
-        antalString = ""
+        antal_string = ""
 
         try:
             for antal in self.i_data["antalPrylar"]:
-                if antalString == "":
-                    antalString += antal
+                if antal_string == "":
+                    antal_string += antal
                 else:
-                    antalString += "," + antal
+                    antal_string += "," + antal
         except (KeyError, TypeError):
             pass
-        antalPaketString = ""
+        antal_paket_string = ""
         try:
             for antal in self.i_data["antalPaket"]:
-                if antalPaketString == "":
-                    antalPaketString += antal
+                if antal_paket_string == "":
+                    antal_paket_string += antal
                 else:
-                    antalPaketString += "," + antal
+                    antal_paket_string += "," + antal
         except (KeyError, TypeError):
             pass
         if self.update:
-            recID = self.i_data["uppdateraProjekt"][0]["id"]
+            rec_id = self.i_data["uppdateraProjekt"][0]["id"]
         else:
-            recID = None
+            rec_id = None
         output = {
             "Gig namn": self.name,
             "Pris": self.pris,
@@ -464,12 +464,12 @@ class Gig:
             "Rigg timmar": self.rigg_timmar,
             "Totalt timmar": self.tim_budget,
             "Pryl pris": self.pryl_pris,
-            "prylPaket": paketIdList,
-            "extraPrylar": prylIdList,
-            "antalPrylar": antalString,
-            "antalPaket": antalPaketString,
+            "prylPaket": paket_id_list,
+            "extraPrylar": pryl_id_list,
+            "antalPrylar": antal_string,
+            "antalPaket": antal_paket_string,
             "update": self.update,
-            "recID": recID
+            "recID": rec_id
         }
 
         # print(output)
@@ -482,7 +482,7 @@ class Gig:
 
 @app.route("/airtable", methods=["POST"])
 def fuck_yeah():
-    iData = request.json
+    i_data = request.json
     # Load all the important data
     with open('config.json', 'r', encoding='utf-8') as f:
         config = json.load(f)
@@ -490,9 +490,9 @@ def fuck_yeah():
         paket = json.load(f)
     with open('prylar.json', 'r', encoding='utf-8') as f:
         prylar = json.load(f)
-    iDataName = list(iData.keys())[-1]
+    i_data_name = list(i_data.keys())[-1]
 
-    Gig(iData, config, prylar, paket, iDataName)
+    Gig(i_data, config, prylar, paket, i_data_name)
     return "<3"
 
 
@@ -503,40 +503,40 @@ def the_basics():
 
 @app.route("/start", methods=["POST", "GET"])
 def start():
-    iData = request.json["Input data"]
+    i_data = request.json["Input data"]
     # Clean junk from data
     try:
         if request.json["key"]:
             pass
-        iDataName = request.json["key"]
+        i_data_name = request.json["key"]
     except KeyError:
-        iDataName = list(iData.keys())[-1]
+        i_data_name = list(i_data.keys())[-1]
 
-    for key in iData:
-        prylList = []
-        paketList = []
+    for key in i_data:
+        pryl_list = []
+        paket_list = []
         try:
             i = 0
-            for pryl in iData[key]["extraPrylar"]:
+            for pryl in i_data[key]["extraPrylar"]:
                 pryl.pop("id", None)
-                prylList.append(iData[key]["extraPrylar"][i]["name"])
+                pryl_list.append(i_data[key]["extraPrylar"][i]["name"])
                 i += 1
-            iData[key]["extraPrylar"] = prylList
+            i_data[key]["extraPrylar"] = pryl_list
         except (KeyError, AttributeError):
             pass
         try:
             i = 0
-            for paket in iData[key]["prylPaket"]:
+            for paket in i_data[key]["prylPaket"]:
                 paket.pop("id", None)
-                paketList.append(iData[key]["prylPaket"][i]["name"])
+                paket_list.append(i_data[key]["prylPaket"][i]["name"])
                 i += 1
-            iData[key]["prylPaket"] = paketList
+            i_data[key]["prylPaket"] = paket_list
         except (KeyError, AttributeError):
             pass
 
     # Save data just because
     with open('input.json', 'w', encoding='utf-8') as f:
-        json.dump(iData, f, ensure_ascii=False, indent=2)
+        json.dump(i_data, f, ensure_ascii=False, indent=2)
 
     # Load all the important data
     with open('config.json', 'r', encoding='utf-8') as f:
@@ -546,7 +546,7 @@ def start():
     with open('prylar.json', 'r', encoding='utf-8') as f:
         prylar = json.load(f)
 
-    Gig(iData, config, prylar, paket, iDataName)
+    Gig(i_data, config, prylar, paket, i_data_name)
 
     return "<3"
 
@@ -566,15 +566,15 @@ def get_prylar():
 
     # Format prylar better
     prylarna = request.json["Prylar"]
-    prylDict = {}
+    pryl_dict = {}
     for prylNamn in prylarna:
-        pryl = prylOb(inPris=prylarna[prylNamn]["pris"], name=prylNamn,
+        pryl = Prylob(inPris=prylarna[prylNamn]["pris"], name=prylNamn,
                       livsLängd=int(prylarna[prylNamn]["livsLängd"]["name"]))
         pryl.rounding(config)
-        prylDict.update(pryl.dict_make())
+        pryl_dict.update(pryl.dict_make())
 
     paketen = request.json["Pryl Paket"]
-    paketDict = {}
+    paket_dict = {}
     for paket in paketen:
         lista = []
         paketen[paket]["name"] = paket
@@ -585,25 +585,25 @@ def get_prylar():
             paketen[paket]["paketPrylar"] = lista
         except KeyError:
             pass
-        paketen[paket]["paketDict"] = paketDict
-        paket = paketOb(prylDict, paketen[paket])
-        paketDict.update(paket.dict_make())
+        paketen[paket]["paket_dict"] = paket_dict
+        paket = Paketob(pryl_dict, paketen[paket])
+        paket_dict.update(paket.dict_make())
 
-    prylarTable = Table(api_key, base_id, "Prylar")
-    paketTable = Table(api_key, base_id, "Pryl Paket")
-    for record in prylarTable.all():
-        prylDict[str(record["fields"]["Pryl Namn"])].update({"id": record["id"]})
-    for record in paketTable.all():
-        paketDict[str(record["fields"]["Paket Namn"])].update({"id": record["id"]})
+    prylar_table = Table(api_key, base_id, "Prylar")
+    paket_table = Table(api_key, base_id, "Pryl Paket")
+    for record in prylar_table.all():
+        pryl_dict[str(record["fields"]["Pryl Namn"])].update({"id": record["id"]})
+    for record in paket_table.all():
+        paket_dict[str(record["fields"]["Paket Namn"])].update({"id": record["id"]})
 
     # Save data to file
     with open('prylar.json', 'w', encoding='utf-8') as f:
-        json.dump(prylDict, f, ensure_ascii=False, indent=2)
+        json.dump(pryl_dict, f, ensure_ascii=False, indent=2)
 
     with open('config.json', 'w', encoding='utf-8') as f:
         json.dump(request.json["Config"], f, ensure_ascii=False, indent=2)
     with open('paket.json', 'w', encoding='utf-8') as f:
-        json.dump(paketDict, f, ensure_ascii=False, indent=2)
+        json.dump(paket_dict, f, ensure_ascii=False, indent=2)
     return "Tack"
 
 
