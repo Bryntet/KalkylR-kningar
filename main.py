@@ -45,7 +45,7 @@ app = Flask(__name__)
 class prylOb:
     def __init__(self, **kwargs):
         # Gets all attributes provided and adds them to self
-        # Current args: name, inPris, pris
+        # Current args: name, in_pris, pris
         self.inPris = None
         self.livsLängd = 3
         self.pris = None
@@ -115,65 +115,65 @@ class paketOb:
         for pryl in self.prylar:
             self.pris += (self.prylar[pryl]["pris"] * self.prylar[pryl]["amount"])
 
-    def dictMake(self):
-        tempDict = vars(self)
-        outDict = {tempDict["name"]: tempDict}
-        outDict[tempDict["name"]].pop('paketPrylar', None)
+    def dict_make(self):
+        temp_dict = vars(self)
+        outDict = {temp_dict["name"]: temp_dict}
+        outDict[temp_dict["name"]].pop('paketPrylar', None)
         bok = {}
         try:
-            for dubbelPaket in outDict[tempDict["name"]]["paketIPrylPaket"][0]:
-                bok.update({"name": outDict[tempDict["name"]]["paketIPrylPaket"][0][dubbelPaket]})
-            outDict[tempDict["name"]]["paketIPrylPaket"] = bok
+            for dubbelPaket in outDict[temp_dict["name"]]["paketIPrylPaket"][0]:
+                bok.update({"name": outDict[temp_dict["name"]]["paketIPrylPaket"][0][dubbelPaket]})
+            outDict[temp_dict["name"]]["paketIPrylPaket"] = bok
         except KeyError:
             pass
 
-        outDict[tempDict["name"]].pop('paketDict', None)
-        outDict[tempDict["name"]].pop('Input data', None)
-        outDict[tempDict["name"]].pop('Output table', None)
-        outDict[tempDict["name"]].pop('name', None)
+        outDict[temp_dict["name"]].pop('paketDict', None)
+        outDict[temp_dict["name"]].pop('Input data', None)
+        outDict[temp_dict["name"]].pop('Output table', None)
+        outDict[temp_dict["name"]].pop('name', None)
 
         return outDict
 
 
-class gig:
+class Gig:
     def __init__(self, i_data, config, prylar, paketen, name):
-        self.outputTable = Table(api_key, base_id, 'Output table')
-        self.slitKostnad = None
+        self.output_table = Table(api_key, base_id, 'Output table')
+        self.slit_kostnad = None
         self.avkastning = None
-        self.prylMarginal = None
-        self.personalMarginal = None
+        self.pryl_marginal = None
+        self.personal_marginal = None
         self.kostnad = None
-        self.prylKostnad = None
-        self.hyrPris = None
-        self.personalKostnad = None
-        self.personalPris = None
-        self.timBudget = None
+        self.pryl_kostnad = None
+        self.hyr_pris = None
+        self.personal_kostnad = None
+        self.personal_pris = None
+        self.tim_budget = None
         self.restid = None
-        self.riggTimmar = None
-        self.projektTimmar = None
-        self.gigTimmar = None
-        self.timPeng = None
+        self.rigg_timmar = None
+        self.projekt_timmar = None
+        self.gig_timmar = None
+        self.tim_peng = None
         self.personal = None
         self.paketen = paketen
         self.prylar = prylar
         self.marginal = 0
-        self.gigPrylar = {}
-        self.preGigPrylar = []
+        self.gig_prylar = {}
+        self.pre_gig_prylar = []
         self.name = name
-        self.iData = i_data[self.name]
-        self.prylPris = 0
+        self.i_data = i_data[self.name]
+        self.pryl_pris = 0
         self.pris = 0
-        self.inPris = 0
+        self.in_pris = 0
         self.update = False
         try:
-            if self.iData["uppdateraProjekt"]:
+            if self.i_data["uppdateraProjekt"]:
                 self.update = True
         except KeyError:
             pass
 
         try:
-            if self.iData["extraPersonal"] is not None:
-                self.personal = self.iData["extraPersonal"]
+            if self.i_data["extraPersonal"] is not None:
+                self.personal = self.i_data["extraPersonal"]
             else:
                 self.personal = 0
         except KeyError:
@@ -186,7 +186,7 @@ class gig:
 
         # Take all prylar and put them inside a list
         try:
-            self.checkPrylar(prylar)
+            self.check_prylar(prylar)
         except KeyError:
             pass
         # Take all prylar from paket and put them inside a list
@@ -196,60 +196,60 @@ class gig:
             pass
         # Add accurate count to all prylar and compile them from list to dict
         self.count_them()
-        # Modify prylPris based on factors such as svanis
+        # Modify pryl_pris based on factors such as svanis
         self.pryl_mod(config)
-        # Get the total modPris and inPris from all the prylar
+        # Get the total modPris and in_pris from all the prylar
         self.get_pris()
 
-        self.personalRakna(config)
-        self.marginalRakna(config)
+        self.personal_rakna(config)
+        self.marginal_rakna(config)
         self.output()
 
-    def checkPrylar(self, prylar):
+    def check_prylar(self, prylar):
         try:
-            if self.iData["antalPrylar"]:
+            if self.i_data["antalPrylar"]:
                 try:
-                    int(self.iData["antalPrylar"])
-                    self.iData["antalPrylar"] = [self.iData["antalPrylar"]]
+                    int(self.i_data["antalPrylar"])
+                    self.i_data["antalPrylar"] = [self.i_data["antalPrylar"]]
                 except ValueError:
-                    self.iData["antalPrylar"] = self.iData["antalPrylar"].split(",")
-            if self.iData["antalPrylar"] is not None:
+                    self.i_data["antalPrylar"] = self.i_data["antalPrylar"].split(",")
+            if self.i_data["antalPrylar"] is not None:
                 antal = True
             else:
                 antal = False
         except KeyError:
             antal = False
         i = 0
-        for pryl in self.iData["extraPrylar"]:
+        for pryl in self.i_data["extraPrylar"]:
             if antal:
 
                 try:
-                    for j in range(int(self.iData["antalPrylar"][i])):
-                        self.preGigPrylar.append({pryl: prylar[pryl]})
+                    for j in range(int(self.i_data["antalPrylar"][i])):
+                        self.pre_gig_prylar.append({pryl: prylar[pryl]})
                 except IndexError:
-                    self.preGigPrylar.append({pryl: prylar[pryl]})
+                    self.pre_gig_prylar.append({pryl: prylar[pryl]})
             else:
                 # Add pryl from prylar to prylList
-                self.preGigPrylar.append({pryl: prylar[pryl]})
+                self.pre_gig_prylar.append({pryl: prylar[pryl]})
             i += 1
 
     def check_paket(self):
         try:
-            if self.iData["antalPaket"]:
+            if self.i_data["antalPaket"]:
 
                 try:
-                    int(self.iData["antalPaket"])
-                    self.iData["antalPaket"] = [self.iData["antalPaket"]]
+                    int(self.i_data["antalPaket"])
+                    self.i_data["antalPaket"] = [self.i_data["antalPaket"]]
                 except ValueError:
-                    self.iData["antalPaket"] = self.iData["antalPaket"].split(",")
-            if self.iData["antalPaket"] is not None:
+                    self.i_data["antalPaket"] = self.i_data["antalPaket"].split(",")
+            if self.i_data["antalPaket"] is not None:
                 antal = True
             else:
                 antal = False
         except KeyError:
             antal = False
 
-        for paket in self.iData["prylPaket"]:
+        for paket in self.i_data["prylPaket"]:
             # Check svanis
             try:
                 if self.paketen[paket]["svanis"]:
@@ -267,64 +267,64 @@ class gig:
             for pryl in self.paketen[paket]["prylar"]:
                 if antal:
                     try:
-                        for j in range(int(self.iData["antalPaket"][i])):
-                            self.preGigPrylar.append({pryl: self.paketen[paket]["prylar"][pryl]})
+                        for j in range(int(self.i_data["antalPaket"][i])):
+                            self.pre_gig_prylar.append({pryl: self.paketen[paket]["prylar"][pryl]})
                     except IndexError:
-                        self.preGigPrylar.append({pryl: self.paketen[paket]["prylar"][pryl]})
+                        self.pre_gig_prylar.append({pryl: self.paketen[paket]["prylar"][pryl]})
                 else:
                     # Add pryl from paket to prylList
-                    self.preGigPrylar.append({pryl: self.paketen[paket]["prylar"][pryl]})
+                    self.pre_gig_prylar.append({pryl: self.paketen[paket]["prylar"][pryl]})
             i += 1
 
     def count_them(self):
-        # print(self.preGigPrylar, "hi")
+        # print(self.pre_gig_prylar, "hi")
         i = 0
-        for pryl in self.preGigPrylar:
+        for pryl in self.pre_gig_prylar:
             for key in pryl:
-                # print(i, key, "\n", list(self.gigPrylar.keys()), "\n")
-                if key in list(self.gigPrylar.keys()):
-                    self.gigPrylar[key]["amount"] += copy.deepcopy(self.preGigPrylar[i][key]["amount"])
-                    # print("hi", key, self.gigPrylar[key]["amount"])
+                # print(i, key, "\n", list(self.gig_prylar.keys()), "\n")
+                if key in list(self.gig_prylar.keys()):
+                    self.gig_prylar[key]["amount"] += copy.deepcopy(self.pre_gig_prylar[i][key]["amount"])
+                    # print("hi", key, self.gig_prylar[key]["amount"])
                 else:
-                    self.gigPrylar.update(copy.deepcopy(self.preGigPrylar[i]))
+                    self.gig_prylar.update(copy.deepcopy(self.pre_gig_prylar[i]))
             i += 1
-        # print(self.gigPrylar)
+        # print(self.gig_prylar)
 
     def pryl_mod(self, config):
 
-        for pryl in self.gigPrylar:
-            self.inPris += self.gigPrylar[pryl]["inPris"]
+        for pryl in self.gig_prylar:
+            self.in_pris += self.gig_prylar[pryl]["inPris"]
 
             # Make new pryl attribute "mod" where price modifications happen
-            self.gigPrylar[pryl]["mod"] = copy.deepcopy(self.gigPrylar[pryl]["pris"])
-            modPryl = self.gigPrylar[pryl]["mod"]
+            self.gig_prylar[pryl]["mod"] = copy.deepcopy(self.gig_prylar[pryl]["pris"])
+            modPryl = self.gig_prylar[pryl]["mod"]
 
             # Mult price by amount of pryl
-            modPryl *= self.gigPrylar[pryl]["amount"]
+            modPryl *= self.gig_prylar[pryl]["amount"]
 
             # If svanis, mult by svanis multi
             if self.svanis:
                 modPryl *= config["svanisMulti"]
 
-            self.gigPrylar[pryl]["dagarMod"] = self.dagar(config, modPryl)
+            self.gig_prylar[pryl]["dagarMod"] = self.dagar(config, modPryl)
 
-            self.gigPrylar[pryl]["mod"] = modPryl
+            self.gig_prylar[pryl]["mod"] = modPryl
 
     def get_pris(self):
-        for pryl in self.gigPrylar:
-            self.inPris += self.gigPrylar[pryl]["inPris"]
-            self.prylPris += self.gigPrylar[pryl]["dagarMod"]
-            self.pris += self.gigPrylar[pryl]["dagarMod"]
-        self.prylKostnad = self.prylPris * 0.4
+        for pryl in self.gig_prylar:
+            self.in_pris += self.gig_prylar[pryl]["inPris"]
+            self.pryl_pris += self.gig_prylar[pryl]["dagarMod"]
+            self.pris += self.gig_prylar[pryl]["dagarMod"]
+        self.pryl_kostnad = self.pryl_pris * 0.4
 
     def dagar(self, config, pris):
-        dagar = self.iData["dagar"]
+        dagar = self.i_data["dagar"]
         dagTvaMulti = config["dagTvåMulti"]
         dagTreMulti = config["dagTreMulti"]
         tempPris = copy.deepcopy(pris)
         if type(dagar) is dict:
             dagar = 1
-            self.iData["dagar"] = 1
+            self.i_data["dagar"] = 1
             print(dagar)
         if dagar < 1:
             tempPris = 0
@@ -334,72 +334,72 @@ class gig:
             tempPris += pris * dagTreMulti * (dagar - 2)
         return tempPris
 
-    def personalRakna(self, config):
-        self.timPeng = math.floor(config["levandeVideoLön"] * (config["lönJustering"]) / 10) * 10
+    def personal_rakna(self, config):
+        self.tim_peng = math.floor(config["levandeVideoLön"] * (config["lönJustering"]) / 10) * 10
 
-        self.gigTimmar = round(int(self.iData["dagLängd"]["name"]) * self.personal * self.iData["dagar"])
+        self.gig_timmar = round(int(self.i_data["dagLängd"]["name"]) * self.personal * self.i_data["dagar"])
 
-        if self.iData["specialRigg"]:
-            self.riggTimmar = self.iData["riggTimmar"]
+        if self.i_data["specialRigg"]:
+            self.rigg_timmar = self.i_data["riggTimmar"]
         else:
-            self.riggTimmar = math.floor(self.pris * config["andelRiggTimmar"])
+            self.rigg_timmar = math.floor(self.pris * config["andelRiggTimmar"])
 
-        self.projektTimmar = math.ceil((self.gigTimmar + self.riggTimmar) * config["projektTid"])
+        self.projekt_timmar = math.ceil((self.gig_timmar + self.rigg_timmar) * config["projektTid"])
 
         if self.svanis:
             self.restid = 0
         else:
-            self.restid = self.personal * self.iData["dagar"] * config["restid"]
+            self.restid = self.personal * self.i_data["dagar"] * config["restid"]
 
-        self.timBudget = self.gigTimmar + self.riggTimmar + self.projektTimmar + self.restid
+        self.tim_budget = self.gig_timmar + self.rigg_timmar + self.projekt_timmar + self.restid
         # Timmar gånger peng per timme
-        self.personalPris = self.timBudget * self.timPeng
+        self.personal_pris = self.tim_budget * self.tim_peng
 
-        self.personalKostnad = self.timBudget * config["levandeVideoLön"]
-        self.pris += self.personalPris
-        # print(self.timBudget, self.restid, self.projektTimmar, self.gigTimmar, self.riggTimmar, self.svanis)
+        self.personal_kostnad = self.tim_budget * config["levandeVideoLön"]
+        self.pris += self.personal_pris
+        # print(self.tim_budget, self.restid, self.projekt_timmar, self.gig_timmar, self.rigg_timmar, self.svanis)
 
-    def marginalRakna(self, config):
+    def marginal_rakna(self, config):
         try:
-            if self.iData["hyrKostnad"] is None:
-                self.iData["hyrKostnad"] = 0
+            if self.i_data["hyrKostnad"] is None:
+                self.i_data["hyrKostnad"] = 0
         except KeyError:
-            self.iData["hyrKostnad"] = 0
+            self.i_data["hyrKostnad"] = 0
 
-        self.hyrPris = self.iData["hyrKostnad"] * (1 + config["hyrMulti"])
-        self.kostnad = self.prylKostnad + self.personalKostnad + self.iData["hyrKostnad"]
-        self.pris += self.hyrPris
-
-        # Prevent div by 0
-        if self.personalPris != 0:
-            self.personalMarginal = (self.personalPris - self.personalKostnad) / self.personalPris
-        else:
-            self.personalMarginal = 0
+        self.hyr_pris = self.i_data["hyrKostnad"] * (1 + config["hyrMulti"])
+        self.kostnad = self.pryl_kostnad + self.personal_kostnad + self.i_data["hyrKostnad"]
+        self.pris += self.hyr_pris
 
         # Prevent div by 0
-        if self.prylPris != 0:
-            self.prylMarginal = (self.prylPris - self.prylKostnad) / self.prylPris
+        if self.personal_pris != 0:
+            self.personal_marginal = (self.personal_pris - self.personal_kostnad) / self.personal_pris
         else:
-            self.prylMarginal = 0
+            self.personal_marginal = 0
+
+        # Prevent div by 0
+        if self.pryl_pris != 0:
+            self.pryl_marginal = (self.pryl_pris - self.pryl_kostnad) / self.pryl_pris
+        else:
+            self.pryl_marginal = 0
         # TODO
         #  Add resekostnader
         #  F19, F20 i arket
 
-        self.slitKostnad = self.prylPris * config["prylSlit"]
+        self.slit_kostnad = self.pryl_pris * config["prylSlit"]
 
         self.avkastning = round(
-            self.pris - self.slitKostnad - self.personalKostnad - self.iData["hyrKostnad"]
+            self.pris - self.slit_kostnad - self.personal_kostnad - self.i_data["hyrKostnad"]
         )
 
         self.marginal = round(
             self.avkastning / (
-                    self.pris - self.iData["hyrKostnad"] * (1 - config["hyrMulti"] * config["hyrMarginal"])
+                    self.pris - self.i_data["hyrKostnad"] * (1 - config["hyrMulti"] * config["hyrMarginal"])
             ) * 10000
         ) / 100
 
     def output(self):
-        print(f"Pryl: {self.prylPris}")
-        print(f"Personal: {self.personalPris}")
+        print(f"Pryl: {self.pryl_pris}")
+        print(f"Personal: {self.personal_pris}")
         print(f"Total: {self.pris}")
         print(f"Avkastning: {self.avkastning}")
 
@@ -408,25 +408,25 @@ class gig:
         else:
             print(f"Marginal: {bcolors.FAIL + str(self.marginal)}%{bcolors.ENDC}")
 
-        self.gigPrylar = dict(sorted(self.gigPrylar.items(), key=lambda item: -1 * item[1]["amount"]))
+        self.gig_prylar = dict(sorted(self.gig_prylar.items(), key=lambda item: -1 * item[1]["amount"]))
 
-        for pryl in self.gigPrylar:
+        for pryl in self.gig_prylar:
             print(
-                f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['mod']} kr ",
-                f"- {self.gigPrylar[pryl]['dagarMod']} kr pga {self.iData['dagar']} dagar")
+                f"\t{self.gig_prylar[pryl]['amount']}st {pryl} - {self.gig_prylar[pryl]['mod']} kr ",
+                f"- {self.gig_prylar[pryl]['dagarMod']} kr pga {self.i_data['dagar']} dagar")
 
         paketIdList = []
         prylIdList = []
 
         # print(self.paketen)
         try:
-            for paket in self.iData["prylPaket"]:
+            for paket in self.i_data["prylPaket"]:
                 paketIdList.append(self.paketen[paket]["id"])
         except KeyError:
             pass
 
         try:
-            for pryl in self.iData["extraPrylar"]:
+            for pryl in self.i_data["extraPrylar"]:
                 prylIdList.append(self.prylar[pryl]["id"])
 
         except KeyError:
@@ -434,7 +434,7 @@ class gig:
         antalString = ""
 
         try:
-            for antal in self.iData["antalPrylar"]:
+            for antal in self.i_data["antalPrylar"]:
                 if antalString == "":
                     antalString += antal
                 else:
@@ -443,7 +443,7 @@ class gig:
             pass
         antalPaketString = ""
         try:
-            for antal in self.iData["antalPaket"]:
+            for antal in self.i_data["antalPaket"]:
                 if antalPaketString == "":
                     antalPaketString += antal
                 else:
@@ -451,7 +451,7 @@ class gig:
         except (KeyError, TypeError):
             pass
         if self.update:
-            recID = self.iData["uppdateraProjekt"][0]["id"]
+            recID = self.i_data["uppdateraProjekt"][0]["id"]
         else:
             recID = None
         output = {
@@ -460,10 +460,10 @@ class gig:
             "Marginal": str(self.marginal) + "%",
             "marginalSecret": self.marginal,
             "Personal": self.personal,
-            "Projekt timmar": self.gigTimmar,
-            "Rigg timmar": self.riggTimmar,
-            "Totalt timmar": self.timBudget,
-            "Pryl pris": self.prylPris,
+            "Projekt timmar": self.gig_timmar,
+            "Rigg timmar": self.rigg_timmar,
+            "Totalt timmar": self.tim_budget,
+            "Pryl pris": self.pryl_pris,
             "prylPaket": paketIdList,
             "extraPrylar": prylIdList,
             "antalPrylar": antalString,
@@ -477,7 +477,7 @@ class gig:
             url="https://hooks.airtable.com/workflows/v1/genericWebhook/appG1QEArAVGABdjm/wflcP4lYCTDwmSs4g"
                 "/wtrzRoN98kiDzdU05",
             json=output)
-        # self.outputTable.create(output)
+        # self.output_table.create(output)
 
 
 @app.route("/airtable", methods=["POST"])
@@ -492,7 +492,7 @@ def fuck_yeah():
         prylar = json.load(f)
     iDataName = list(iData.keys())[-1]
 
-    gig(iData, config, prylar, paket, iDataName)
+    Gig(iData, config, prylar, paket, iDataName)
     return "<3"
 
 
@@ -546,7 +546,7 @@ def start():
     with open('prylar.json', 'r', encoding='utf-8') as f:
         prylar = json.load(f)
 
-    gig(iData, config, prylar, paket, iDataName)
+    Gig(iData, config, prylar, paket, iDataName)
 
     return "<3"
 
@@ -587,7 +587,7 @@ def get_prylar():
             pass
         paketen[paket]["paketDict"] = paketDict
         paket = paketOb(prylDict, paketen[paket])
-        paketDict.update(paket.dictMake())
+        paketDict.update(paket.dict_make())
 
     prylarTable = Table(api_key, base_id, "Prylar")
     paketTable = Table(api_key, base_id, "Pryl Paket")
