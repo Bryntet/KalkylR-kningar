@@ -46,6 +46,8 @@ class prylOb:
     def __init__(self, **kwargs):
         # Gets all attributes provided and adds them to self
         # Current args: name, inPris, pris
+        self.inPris = None
+        self.livsLängd = 3
         self.pris = None
         for argName, value in kwargs.items():
             self.__dict__.update({argName: value})
@@ -76,6 +78,10 @@ class paketOb:
         # Gets all kwargs provided and adds them to self
         # Current kwargs:
         # print(args, "test")
+        self.paketPrylar = []
+        self.antalAvPryl = None
+        self.paketDict = {}
+        self.paketIPrylPaket = None
         for argName, value in args.items():
             # print(argName, value)
             self.__dict__.update({argName: value})
@@ -83,16 +89,16 @@ class paketOb:
         self.pris = 0
         self.prylar = {}
         # print(prylar)
-        try:
-            if self.paketIPrylPaket:
-                for paket in self.paketIPrylPaket:
-                    # print(paket, self.paketDict[paket["name"]])
-                    for pryl in self.paketDict[paket["name"]]["prylar"]:
-                        if pryl in self.prylar.keys():
-                            self.prylar[pryl]["amount"] += 1
-                        else:
-                            self.prylar[pryl] = copy.deepcopy(self.paketDict[paket["name"]]["prylar"][pryl])
-        except AttributeError:
+
+        if self.paketIPrylPaket is not None:
+            for paket in self.paketIPrylPaket:
+                # print(paket, self.paketDict[paket["name"]])
+                for pryl in self.paketDict[paket["name"]]["prylar"]:
+                    if pryl in self.prylar.keys():
+                        self.prylar[pryl]["amount"] += 1
+                    else:
+                        self.prylar[pryl] = copy.deepcopy(self.paketDict[paket["name"]]["prylar"][pryl])
+        else:
             try:
                 # Add pryl objects to self list of all prylar in paket
                 self.antalAvPryl = str(self.antalAvPryl).split(",")
