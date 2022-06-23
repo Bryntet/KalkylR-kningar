@@ -2,6 +2,8 @@ import copy
 import json
 import math
 import os
+import re
+
 import pandas as pd
 import requests
 from flask import Flask, request
@@ -165,6 +167,9 @@ class Gig:
         self.pris = 0
         self.in_pris = 0
         self.update = False
+
+        self.start_time = time.time()
+
         try:
             if self.i_data["uppdateraProjekt"]:
                 self.update = True
@@ -204,7 +209,7 @@ class Gig:
         self.personal_rakna(config)
         self.marginal_rakna(config)
         self.output()
-
+        print(time.time()-self.start_time)
     def check_prylar(self, prylar):
         try:
             if self.i_data["antalPrylar"]:
@@ -465,14 +470,16 @@ class Gig:
             log = []
         leverans_nummer = 1
         for key in old_output:
-            if old_output[key]["Projekt"] == self.name:
+            # Strip key of number delimiter
+            print(key)
+            if re.findall(r"(.*) #\d", key)[0] == self.name:
+                print(leverans_nummer)
                 leverans_nummer += 1
 
         output = {
             "Gig namn": f"{self.name} #{leverans_nummer}",
             "Pris": self.pris,
-            "Marginal": str(self.marginal) + "%",
-            "marginalSecret": self.marginal,
+            "Marginal": self.marginal,
             "Personal": self.personal,
             "Projekt timmar": self.gig_timmar,
             "Rigg timmar": self.rigg_timmar,
@@ -482,16 +489,26 @@ class Gig:
             "extraPrylar": pryl_id_list,
             "antalPrylar": antal_string,
             "antalPaket": antal_paket_string,
-            "update": self.update,
-            "recID": rec_id,
+            "Projekt kanban": self.name,
             "Projekt": self.name,
-            "start": self.i_data["Börja datum"],
-            "slut": self.i_data["Sluta datum"]
+            "börjaDatum": self.i_data["Börja datum"],
+            "slutaDatum": self.i_data["Sluta datum"]
         }
+        print(time.time()-self.start_time)
+        print(output)
+
+        if self.update:
+            self.output_table.update(rec_id, output, typecast=True)
+        else:
+            self.output_table.create(output, typecast=True)
+
+        print(time.time() - self.start_time)
+        """
         requests.post(
             url="https://hooks.airtable.com/workflows/v1/genericWebhook/appG1QEArAVGABdjm/wflcP4lYCTDwmSs4g"
                 "/wtrzRoN98kiDzdU05",
             json=output)
+        """
         output_to_json = {
             f"{self.name} #{leverans_nummer}": output
         }
@@ -542,7 +559,7 @@ def delete():
     return "<3"
 
 
-@app.route("/ifuckedup", methods=["POST"])
+@app.route("/ifuckedup", methods=["GET"])
 def take_back():
     with open("output_backup.json", "r", encoding="utf-8") as f:
         backup = json.load(f)
@@ -553,16 +570,16 @@ def take_back():
         output = {}
 
     key = list(backup.keys())[0]
-
+    backup["update"] = False
     requests.post(
         url="https://hooks.airtable.com/workflows/v1/genericWebhook/appG1QEArAVGABdjm/wflcP4lYCTDwmSs4g"
             "/wtrzRoN98kiDzdU05",
-        json=backup[key])
+        json=backup)
 
     with open("output.json", "w", encoding="utf-8") as f:
-        output.update(backup)
+        output[backup["Gig namn"]] = backup
         json.dump(output, f, ensure_ascii=False, indent=2)
-
+    return "fixed"
 
 @app.route("/", methods=["GET"])
 def the_basics():
@@ -571,7 +588,7 @@ def the_basics():
 
 @app.route("/start", methods=["POST", "GET"])
 def start():
-    i_data = request.json["Input data"]
+    i_data = request.json
     # Clean junk from data
     try:
         if request.json["key"]:
@@ -592,15 +609,13 @@ def start():
             i_data[key]["extraPrylar"] = pryl_list
         except (KeyError, AttributeError):
             pass
-        try:
+        if i_data[key]["prylPaket"] is not None:
             i = 0
             for paket in i_data[key]["prylPaket"]:
                 paket.pop("id", None)
                 paket_list.append(i_data[key]["prylPaket"][i]["name"])
                 i += 1
             i_data[key]["prylPaket"] = paket_list
-        except (KeyError, AttributeError):
-            pass
 
     # Save data just because
     with open('input.json', 'w', encoding='utf-8') as f:
