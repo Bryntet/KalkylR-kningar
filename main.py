@@ -49,17 +49,17 @@ class Prylob:
         # Gets all attributes provided and adds them to self
         # Current args: name, in_pris, pris
         self.in_pris = None
-        self.livsLängd = 3
+        self.livs_längd = 3
         self.pris = None
         for argName, value in kwargs.items():
             self.__dict__.update({argName: value})
 
         self.amount = 1
         self.mult = 145
-        self.mult -= self.livsLängd * 15
+        self.mult -= self.livs_längd * 15
         self.mult /= 100
 
-        print(self.mult)
+        #print(self.mult)
 
     def rounding(self, config):
         # Convert to lower price as a percentage of the buy price
@@ -85,8 +85,7 @@ class Paketob:
         self.paket_dict = {}
         self.paket_i_pryl_paket = None
         for argName, value in args.items():
-            # print(argName, value)
-            self.__dict__.update({argName: value})
+             self.__dict__.update({argName: value})
 
         self.pris = 0
         self.prylar = {}
@@ -122,12 +121,10 @@ class Paketob:
         out_dict = {temp_dict["name"]: temp_dict}
         out_dict[temp_dict["name"]].pop('paket_prylar', None)
         bok = {}
-        try:
+        if out_dict[temp_dict["name"]]["paket_i_pryl_paket"] is not None:
             for dubbelPaket in out_dict[temp_dict["name"]]["paket_i_pryl_paket"][0]:
                 bok.update({"name": out_dict[temp_dict["name"]]["paket_i_pryl_paket"][0][dubbelPaket]})
             out_dict[temp_dict["name"]]["paket_i_pryl_paket"] = bok
-        except KeyError:
-            pass
 
         out_dict[temp_dict["name"]].pop('paket_dict', None)
         out_dict[temp_dict["name"]].pop('Input data', None)
@@ -139,6 +136,7 @@ class Paketob:
 
 class Gig:
     def __init__(self, i_data, config, prylar, paketen, name):
+        self.pryl_fonden = None
         self.output_table = Table(api_key, base_id, 'Output table')
         self.slit_kostnad = None
         self.avkastning = None
@@ -209,7 +207,7 @@ class Gig:
         self.personal_rakna(config)
         self.marginal_rakna(config)
         self.output()
-        print(time.time()-self.start_time)
+
     def check_prylar(self, prylar):
         try:
             if self.i_data["antalPrylar"]:
@@ -298,7 +296,7 @@ class Gig:
     def pryl_mod(self, config):
 
         for pryl in self.gig_prylar:
-            self.in_pris += self.gig_prylar[pryl]["inPris"]
+            self.in_pris += self.gig_prylar[pryl]["in_pris"]
 
             # Make new pryl attribute "mod" where price modifications happen
             self.gig_prylar[pryl]["mod"] = copy.deepcopy(self.gig_prylar[pryl]["pris"])
@@ -317,7 +315,7 @@ class Gig:
 
     def get_pris(self):
         for pryl in self.gig_prylar:
-            self.in_pris += self.gig_prylar[pryl]["inPris"]
+            self.in_pris += self.gig_prylar[pryl]["in_pris"]
             self.pryl_pris += self.gig_prylar[pryl]["dagarMod"]
             self.pris += self.gig_prylar[pryl]["dagarMod"]
         self.pryl_kostnad = self.pryl_pris * 0.4
@@ -391,7 +389,7 @@ class Gig:
         #  F19, F20 i arket
 
         self.slit_kostnad = self.pryl_pris * config["prylSlit"]
-
+        self.pryl_fonden = self.slit_kostnad * (1+config["Prylinv (rel slit)"])
         self.avkastning = round(
             self.pris - self.slit_kostnad - self.personal_kostnad - self.i_data["hyrKostnad"]
         )
@@ -414,8 +412,9 @@ class Gig:
             print(f"Marginal: {Bcolors.FAIL + str(self.marginal)}%{Bcolors.ENDC}")
 
         self.gig_prylar = dict(sorted(self.gig_prylar.items(), key=lambda item: -1 * item[1]["amount"]))
-
+        packlista = "# Packlista:\n"
         for pryl in self.gig_prylar:
+            packlista += f"### {self.gig_prylar[pryl]['amount']}st {pryl}\n\n"
             print(
                 f"\t{self.gig_prylar[pryl]['amount']}st {pryl} - {self.gig_prylar[pryl]['mod']} kr ",
                 f"- {self.gig_prylar[pryl]['dagarMod']} kr pga {self.i_data['dagar']} dagar")
@@ -471,15 +470,13 @@ class Gig:
         leverans_nummer = 1
         for key in old_output:
             # Strip key of number delimiter
-            print(key)
             if re.findall(r"(.*) #\d", key)[0] == self.name:
-                print(leverans_nummer)
                 leverans_nummer += 1
 
         output = {
             "Gig namn": f"{self.name} #{leverans_nummer}",
             "Pris": self.pris,
-            "Marginal": self.marginal,
+            "Marginal": self.marginal/100,
             "Personal": self.personal,
             "Projekt timmar": self.gig_timmar,
             "Rigg timmar": self.rigg_timmar,
@@ -492,7 +489,14 @@ class Gig:
             "Projekt kanban": self.name,
             "Projekt": self.name,
             "börjaDatum": self.i_data["Börja datum"],
-            "slutaDatum": self.i_data["Sluta datum"]
+            "slutaDatum": self.i_data["Sluta datum"],
+            "dagar": self.i_data["dagar"],
+            "packlista": packlista,
+            "restid": self.restid,
+            "projektTid": self.projekt_timmar,
+            "dagLängd": self.i_data["dagLängd"]["name"],
+            "slitKostnad": self.slit_kostnad,
+            "prylFonden": self.pryl_fonden
         }
         print(time.time()-self.start_time)
         print(output)
@@ -513,7 +517,7 @@ class Gig:
             f"{self.name} #{leverans_nummer}": output
         }
 
-        print(output_to_json)
+        print(self.gig_prylar)
         with open("output.json", "w", encoding="utf-8") as f:
             old_output.update(output_to_json)
             json.dump(old_output, f, ensure_ascii=False, indent=2)
@@ -651,8 +655,8 @@ def get_prylar():
     prylarna = request.json["Prylar"]
     pryl_dict = {}
     for prylNamn in prylarna:
-        pryl = Prylob(inPris=prylarna[prylNamn]["pris"], name=prylNamn,
-                      livsLängd=int(prylarna[prylNamn]["livsLängd"]["name"]))
+        pryl = Prylob(in_pris=prylarna[prylNamn]["pris"], name=prylNamn,
+                      livs_längd=int(prylarna[prylNamn]["livsLängd"]["name"]))
         pryl.rounding(config)
         pryl_dict.update(pryl.dict_make())
 
@@ -662,10 +666,10 @@ def get_prylar():
         lista = []
         paketen[paket]["name"] = paket
         try:
-            for pryl in paketen[paket]["paketPrylar"]:
+            for pryl in paketen[paket]["paket_prylar"]:
                 lista.append(pryl["name"])
 
-            paketen[paket]["paketPrylar"] = lista
+            paketen[paket]["paket_prylar"] = lista
         except KeyError:
             pass
         paketen[paket]["paket_dict"] = paket_dict
