@@ -56,6 +56,7 @@ class prylOb:
         self.mult /= 100
 
         print(self.mult)
+
     def rounding(self, config):
         # Convert to lower price as a percentage of the buy price
         self.pris = math.floor((float(self.inPris) * config["prylKostnadMulti"]) / 10 * self.mult) * 10
@@ -129,7 +130,7 @@ class paketOb:
 
 
 class gig:
-    def __init__(self, iData, config, prylar, paketen, name):
+    def __init__(self, i_data, config, prylar, paketen, name):
         self.outputTable = Table(api_key, base_id, 'Output table')
         self.slitKostnad = None
         self.avkastning = None
@@ -153,10 +154,16 @@ class gig:
         self.gigPrylar = {}
         self.preGigPrylar = []
         self.name = name
-        self.iData = iData[self.name]
+        self.iData = i_data[self.name]
         self.prylPris = 0
         self.pris = 0
         self.inPris = 0
+        self.update = False
+        try:
+            if self.iData["uppdateraProjekt"]:
+                self.update = True
+        except KeyError:
+            pass
 
         try:
             if self.iData["extraPersonal"] is not None:
@@ -166,7 +173,7 @@ class gig:
         except KeyError:
             self.personal = 0
         try:
-            if iData["svanis"]:
+            if i_data["svanis"]:
                 self.svanis = True
         except KeyError:
             self.svanis = False
@@ -399,7 +406,8 @@ class gig:
 
         for pryl in self.gigPrylar:
             print(
-                f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['mod']} kr - {self.gigPrylar[pryl]['dagarMod']} kr pga {self.iData['dagar']} dagar")
+                f"\t{self.gigPrylar[pryl]['amount']}st {pryl} - {self.gigPrylar[pryl]['mod']} kr ",
+                f"- {self.gigPrylar[pryl]['dagarMod']} kr pga {self.iData['dagar']} dagar")
 
         paketIdList = []
         prylIdList = []
@@ -436,7 +444,10 @@ class gig:
                     antalPaketString += "," + antal
         except (KeyError, TypeError):
             pass
-
+        if self.update:
+            recID = self.iData["uppdateraProjekt"][0]["id"]
+        else:
+            recID = None
         output = {
             "Gig namn": self.name,
             "Pris": self.pris,
@@ -450,12 +461,15 @@ class gig:
             "prylPaket": paketIdList,
             "extraPrylar": prylIdList,
             "antalPrylar": antalString,
-            "antalPaket": antalPaketString
+            "antalPaket": antalPaketString,
+            "update": self.update,
+            "recID": recID
         }
 
         print(output)
         requests.post(
-            url="https://hooks.airtable.com/workflows/v1/genericWebhook/appG1QEArAVGABdjm/wflcP4lYCTDwmSs4g/wtrzRoN98kiDzdU05",
+            url="https://hooks.airtable.com/workflows/v1/genericWebhook/appG1QEArAVGABdjm/wflcP4lYCTDwmSs4g"
+                "/wtrzRoN98kiDzdU05",
             json=output)
         # self.outputTable.create(output)
 
