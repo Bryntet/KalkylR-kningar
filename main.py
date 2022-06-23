@@ -330,7 +330,7 @@ class gig:
 
     def personalRakna(self, config):
         self.timPeng = math.floor(config["levandeVideoLön"] * (config["lönJustering"]) / 10) * 10
-        print(self.iData["dagLängd"], self.personal, self.iData["dagar"])
+
         self.gigTimmar = round(int(self.iData["dagLängd"]["name"]) * self.personal * self.iData["dagar"])
 
         if self.iData["specialRigg"]:
@@ -466,7 +466,7 @@ class gig:
             "recID": recID
         }
 
-        print(output)
+        # print(output)
         requests.post(
             url="https://hooks.airtable.com/workflows/v1/genericWebhook/appG1QEArAVGABdjm/wflcP4lYCTDwmSs4g"
                 "/wtrzRoN98kiDzdU05",
