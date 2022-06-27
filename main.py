@@ -3,13 +3,22 @@ import json
 import math
 import os
 import re
-
+import pytz
 import pandas as pd
 import requests
 from flask import Flask, request
 from pyairtable import Table
 import time
+import calendar
+import datetime
+import holidays
 
+for holiday in holidays.SWE(years=datetime.date.today().year).items():
+    if holiday[1] != "Söndag":
+        print(holiday[1])
+
+for date, holiday in holidays.SWE(False, years=datetime.date.today().year).items():
+    print(date, holiday)
 
 class Bcolors:
     HEADER = '\033[95m'
@@ -59,7 +68,7 @@ class Prylob:
         self.mult -= self.livs_längd * 15
         self.mult /= 100
 
-        #print(self.mult)
+        # print(self.mult)
 
     def rounding(self, config):
         # Convert to lower price as a percentage of the buy price
@@ -85,7 +94,7 @@ class Paketob:
         self.paket_dict = {}
         self.paket_i_pryl_paket = None
         for argName, value in args.items():
-             self.__dict__.update({argName: value})
+            self.__dict__.update({argName: value})
 
         self.pris = 0
         self.prylar = {}
@@ -136,6 +145,12 @@ class Paketob:
 
 class Gig:
     def __init__(self, i_data, config, prylar, paketen, name):
+        self.bad_day_dict = {}
+        self.day_dict = {}
+        self.dag_längd = None
+        self.time_dif = None
+        self.avkastning_without_pris = None
+        self.hyr_things = None
         self.pryl_fonden = None
         self.output_table = Table(api_key, base_id, 'Output table')
         self.slit_kostnad = None
@@ -203,7 +218,7 @@ class Gig:
         self.pryl_mod(config)
         # Get the total modPris and in_pris from all the prylar
         self.get_pris()
-
+        self.tid()
         self.personal_rakna(config)
         self.marginal_rakna(config)
         self.output()
@@ -321,7 +336,9 @@ class Gig:
         self.pryl_kostnad = self.pryl_pris * 0.4
 
     def dagar(self, config, pris):
+
         dagar = self.i_data["dagar"]
+
         dag_tva_multi = config["dagTvåMulti"]
         dag_tre_multi = config["dagTreMulti"]
         temp_pris = copy.deepcopy(pris)
@@ -337,15 +354,79 @@ class Gig:
             temp_pris += pris * dag_tre_multi * (dagar - 2)
         return temp_pris
 
+    def tid(self):
+        print(self.i_data["Börja datum"].split("T")[1], self.i_data["slut tid"].split("T")[1])
+        börja = self.i_data["Börja datum"].split("T")[1].split(":")
+        slut = self.i_data["slut tid"].split("T")[1].split(":")
+        self.bad_day_dict = dict(zip(calendar.day_name, range(7)))
+        i = 1
+        for day in self.bad_day_dict:
+            self.day_dict[i] = day
+            i += 1
+
+        print(self.day_dict)
+
+        print(self.day_dict[datetime.date.today().isoweekday()])
+
+        base = datetime.datetime.today()
+        date1 = datetime.datetime.fromisoformat(self.i_data["Börja datum"].split(".")[0])
+        date2 = datetime.datetime.fromisoformat(self.i_data["slut tid"].split(".")[0])
+        hours = date2-date1
+
+        print(self.day_dict[datetime.datetime.fromisoformat(self.i_data["Börja datum"].split(".")[0]).isoweekday()])
+
+        self.dag_längd = math.ceil(hours.seconds / 60 / 60)
+        self.ob_dict = {"0": [],
+                        "1": [],
+                        "2": [],
+                        "3": [],
+                        "4": []
+                        }
+        for date, holiday in holidays.SWE(False, years=date2.year).items():
+            if holiday == "Långfredagen":
+                skärtorsdagen = date - datetime.timedelta(days=1)
+        holidays.SWE(False, years=date2.year).update({skärtorsdagen: "Skärtorsdagen"})
+
+        # Räkna ut ob och lägg i en dict
+        for i in range(self.dag_längd):
+            pre_tz_temp_date = date1 + datetime.timedelta(hours=i)
+            old_timezone = pytz.timezone("UTC")
+            new_timezone = pytz.timezone("Europe/Stockholm")
+            localized_timestamp = old_timezone.localize(pre_tz_temp_date)
+            temp_date = localized_timestamp.astimezone(new_timezone)
+
+            if temp_date in holidays.SWE(False, years=temp_date.year):
+                if holidays.SWE(False, years=temp_date.year)[temp_date] in ["Trettondedag jul", "Kristi himmelsfärdsdag", "Alla helgons dag"] and temp_date.hour >= 7:
+                    self.ob_dict["3"].append(temp_date.timestamp())
+                elif holidays.SWE(False, years=temp_date.year)[temp_date] in ["Nyårsafton"] and temp_date.hour >= 18 or holidays.SWE(False, years=temp_date.year)[temp_date] in ["Pingstdagen", "Sveriges nationaldag", "Midsommarafton", "Julafton"] and temp_date.hour >= 7:
+                    self.ob_dict["4"].append(temp_date.timestamp())
+                else:
+                    self.ob_dict["0"].append(temp_date.timestamp())
+            elif str(temp_date).split(" ")[0] == str(skärtorsdagen) and temp_date.hour >= 18:
+                self.ob_dict["4"].append(temp_date.timestamp())
+            elif temp_date.isoweekday() >= 1 and temp_date.isoweekday() <= 5:
+                if temp_date.hour >= 18:
+                    self.ob_dict["1"].append(temp_date.timestamp())
+                elif temp_date.hour <= 7:
+                    self.ob_dict["2"].append(temp_date.timestamp())
+                else:
+                    self.ob_dict["0"].append(temp_date.timestamp())
+            elif temp_date.isoweekday() == 6 or temp_date.isoweekday() == 7:
+                self.ob_dict["3"].append(temp_date.timestamp())
+            else:
+                self.ob_dict["0"].append(temp_date.timestamp())
+
+        print(self.ob_dict)
     def personal_rakna(self, config):
         self.tim_peng = math.floor(config["levandeVideoLön"] * (config["lönJustering"]) / 10) * 10
 
-        self.gig_timmar = round(int(self.i_data["dagLängd"]["name"]) * self.personal * self.i_data["dagar"])
+        self.gig_timmar = round(self.dag_längd * self.personal * self.i_data["dagar"])
 
         if self.i_data["specialRigg"]:
             self.rigg_timmar = self.i_data["riggTimmar"]
         else:
-            self.rigg_timmar = math.floor(self.pris * config["andelRiggTimmar"])
+
+            self.rigg_timmar = math.floor(self.pryl_pris * config["andelRiggTimmar"])
 
         self.projekt_timmar = math.ceil((self.gig_timmar + self.rigg_timmar) * config["projektTid"])
 
@@ -389,18 +470,20 @@ class Gig:
         #  F19, F20 i arket
 
         self.slit_kostnad = self.pryl_pris * config["prylSlit"]
-        self.pryl_fonden = self.slit_kostnad * (1+config["Prylinv (rel slit)"])
+        self.pryl_fonden = self.slit_kostnad * (1 + config["Prylinv (rel slit)"])
         self.avkastning = round(
             self.pris - self.slit_kostnad - self.personal_kostnad - self.i_data["hyrKostnad"]
         )
-
+        self.avkastning_without_pris = -1 * self.slit_kostnad - self.personal_kostnad - self.i_data["hyrKostnad"]
+        self.hyr_things = self.i_data["hyrKostnad"] * (1 - config["hyrMulti"] * config["hyrMarginal"])
         self.marginal = round(
             self.avkastning / (
-                    self.pris - self.i_data["hyrKostnad"] * (1 - config["hyrMulti"] * config["hyrMarginal"])
+                    self.pris - self.hyr_things
             ) * 10000
         ) / 100
 
     def output(self):
+        print(self.tim_budget, self.gig_timmar, self.rigg_timmar)
         print(f"Pryl: {self.pryl_pris}")
         print(f"Personal: {self.personal_pris}")
         print(f"Total: {self.pris}")
@@ -412,7 +495,7 @@ class Gig:
             print(f"Marginal: {Bcolors.FAIL + str(self.marginal)}%{Bcolors.ENDC}")
 
         self.gig_prylar = dict(sorted(self.gig_prylar.items(), key=lambda item: -1 * item[1]["amount"]))
-        packlista = "# Packlista:\n"
+        packlista = "# Packlista:\n\n"
         for pryl in self.gig_prylar:
             packlista += f"### {self.gig_prylar[pryl]['amount']}st {pryl}\n\n"
             print(
@@ -476,7 +559,7 @@ class Gig:
         output = {
             "Gig namn": f"{self.name} #{leverans_nummer}",
             "Pris": self.pris,
-            "Marginal": self.marginal/100,
+            "Marginal": self.marginal / 100,
             "Personal": self.personal,
             "Projekt timmar": self.gig_timmar,
             "Rigg timmar": self.rigg_timmar,
@@ -496,9 +579,11 @@ class Gig:
             "projektTid": self.projekt_timmar,
             "dagLängd": self.i_data["dagLängd"]["name"],
             "slitKostnad": self.slit_kostnad,
-            "prylFonden": self.pryl_fonden
+            "prylFonden": self.pryl_fonden,
+            "hyrthings": self.hyr_things,
+            "avkastWithoutPris": self.avkastning_without_pris
         }
-        print(time.time()-self.start_time)
+        print(time.time() - self.start_time)
         print(output)
 
         if self.update:
@@ -584,6 +669,7 @@ def take_back():
         output[backup["Gig namn"]] = backup
         json.dump(output, f, ensure_ascii=False, indent=2)
     return "fixed"
+
 
 @app.route("/", methods=["GET"])
 def the_basics():
