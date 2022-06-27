@@ -12,7 +12,7 @@ import time
 import calendar
 import datetime
 import holidays
-
+print(6 > datetime.datetime.now().hour > 0)
 for holiday in holidays.SWE(years=datetime.date.today().year).items():
     if holiday[1] != "Söndag":
         print(holiday[1])
@@ -382,9 +382,11 @@ class Gig:
                         "3": [],
                         "4": []
                         }
+        skärtorsdagen = None
         for date, holiday in holidays.SWE(False, years=date2.year).items():
             if holiday == "Långfredagen":
                 skärtorsdagen = date - datetime.timedelta(days=1)
+                break
 
         # Räkna ut ob och lägg i en dict
         for i in range(self.dag_längd):
@@ -416,7 +418,7 @@ class Gig:
                 self.ob_dict["0"].append(temp_date.timestamp())
 
         print(self.ob_dict)
-        
+
         self.ob_mult = 0
         self.ob_mult += len(self.ob_dict["0"]) * config["levandeVideoLön"]
         self.ob_mult += len(self.ob_dict["1"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 600)

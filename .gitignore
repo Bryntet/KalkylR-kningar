@@ -3,7 +3,6 @@ everything.json
 input.json
 paket.json
 prylar.json
-poetry.lock
 .breakpoints
 /.idea/.gitignore
 /.idea/KalkylR-kningar.iml
