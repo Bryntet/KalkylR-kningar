@@ -218,7 +218,7 @@ class Gig:
         self.pryl_mod(config)
         # Get the total modPris and in_pris from all the prylar
         self.get_pris()
-        self.tid()
+        self.tid(config)
         self.personal_rakna(config)
         self.marginal_rakna(config)
         self.output()
@@ -354,7 +354,7 @@ class Gig:
             temp_pris += pris * dag_tre_multi * (dagar - 2)
         return temp_pris
 
-    def tid(self):
+    def tid(self, config):
         print(self.i_data["Börja datum"].split("T")[1], self.i_data["slut tid"].split("T")[1])
         börja = self.i_data["Börja datum"].split("T")[1].split(":")
         slut = self.i_data["slut tid"].split("T")[1].split(":")
@@ -385,7 +385,6 @@ class Gig:
         for date, holiday in holidays.SWE(False, years=date2.year).items():
             if holiday == "Långfredagen":
                 skärtorsdagen = date - datetime.timedelta(days=1)
-        holidays.SWE(False, years=date2.year).update({skärtorsdagen: "Skärtorsdagen"})
 
         # Räkna ut ob och lägg i en dict
         for i in range(self.dag_längd):
@@ -404,7 +403,7 @@ class Gig:
                     self.ob_dict["0"].append(temp_date.timestamp())
             elif str(temp_date).split(" ")[0] == str(skärtorsdagen) and temp_date.hour >= 18:
                 self.ob_dict["4"].append(temp_date.timestamp())
-            elif temp_date.isoweekday() >= 1 and temp_date.isoweekday() <= 5:
+            elif 1 <= temp_date.isoweekday() <= 5:
                 if temp_date.hour >= 18:
                     self.ob_dict["1"].append(temp_date.timestamp())
                 elif temp_date.hour <= 7:
@@ -417,8 +416,18 @@ class Gig:
                 self.ob_dict["0"].append(temp_date.timestamp())
 
         print(self.ob_dict)
+        
+        self.ob_mult = 0
+        self.ob_mult += len(self.ob_dict["0"]) * config["levandeVideoLön"]
+        self.ob_mult += len(self.ob_dict["1"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 600)
+        self.ob_mult += len(self.ob_dict["2"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 400)
+        self.ob_mult += len(self.ob_dict["3"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 300)
+        self.ob_mult += len(self.ob_dict["4"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 150)
+        self.ob_mult /= self.dag_längd
+        self.ob_mult *= 1.5
+        print(self.ob_mult)
     def personal_rakna(self, config):
-        self.tim_peng = math.floor(config["levandeVideoLön"] * (config["lönJustering"]) / 10) * 10
+        self.tim_peng = math.floor(self.ob_mult * (config["lönJustering"]) / 10) * 10
 
         self.gig_timmar = round(self.dag_längd * self.personal * self.i_data["dagar"])
 
