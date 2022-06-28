@@ -12,13 +12,6 @@ import time
 import calendar
 import datetime
 import holidays
-print(6 > datetime.datetime.now().hour > 0)
-for holiday in holidays.SWE(years=datetime.date.today().year).items():
-    if holiday[1] != "Söndag":
-        print(holiday[1])
-
-for date, holiday in holidays.SWE(False, years=datetime.date.today().year).items():
-    print(date, holiday)
 
 class Bcolors:
     HEADER = '\033[95m'
@@ -109,8 +102,9 @@ class Paketob:
                     else:
                         self.prylar[pryl] = copy.deepcopy(self.paket_dict[paket["name"]]["prylar"][pryl])
         else:
-            try:
+            if self.antal_av_pryl is not None:
                 # Add pryl objects to self list of all prylar in paket
+
                 self.antal_av_pryl = str(self.antal_av_pryl).split(",")
                 for pryl in self.paket_prylar:
                     ind = self.paket_prylar.index(pryl)
@@ -119,8 +113,13 @@ class Paketob:
                     self.prylar[pryl]["amount"] = int(self.antal_av_pryl[ind])
 
                 # print(self.prylar, "\n\n\n\n")
-            except AttributeError:
-                pass
+            else:
+                for pryl in self.paket_prylar:
+                    ind = self.paket_prylar.index(pryl)
+
+                    self.prylar.update({pryl: copy.deepcopy(prylar[pryl])})
+                    self.prylar[pryl]["amount"] = 1
+
         # Set total price of prylar in paket
         for pryl in self.prylar:
             self.pris += (self.prylar[pryl]["pris"] * self.prylar[pryl]["amount"])
@@ -145,6 +144,7 @@ class Paketob:
 
 class Gig:
     def __init__(self, i_data, config, prylar, paketen, name):
+        self.ob_dict = {}
         self.bad_day_dict = {}
         self.day_dict = {}
         self.dag_längd = None
@@ -176,11 +176,13 @@ class Gig:
         self.pre_gig_prylar = []
         self.name = name
         self.i_data = i_data[self.name]
+        self.post_text_kostnad = 0
+        self.post_text_pris = 0
         self.pryl_pris = 0
         self.pris = 0
         self.in_pris = 0
         self.update = False
-
+        self.config = config
         self.start_time = time.time()
 
         try:
@@ -219,6 +221,7 @@ class Gig:
         # Get the total modPris and in_pris from all the prylar
         self.get_pris()
         self.tid(config)
+        self.post_text()
         self.personal_rakna(config)
         self.marginal_rakna(config)
         self.output()
@@ -345,7 +348,7 @@ class Gig:
         if type(dagar) is dict:
             dagar = 1
             self.i_data["dagar"] = 1
-            print(dagar)
+            p
         if dagar < 1:
             temp_pris = 0
         elif dagar >= 2:
@@ -355,25 +358,17 @@ class Gig:
         return temp_pris
 
     def tid(self, config):
-        print(self.i_data["Börja datum"].split("T")[1], self.i_data["slut tid"].split("T")[1])
-        börja = self.i_data["Börja datum"].split("T")[1].split(":")
-        slut = self.i_data["slut tid"].split("T")[1].split(":")
+
         self.bad_day_dict = dict(zip(calendar.day_name, range(7)))
         i = 1
         for day in self.bad_day_dict:
             self.day_dict[i] = day
             i += 1
 
-        print(self.day_dict)
-
-        print(self.day_dict[datetime.date.today().isoweekday()])
-
-        base = datetime.datetime.today()
         date1 = datetime.datetime.fromisoformat(self.i_data["Börja datum"].split(".")[0])
         date2 = datetime.datetime.fromisoformat(self.i_data["slut tid"].split(".")[0])
         hours = date2-date1
 
-        print(self.day_dict[datetime.datetime.fromisoformat(self.i_data["Börja datum"].split(".")[0]).isoweekday()])
 
         self.dag_längd = math.ceil(hours.seconds / 60 / 60)
         self.ob_dict = {"0": [],
@@ -417,7 +412,6 @@ class Gig:
             else:
                 self.ob_dict["0"].append(temp_date.timestamp())
 
-        print(self.ob_dict)
 
         self.ob_mult = 0
         self.ob_mult += len(self.ob_dict["0"]) * config["levandeVideoLön"]
@@ -427,7 +421,7 @@ class Gig:
         self.ob_mult += len(self.ob_dict["4"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 150)
         self.ob_mult /= self.dag_längd
         self.ob_mult *= 1.5
-        print(self.ob_mult)
+
     def personal_rakna(self, config):
         self.tim_peng = math.floor(self.ob_mult * (config["lönJustering"]) / 10) * 10
 
@@ -454,6 +448,17 @@ class Gig:
         self.pris += self.personal_pris
         # print(self.tim_budget, self.restid, self.projekt_timmar, self.gig_timmar, self.rigg_timmar, self.svanis)
 
+    def post_text(self):
+        try:
+            if self.i_data["post_text"]:
+                # Convert from seconds to mins
+                self.i_data["Textning minuter"] = self.i_data["Textning minuter"]/60
+
+                self.post_text_pris = self.i_data["Textning minuter"]*self.config["textningPostPris"]
+                self.post_text_kostnad = self.i_data["Textning minuter"]*self.config["textningPostKostnad"]
+        except KeyError:
+            pass
+
     def marginal_rakna(self, config):
         try:
             if self.i_data["hyrKostnad"] is None:
@@ -462,8 +467,8 @@ class Gig:
             self.i_data["hyrKostnad"] = 0
 
         self.hyr_pris = self.i_data["hyrKostnad"] * (1 + config["hyrMulti"])
-        self.kostnad = self.pryl_kostnad + self.personal_kostnad + self.i_data["hyrKostnad"]
-        self.pris += self.hyr_pris
+        self.kostnad = self.pryl_kostnad + self.personal_kostnad + self.i_data["hyrKostnad"] + self.post_text_kostnad
+        self.pris += self.hyr_pris + self.post_text_pris
 
         # Prevent div by 0
         if self.personal_pris != 0:
@@ -494,7 +499,7 @@ class Gig:
         ) / 100
 
     def output(self):
-        print(self.tim_budget, self.gig_timmar, self.rigg_timmar)
+        print(f"Post Text: {self.post_text_pris}")
         print(f"Pryl: {self.pryl_pris}")
         print(f"Personal: {self.personal_pris}")
         print(f"Total: {self.pris}")
@@ -588,14 +593,13 @@ class Gig:
             "packlista": packlista,
             "restid": self.restid,
             "projektTid": self.projekt_timmar,
-            "dagLängd": self.i_data["dagLängd"]["name"],
+            "dagLängd": str(self.dag_längd),
             "slitKostnad": self.slit_kostnad,
             "prylFonden": self.pryl_fonden,
             "hyrthings": self.hyr_things,
             "avkastWithoutPris": self.avkastning_without_pris
         }
         print(time.time() - self.start_time)
-        print(output)
 
         if self.update:
             self.output_table.update(rec_id, output, typecast=True)
@@ -603,17 +607,11 @@ class Gig:
             self.output_table.create(output, typecast=True)
 
         print(time.time() - self.start_time)
-        """
-        requests.post(
-            url="https://hooks.airtable.com/workflows/v1/genericWebhook/appG1QEArAVGABdjm/wflcP4lYCTDwmSs4g"
-                "/wtrzRoN98kiDzdU05",
-            json=output)
-        """
+
         output_to_json = {
             f"{self.name} #{leverans_nummer}": output
         }
 
-        print(self.gig_prylar)
         with open("output.json", "w", encoding="utf-8") as f:
             old_output.update(output_to_json)
             json.dump(old_output, f, ensure_ascii=False, indent=2)
@@ -797,53 +795,7 @@ def update():
         json.dump(request.json, f, ensure_ascii=False, indent=2)
     return "<3"
 
-
 def server():
     app.run(host='0.0.0.0')
-
-
-personal = 0
-
-svanis = False
-
-# prylLista = prylarOchPersonalAvPaket({"prylPaket": ["id0"]})
-
-# print(fixaPrylarna({"extraPrylar": '1 "id0"', "prylLista": prylLista}))
-
-
-"""
-def raknaTillganglighetsTjanster(inputData):
-  tillganglighetsPris = 0
-  tillganglighetsKostnad = 0
-  if inputData["textningOchÖversättning"] == "Ja":
-    tillganglighetsPris += inputData["postMinuter"]*300
-    tillganglighetsKostnad += inputData["postMinuter"]*160
-
-  elif inputData["textning"] == "Post":
-    tillganglighetsPris += inputData["postMinuter"]*120
-    tillganglighetsKostnad += inputData["postMinuter"]*50
-
-  elif inputData["textning"] == "Live":
-    tillganglighetsPris += inputData["liveMinuter"]
-    tillganglighetsKostnad += inputData["liveMinuter"]
-  if inputData["syntolkning"] == "Live":
-    tillganglighetsPris += inputData[liveMinuter]
-    tillganglighetsKostnad += inputData["liveMinuter"]
-  elif inputData["syntolking"] == "Post":
-
-
-
-    
-  tillganglighetsInfo = {}
-  return tillganglighetsInfo
-"""
-
-inputFields = ["gigNamn", "prylPaket", "dagLängd", "extraPrylar", "dagLängd", "dagar", "extraPersonal", "hyrKostnad",
-               "antalPaket", "antalPrylar", "extraPrylar", "projekt"]
-paketFields = ["Paket Namn", "Paket i prylPaket", "Prylar", "Antal Prylar", "Personal", "Svanis", "Hyreskostnad"]
-prylFields = ["Pryl Namn", "pris"]
-
-# config = {}
-
 
 server()
