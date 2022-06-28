@@ -13,6 +13,7 @@ import calendar
 import datetime
 import holidays
 
+
 class Bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -348,7 +349,7 @@ class Gig:
         if type(dagar) is dict:
             dagar = 1
             self.i_data["dagar"] = 1
-            p
+
         if dagar < 1:
             temp_pris = 0
         elif dagar >= 2:
@@ -367,8 +368,7 @@ class Gig:
 
         date1 = datetime.datetime.fromisoformat(self.i_data["Börja datum"].split(".")[0])
         date2 = datetime.datetime.fromisoformat(self.i_data["slut tid"].split(".")[0])
-        hours = date2-date1
-
+        hours = date2 - date1
 
         self.dag_längd = math.ceil(hours.seconds / 60 / 60)
         self.ob_dict = {"0": [],
@@ -392,9 +392,14 @@ class Gig:
             temp_date = localized_timestamp.astimezone(new_timezone)
 
             if temp_date in holidays.SWE(False, years=temp_date.year):
-                if holidays.SWE(False, years=temp_date.year)[temp_date] in ["Trettondedag jul", "Kristi himmelsfärdsdag", "Alla helgons dag"] and temp_date.hour >= 7:
+                if holidays.SWE(False, years=temp_date.year)[temp_date] in ["Trettondedag jul",
+                                                                            "Kristi himmelsfärdsdag",
+                                                                            "Alla helgons dag"] and temp_date.hour >= 7:
                     self.ob_dict["3"].append(temp_date.timestamp())
-                elif holidays.SWE(False, years=temp_date.year)[temp_date] in ["Nyårsafton"] and temp_date.hour >= 18 or holidays.SWE(False, years=temp_date.year)[temp_date] in ["Pingstdagen", "Sveriges nationaldag", "Midsommarafton", "Julafton"] and temp_date.hour >= 7:
+                elif holidays.SWE(False, years=temp_date.year)[temp_date] in ["Nyårsafton"] and temp_date.hour >= 18 or \
+                        holidays.SWE(False, years=temp_date.year)[temp_date] in ["Pingstdagen", "Sveriges nationaldag",
+                                                                                 "Midsommarafton",
+                                                                                 "Julafton"] and temp_date.hour >= 7:
                     self.ob_dict["4"].append(temp_date.timestamp())
                 else:
                     self.ob_dict["0"].append(temp_date.timestamp())
@@ -411,7 +416,6 @@ class Gig:
                 self.ob_dict["3"].append(temp_date.timestamp())
             else:
                 self.ob_dict["0"].append(temp_date.timestamp())
-
 
         self.ob_mult = 0
         self.ob_mult += len(self.ob_dict["0"]) * config["levandeVideoLön"]
@@ -452,10 +456,10 @@ class Gig:
         try:
             if self.i_data["post_text"]:
                 # Convert from seconds to mins
-                self.i_data["Textning minuter"] = self.i_data["Textning minuter"]/60
+                self.i_data["Textning minuter"] = self.i_data["Textning minuter"] / 60
 
-                self.post_text_pris = self.i_data["Textning minuter"]*self.config["textningPostPris"]
-                self.post_text_kostnad = self.i_data["Textning minuter"]*self.config["textningPostKostnad"]
+                self.post_text_pris = self.i_data["Textning minuter"] * self.config["textningPostPris"]
+                self.post_text_kostnad = self.i_data["Textning minuter"] * self.config["textningPostKostnad"]
         except KeyError:
             pass
 
@@ -795,7 +799,9 @@ def update():
         json.dump(request.json, f, ensure_ascii=False, indent=2)
     return "<3"
 
+
 def server():
     app.run(host='0.0.0.0')
+
 
 server()
