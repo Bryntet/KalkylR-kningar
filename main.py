@@ -145,6 +145,8 @@ class Paketob:
 
 class Gig:
     def __init__(self, i_data, config, prylar, paketen, name):
+        self.tim_budget_personal = None
+        self.tim_budget_frilans = None
         self.ob_dict = {}
         self.bad_day_dict = {}
         self.day_dict = {}
@@ -177,6 +179,16 @@ class Gig:
         self.pre_gig_prylar = []
         self.name = name
         self.i_data = i_data[self.name]
+        self.frilans_hyrkostnad = 0
+        if self.i_data["Frilans"] is not None:
+            self.frilans = len(self.i_data["Frilans"])
+            with open("frilans.json", "r", encoding="utf-8") as f:
+                frilans_list = json.load(f)
+            for frilans in self.i_data["Frilans"]:
+                self.frilans_hyrkostnad += frilans_list[frilans["name"]]["hyrkostnad"]
+            print(self.frilans_hyrkostnad)
+        else:
+            self.frilans = 0
         self.post_text_kostnad = 0
         self.post_text_pris = 0
         self.pryl_pris = 0
@@ -434,7 +446,6 @@ class Gig:
         if self.i_data["specialRigg"]:
             self.rigg_timmar = self.i_data["riggTimmar"]
         else:
-
             self.rigg_timmar = math.floor(self.pryl_pris * config["andelRiggTimmar"])
 
         self.projekt_timmar = math.ceil((self.gig_timmar + self.rigg_timmar) * config["projektTid"])
@@ -445,12 +456,13 @@ class Gig:
             self.restid = self.personal * self.i_data["dagar"] * config["restid"]
 
         self.tim_budget = self.gig_timmar + self.rigg_timmar + self.projekt_timmar + self.restid
+        self.tim_budget_frilans = self.tim_budget/self.personal*self.frilans
+        self.tim_budget_personal = self.tim_budget/self.personal*(self.personal-self.frilans)
         # Timmar gånger peng per timme
-        self.personal_pris = self.tim_budget * self.tim_peng
-
-        self.personal_kostnad = self.tim_budget * config["levandeVideoLön"]
-        self.pris += self.personal_pris
-        # print(self.tim_budget, self.restid, self.projekt_timmar, self.gig_timmar, self.rigg_timmar, self.svanis)
+        self.personal_pris = self.tim_budget_personal * self.tim_peng
+        self.personal_pris_gammal = self.tim_budget * self.tim_peng
+        self.personal_kostnad = self.tim_budget_personal * config["levandeVideoLön"]
+        self.personal_kostnad_gammal = self.tim_budget * config["levandeVideoLön"]
 
     def post_text(self):
         try:
@@ -471,8 +483,18 @@ class Gig:
             self.i_data["hyrKostnad"] = 0
 
         self.hyr_pris = self.i_data["hyrKostnad"] * (1 + config["hyrMulti"])
-        self.kostnad = self.pryl_kostnad + self.personal_kostnad + self.i_data["hyrKostnad"] + self.post_text_kostnad
-        self.pris += self.hyr_pris + self.post_text_pris
+
+        self.gammal_pris = copy.deepcopy(self.pris)
+        self.gammal_pris += self.hyr_pris + self.post_text_pris + self.personal_pris_gammal
+        self.gammal_kostnad = self.pryl_kostnad + self.personal_kostnad_gammal + self.i_data["hyrKostnad"] + self.post_text_kostnad
+
+        if self.personal_pris_gammal != 0:
+            self.personal_marginal_gammal = (self.personal_pris_gammal - self.personal_kostnad_gammal) / self.personal_pris_gammal
+        else:
+            self.personal_marginal_gammal = 0
+
+        self.kostnad = self.pryl_kostnad + self.personal_kostnad + self.i_data["hyrKostnad"] + self.post_text_kostnad + self.frilans_hyrkostnad
+        self.pris += self.hyr_pris + self.post_text_pris + self.personal_pris
 
         # Prevent div by 0
         if self.personal_pris != 0:
@@ -486,13 +508,15 @@ class Gig:
         else:
             self.pryl_marginal = 0
         # TODO
-        #  Add resekostnader
         #  F19, F20 i arket
 
         self.slit_kostnad = self.pryl_pris * config["prylSlit"]
         self.pryl_fonden = self.slit_kostnad * (1 + config["Prylinv (rel slit)"])
         self.avkastning = round(
             self.pris - self.slit_kostnad - self.personal_kostnad - self.i_data["hyrKostnad"]
+        )
+        self.avkastning_gammal = round(
+            self.gammal_pris - self.slit_kostnad - self.personal_kostnad_gammal - self.i_data["hyrKostnad"]
         )
         self.avkastning_without_pris = -1 * self.slit_kostnad - self.personal_kostnad - self.i_data["hyrKostnad"]
         self.hyr_things = self.i_data["hyrKostnad"] * (1 - config["hyrMulti"] * config["hyrMarginal"])
@@ -501,8 +525,14 @@ class Gig:
                     self.pris - self.hyr_things
             ) * 10000
         ) / 100
-
+        self.marginal_gammal = round(
+            self.avkastning_gammal / (
+                    self.gammal_pris - self.hyr_things
+            ) * 10000
+        ) / 100
+        print(self.marginal, self.marginal_gammal)
     def output(self):
+        print(self.tim_budget, self.tim_budget_personal, self.tim_budget_frilans)
         print(f"Post Text: {self.post_text_pris}")
         print(f"Pryl: {self.pryl_pris}")
         print(f"Personal: {self.personal_pris}")
@@ -579,7 +609,6 @@ class Gig:
         output = {
             "Gig namn": f"{self.name} #{leverans_nummer}",
             "Pris": self.pris,
-            "Marginal": self.marginal / 100,
             "Personal": self.personal,
             "Projekt timmar": self.gig_timmar,
             "Rigg timmar": self.rigg_timmar,
@@ -601,7 +630,10 @@ class Gig:
             "slitKostnad": self.slit_kostnad,
             "prylFonden": self.pryl_fonden,
             "hyrthings": self.hyr_things,
-            "avkastWithoutPris": self.avkastning_without_pris
+            "avkastWithoutPris": self.avkastning_without_pris,
+            "frilanstimmar": self.tim_budget_frilans,
+            "Marginal": self.marginal_gammal/100,
+            "total_tid_ex_frilans": self.tim_budget_personal
         }
         print(time.time() - self.start_time)
 
@@ -790,6 +822,8 @@ def get_prylar():
         json.dump(request.json["Config"], f, ensure_ascii=False, indent=2)
     with open('paket.json', 'w', encoding='utf-8') as f:
         json.dump(paket_dict, f, ensure_ascii=False, indent=2)
+    with open('frilans.json', 'w', encoding='utf-8') as f:
+        json.dump(request.json["Frilans"], f, ensure_ascii=False, indent=2)
     return "Tack"
 
 
