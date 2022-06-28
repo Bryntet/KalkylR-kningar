@@ -145,6 +145,11 @@ class Paketob:
 
 class Gig:
     def __init__(self, i_data, config, prylar, paketen, name):
+        self.extra_gig_tid = None
+        self.ob_mult = None
+        self.personal_kostnad_gammal = None
+        self.avkastning_gammal = None
+        self.personal_pris_gammal = None
         self.tim_budget_personal = None
         self.tim_budget_frilans = None
         self.ob_dict = {}
@@ -180,11 +185,13 @@ class Gig:
         self.name = name
         self.i_data = i_data[self.name]
         self.frilans_hyrkostnad = 0
+        self.frilans_lista = []
         if self.i_data["Frilans"] is not None:
             self.frilans = len(self.i_data["Frilans"])
             with open("frilans.json", "r", encoding="utf-8") as f:
                 frilans_list = json.load(f)
             for frilans in self.i_data["Frilans"]:
+                self.frilans_lista.append(frilans["id"])
                 self.frilans_hyrkostnad += frilans_list[frilans["name"]]["hyrkostnad"]
             print(self.frilans_hyrkostnad)
         else:
@@ -218,27 +225,32 @@ class Gig:
             self.svanis = False
 
         # Take all prylar and put them inside a list
-        try:
+        if self.i_data["extraPrylar"] is not None:
             self.check_prylar(prylar)
-        except KeyError:
-            pass
         # Take all prylar from paket and put them inside a list
-        try:
-            self.check_paket()
-        except KeyError:
-            pass
+
+        self.check_paket()
+
+        print(self.pryl_pris)
         # Add accurate count to all prylar and compile them from list to dict
         self.count_them()
+        print(self.pryl_pris)
         # Modify pryl_pris based on factors such as svanis
         self.pryl_mod(config)
+        print(self.pryl_pris)
         # Get the total modPris and in_pris from all the prylar
         self.get_pris()
+        print(self.pryl_pris)
         self.tid(config)
+        print(self.pryl_pris)
         self.post_text()
+        print(self.pryl_pris)
         self.personal_rakna(config)
+        print(self.pryl_pris)
         self.marginal_rakna(config)
+        print(self.pryl_pris)
         self.output()
-
+        print(self.pryl_pris)
     def check_prylar(self, prylar):
         try:
             if self.i_data["antalPrylar"]:
@@ -346,9 +358,11 @@ class Gig:
 
     def get_pris(self):
         for pryl in self.gig_prylar:
+
             self.in_pris += self.gig_prylar[pryl]["in_pris"]
             self.pryl_pris += self.gig_prylar[pryl]["dagarMod"]
             self.pris += self.gig_prylar[pryl]["dagarMod"]
+            print(self.pryl_pris, pryl)
         self.pryl_kostnad = self.pryl_pris * 0.4
 
     def dagar(self, config, pris):
@@ -380,9 +394,26 @@ class Gig:
 
         date1 = datetime.datetime.fromisoformat(self.i_data["Börja datum"].split(".")[0])
         date2 = datetime.datetime.fromisoformat(self.i_data["slut tid"].split(".")[0])
-        hours = date2 - date1
 
-        self.dag_längd = math.ceil(hours.seconds / 60 / 60)
+        hours = date2 - date1
+        hours_list = [math.ceil(hours.seconds/60/60)]
+        if self.i_data["tid för gig"] is not None:
+            try:
+                self.extra_gig_tid = self.i_data["tid för gig"].split(",")
+            except AttributeError:
+                self.extra_gig_tid = [self.i_data["tid för gig"]]
+            for tid in self.extra_gig_tid:
+                temp1 = tid.split("-")[0].split(":")
+                temp2 = tid.split("-")[1].split(":")
+                hours_list.append(
+                    math.ceil((datetime.timedelta(hours=int(temp2[0]), minutes=int(temp2[1])) - datetime.timedelta(hours=int(temp1[0]), minutes=int(temp1[1]))).seconds /60 /60)
+                )
+        else:
+            if self.dagar != 1:
+                for i in range(self.i_data["dagar"]-1):
+                    hours_list.append(hours_list[0])
+        # self.dag_längd = math.ceil(hours.seconds / 60 / 60)
+
         self.ob_dict = {"0": [],
                         "1": [],
                         "2": [],
@@ -394,40 +425,47 @@ class Gig:
             if holiday == "Långfredagen":
                 skärtorsdagen = date - datetime.timedelta(days=1)
                 break
-
-        # Räkna ut ob och lägg i en dict
-        for i in range(self.dag_längd):
-            pre_tz_temp_date = date1 + datetime.timedelta(hours=i)
-            old_timezone = pytz.timezone("UTC")
-            new_timezone = pytz.timezone("Europe/Stockholm")
-            localized_timestamp = old_timezone.localize(pre_tz_temp_date)
-            temp_date = localized_timestamp.astimezone(new_timezone)
-
-            if temp_date in holidays.SWE(False, years=temp_date.year):
-                if holidays.SWE(False, years=temp_date.year)[temp_date] in ["Trettondedag jul",
-                                                                            "Kristi himmelsfärdsdag",
-                                                                            "Alla helgons dag"] and temp_date.hour >= 7:
-                    self.ob_dict["3"].append(temp_date.timestamp())
-                elif holidays.SWE(False, years=temp_date.year)[temp_date] in ["Nyårsafton"] and temp_date.hour >= 18 or \
-                        holidays.SWE(False, years=temp_date.year)[temp_date] in ["Pingstdagen", "Sveriges nationaldag",
-                                                                                 "Midsommarafton",
-                                                                                 "Julafton"] and temp_date.hour >= 7:
+        for hour in hours_list:
+            # Räkna ut ob och lägg i en dict
+            for i in range(hour):
+                pre_tz_temp_date = date1 + datetime.timedelta(hours=i)
+                old_timezone = pytz.timezone("UTC")
+                new_timezone = pytz.timezone("Europe/Stockholm")
+                localized_timestamp = old_timezone.localize(pre_tz_temp_date)
+                temp_date = localized_timestamp.astimezone(new_timezone)
+                if temp_date in holidays.SWE(False, years=temp_date.year):
+                    if holidays.SWE(False, years=temp_date.year)[temp_date] in ["Trettondedag jul",
+                                                                                "Kristi himmelsfärdsdag",
+                                                                                "Alla helgons dag"] and temp_date.hour >= 7:
+                        self.ob_dict["3"].append(temp_date.timestamp())
+                    elif holidays.SWE(False, years=temp_date.year)[temp_date] in ["Nyårsafton"] and temp_date.hour >= 18 or \
+                            holidays.SWE(False, years=temp_date.year)[temp_date] in ["Pingstdagen", "Sveriges nationaldag",
+                                                                                     "Midsommarafton",
+                                                                                     "Julafton"] and temp_date.hour >= 7:
+                        self.ob_dict["4"].append(temp_date.timestamp())
+                    else:
+                        self.ob_dict["0"].append(temp_date.timestamp())
+                elif str(temp_date).split(" ")[0] == str(skärtorsdagen) and temp_date.hour >= 18:
                     self.ob_dict["4"].append(temp_date.timestamp())
+                elif 1 > temp_date.isoweekday() > 5:
+                    if temp_date.hour >= 18:
+                        self.ob_dict["1"].append(temp_date.timestamp())
+                    elif temp_date.hour <= 7:
+                        self.ob_dict["2"].append(temp_date.timestamp())
+                    else:
+                        self.ob_dict["0"].append(temp_date.timestamp())
+                elif temp_date.isoweekday() == 6 or temp_date.isoweekday() == 7:
+                    self.ob_dict["3"].append(temp_date.timestamp())
                 else:
                     self.ob_dict["0"].append(temp_date.timestamp())
-            elif str(temp_date).split(" ")[0] == str(skärtorsdagen) and temp_date.hour >= 18:
-                self.ob_dict["4"].append(temp_date.timestamp())
-            elif 1 <= temp_date.isoweekday() <= 5:
-                if temp_date.hour >= 18:
-                    self.ob_dict["1"].append(temp_date.timestamp())
-                elif temp_date.hour <= 7:
-                    self.ob_dict["2"].append(temp_date.timestamp())
-                else:
-                    self.ob_dict["0"].append(temp_date.timestamp())
-            elif temp_date.isoweekday() == 6 or temp_date.isoweekday() == 7:
-                self.ob_dict["3"].append(temp_date.timestamp())
-            else:
-                self.ob_dict["0"].append(temp_date.timestamp())
+            date1 += datetime.timedelta(days=1)
+
+        avg = 0
+        for hour in hours_list:
+            avg += hour
+        avg /= len(hours_list)
+
+        self.dag_längd = avg
 
         self.ob_mult = 0
         self.ob_mult += len(self.ob_dict["0"]) * config["levandeVideoLön"]
@@ -435,8 +473,9 @@ class Gig:
         self.ob_mult += len(self.ob_dict["2"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 400)
         self.ob_mult += len(self.ob_dict["3"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 300)
         self.ob_mult += len(self.ob_dict["4"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 150)
-        self.ob_mult /= self.dag_längd
+        self.ob_mult /= self.dag_längd*len(hours_list)
         self.ob_mult *= 1.5
+        print(self.personal, "hi")
 
     def personal_rakna(self, config):
         self.tim_peng = math.floor(self.ob_mult * (config["lönJustering"]) / 10) * 10
@@ -454,15 +493,14 @@ class Gig:
             self.restid = 0
         else:
             self.restid = self.personal * self.i_data["dagar"] * config["restid"]
-
         self.tim_budget = self.gig_timmar + self.rigg_timmar + self.projekt_timmar + self.restid
-        self.tim_budget_frilans = self.tim_budget/self.personal*self.frilans
-        self.tim_budget_personal = self.tim_budget/self.personal*(self.personal-self.frilans)
+        self.tim_budget_frilans = self.tim_budget / self.personal * self.frilans
+        self.tim_budget_personal = self.tim_budget / self.personal * (self.personal - self.frilans)
         # Timmar gånger peng per timme
         self.personal_pris = self.tim_budget_personal * self.tim_peng
         self.personal_pris_gammal = self.tim_budget * self.tim_peng
-        self.personal_kostnad = self.tim_budget_personal * config["levandeVideoLön"]
-        self.personal_kostnad_gammal = self.tim_budget * config["levandeVideoLön"]
+        self.personal_kostnad = self.tim_budget_personal * config["levandeVideoLön"]*1.5
+        self.personal_kostnad_gammal = self.tim_budget * config["levandeVideoLön"]+1.5
 
     def post_text(self):
         try:
@@ -486,14 +524,17 @@ class Gig:
 
         self.gammal_pris = copy.deepcopy(self.pris)
         self.gammal_pris += self.hyr_pris + self.post_text_pris + self.personal_pris_gammal
-        self.gammal_kostnad = self.pryl_kostnad + self.personal_kostnad_gammal + self.i_data["hyrKostnad"] + self.post_text_kostnad
+        self.gammal_kostnad = self.pryl_kostnad + self.personal_kostnad_gammal + self.i_data[
+            "hyrKostnad"] + self.post_text_kostnad
 
         if self.personal_pris_gammal != 0:
-            self.personal_marginal_gammal = (self.personal_pris_gammal - self.personal_kostnad_gammal) / self.personal_pris_gammal
+            self.personal_marginal_gammal = (
+                                                    self.personal_pris_gammal - self.personal_kostnad_gammal) / self.personal_pris_gammal
         else:
             self.personal_marginal_gammal = 0
 
-        self.kostnad = self.pryl_kostnad + self.personal_kostnad + self.i_data["hyrKostnad"] + self.post_text_kostnad + self.frilans_hyrkostnad
+        self.kostnad = self.pryl_kostnad + self.personal_kostnad + self.i_data[
+            "hyrKostnad"] + self.post_text_kostnad + self.frilans_hyrkostnad
         self.pris += self.hyr_pris + self.post_text_pris + self.personal_pris
 
         # Prevent div by 0
@@ -531,7 +572,9 @@ class Gig:
             ) * 10000
         ) / 100
         print(self.marginal, self.marginal_gammal)
+
     def output(self):
+        print(self.i_data["dagar"])
         print(self.tim_budget, self.tim_budget_personal, self.tim_budget_frilans)
         print(f"Post Text: {self.post_text_pris}")
         print(f"Pryl: {self.pryl_pris}")
@@ -562,12 +605,10 @@ class Gig:
         except KeyError:
             pass
 
-        try:
+        if self.i_data["extraPrylar"] is not None:
             for pryl in self.i_data["extraPrylar"]:
                 pryl_id_list.append(self.prylar[pryl]["id"])
 
-        except KeyError:
-            pass
         antal_string = ""
 
         try:
@@ -632,9 +673,13 @@ class Gig:
             "hyrthings": self.hyr_things,
             "avkastWithoutPris": self.avkastning_without_pris,
             "frilanstimmar": self.tim_budget_frilans,
-            "Marginal": self.marginal_gammal/100,
-            "total_tid_ex_frilans": self.tim_budget_personal
+            "Marginal": self.marginal_gammal / 100,
+            "total_tid_ex_frilans": self.tim_budget_personal,
+            "frilans": self.frilans_lista,
+            "projektledare": self.i_data["projektledare"][0]["id"],
+            "producent": self.i_data["producent"][0]["id"]
         }
+        print(self.i_data["projektledare"])
         print(time.time() - self.start_time)
 
         if self.update:
@@ -703,7 +748,6 @@ def take_back():
     except OSError:
         output = {}
 
-    key = list(backup.keys())[0]
     backup["update"] = False
     requests.post(
         url="https://hooks.airtable.com/workflows/v1/genericWebhook/appG1QEArAVGABdjm/wflcP4lYCTDwmSs4g"
@@ -735,15 +779,14 @@ def start():
     for key in i_data:
         pryl_list = []
         paket_list = []
-        try:
+        if i_data[key]["extraPrylar"] is not None:
             i = 0
             for pryl in i_data[key]["extraPrylar"]:
                 pryl.pop("id", None)
                 pryl_list.append(i_data[key]["extraPrylar"][i]["name"])
                 i += 1
             i_data[key]["extraPrylar"] = pryl_list
-        except (KeyError, AttributeError):
-            pass
+
         if i_data[key]["prylPaket"] is not None:
             i = 0
             for paket in i_data[key]["prylPaket"]:
