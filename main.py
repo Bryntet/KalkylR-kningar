@@ -538,7 +538,7 @@ class Gig:
         self.personal_pris = self.tim_budget_personal * self.tim_peng
         self.personal_pris_gammal = self.tim_budget * self.tim_peng
         self.personal_kostnad = self.tim_budget_personal * config["levandeVideoLön"] * 1.5
-        self.personal_kostnad_gammal = self.tim_budget * config["levandeVideoLön"] + 1.5
+        self.personal_kostnad_gammal = self.tim_budget * config["levandeVideoLön"] * 1.5
         print(self.tim_budget, self.tim_budget_personal, self.personal_kostnad, self.personal_kostnad_gammal)
     def post_text(self):
         try:
