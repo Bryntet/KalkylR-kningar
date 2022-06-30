@@ -599,8 +599,6 @@ class Gig:
         
 
     def output(self):
-        print(self.i_data["dagar"])
-        print(self.tim_budget, self.tim_budget_personal, self.tim_budget_frilans)
         print(f"Post Text: {self.post_text_pris}")
         print(f"Pryl: {self.pryl_pris}")
         print(f"Personal: {self.personal_pris}")
@@ -704,7 +702,10 @@ class Gig:
             "projektledare": self.i_data["projektledare"][0]["id"],
             "producent": self.i_data["producent"][0]["id"],
             "leverans_nummer": leverans_nummer,
-            "Kund": self.i_data["Kund"][0]["id"]
+            "Kund": self.i_data["Kund"][0]["id"],
+            "Svanis": self.svanis,
+            "Typ": self.i_data["Projekt typ"]["name"],
+            "Adress": self.i_data["Adress"]
         }
         print(time.time() - self.start_time)
 
