@@ -13,7 +13,6 @@ import calendar
 import datetime
 import holidays
 
-
 class Bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -545,27 +544,27 @@ class Gig:
         self.gammal_pris = copy.deepcopy(self.pris)
         self.gammal_kostnad = self.pryl_kostnad + self.personal_kostnad_gammal + self.i_data[
             "hyrKostnad"] + self.post_text_kostnad + self.frilans_hyrkostnad
-        
+
         if self.personal_pris_gammal != 0:
             self.personal_marginal_gammal = (self.personal_pris_gammal - self.personal_kostnad_gammal) / self.personal_pris_gammal
         else:
             self.personal_marginal_gammal = 0
-        
+
         self.kostnad = self.pryl_kostnad + self.personal_kostnad + self.i_data[
             "hyrKostnad"] + self.post_text_kostnad + self.frilans_hyrkostnad
-        
+
 
         self.gammal_pris += self.hyr_pris + self.post_text_pris + self.personal_pris_gammal
 
         self.pris += self.hyr_pris + self.post_text_pris + self.personal_pris
 
-        
+
         # Prevent div by 0
         if self.personal_pris != 0:
             self.personal_marginal = (self.personal_pris - self.personal_kostnad) / self.personal_pris
         else:
             self.personal_marginal = 0
-        
+
         # Prevent div by 0
         if self.pryl_pris != 0:
             self.pryl_marginal = (self.pryl_pris - self.pryl_kostnad) / self.pryl_pris
@@ -573,7 +572,7 @@ class Gig:
             self.pryl_marginal = 0
         # TODO
         #  F19, F20 i arket
-        
+
         self.slit_kostnad = self.pryl_pris * config["prylSlit"]
         self.pryl_fonden = self.slit_kostnad * (1 + config["Prylinv (rel slit)"])
 
@@ -596,7 +595,7 @@ class Gig:
                     self.gammal_pris - self.hyr_things
             ) * 10000
         ) / 100
-        
+
 
     def output(self):
         print(f"Post Text: {self.post_text_pris}")
@@ -705,7 +704,8 @@ class Gig:
             "Kund": self.i_data["Kund"][0]["id"],
             "Svanis": self.svanis,
             "Typ": self.i_data["Projekt typ"]["name"],
-            "Adress": self.i_data["Adress"]
+            "Adress": self.i_data["Adress"],
+            "Beställare": [self.i_data["Beställare"][0]["id"]]
         }
         print(time.time() - self.start_time)
 
@@ -730,8 +730,8 @@ class Gig:
         for getin, getout in self.dagar_list:
             kalender_list.append({
                 "Name": self.name,
-                "Getin": getin.isoformat(),
-                "Getout": getout.isoformat(),
+                "Getin-hidden": getin.isoformat(),
+                "Getout-hidden": getout.isoformat(),
                 "Projekt": output_from_airtable["fields"]["Projekt"],
                 "Leverans": [output_from_airtable["id"]]
             })
