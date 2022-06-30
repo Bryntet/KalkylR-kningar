@@ -42,7 +42,6 @@ output_table = Table(api_key, base_id, 'Output table')
 beforeTime = time.time()
 output_tables = []
 
-print(time.time() - beforeTime)
 
 app = Flask(__name__)
 
@@ -62,7 +61,6 @@ class Prylob:
         self.mult -= self.livs_längd * 15
         self.mult /= 100
 
-        # print(self.mult)
 
     def rounding(self, config):
         # Convert to lower price as a percentage of the buy price
@@ -82,7 +80,6 @@ class Paketob:
     def __init__(self, prylar, args):
         # Gets all kwargs provided and adds them to self
         # Current kwargs:
-        # print(args, "test")
         self.paket_prylar = []
         self.antal_av_pryl = None
         self.paket_dict = {}
@@ -92,11 +89,9 @@ class Paketob:
 
         self.pris = 0
         self.prylar = {}
-        # print(prylar)
 
         if self.paket_i_pryl_paket is not None:
             for paket in self.paket_i_pryl_paket:
-                # print(paket, self.paket_dict[paket["name"]])
                 for pryl in self.paket_dict[paket["name"]]["prylar"]:
                     if pryl in self.prylar.keys():
                         self.prylar[pryl]["amount"] += 1
@@ -113,7 +108,6 @@ class Paketob:
                     self.prylar.update({pryl: copy.deepcopy(prylar[pryl])})
                     self.prylar[pryl]["amount"] = int(self.antal_av_pryl[ind])
 
-                # print(self.prylar, "\n\n\n\n")
             else:
                 for pryl in self.paket_prylar:
                     ind = self.paket_prylar.index(pryl)
@@ -189,14 +183,12 @@ class Gig:
         self.frilans_hyrkostnad = 0
         self.frilans_lista = []
         if self.i_data["Frilans"] is not None:
-            print(self.i_data["Frilans"])
             self.frilans = len(self.i_data["Frilans"])
             with open("frilans.json", "r", encoding="utf-8") as f:
                 frilans_list = json.load(f)
             for frilans in self.i_data["Frilans"]:
                 self.frilans_lista.append(frilans["id"])
                 self.frilans_hyrkostnad += self.i_data["dagar"] * frilans_list[frilans["name"]]["hyrkostnad"]
-            print(self.frilans_lista, self.frilans_hyrkostnad)
         else:
             self.frilans = 0
 
@@ -235,26 +227,22 @@ class Gig:
 
         self.check_paket()
 
-        print(self.pryl_pris)
         # Add accurate count to all prylar and compile them from list to dict
         self.count_them()
-        print(self.pryl_pris)
         # Modify pryl_pris based on factors such as svanis
         self.pryl_mod(config)
-        print(self.pryl_pris)
         # Get the total modPris and in_pris from all the prylar
         self.get_pris()
-        print(self.pryl_pris)
+
         self.tid(config)
-        print(self.pryl_pris)
+
         self.post_text()
-        print(self.pryl_pris)
+
         self.personal_rakna(config)
-        print(self.pryl_pris)
+
         self.marginal_rakna(config)
-        print(self.pryl_pris)
+
         self.output()
-        print(self.pryl_pris)
 
     def check_prylar(self, prylar):
         try:
@@ -328,18 +316,14 @@ class Gig:
             i += 1
 
     def count_them(self):
-        # print(self.pre_gig_prylar, "hi")
         i = 0
         for pryl in self.pre_gig_prylar:
             for key in pryl:
-                # print(i, key, "\n", list(self.gig_prylar.keys()), "\n")
                 if key in list(self.gig_prylar.keys()):
                     self.gig_prylar[key]["amount"] += copy.deepcopy(self.pre_gig_prylar[i][key]["amount"])
-                    # print("hi", key, self.gig_prylar[key]["amount"])
                 else:
                     self.gig_prylar.update(copy.deepcopy(self.pre_gig_prylar[i]))
             i += 1
-        # print(self.gig_prylar)
 
     def pryl_mod(self, config):
 
@@ -366,7 +350,6 @@ class Gig:
             self.in_pris += self.gig_prylar[pryl]["in_pris"]
             self.pryl_pris += self.gig_prylar[pryl]["dagarMod"]
             self.pris += self.gig_prylar[pryl]["dagarMod"]
-            print(self.pryl_pris, pryl)
         self.pryl_kostnad = self.pryl_pris * 0.4
 
     def dagar(self, config, pris):
@@ -442,7 +425,6 @@ class Gig:
 
         self.dagar_list = temp_dagar_list
         # self.dag_längd = math.ceil(hours.seconds / 60 / 60)
-        print(self.dagar_list)
         self.ob_dict = {"0": [],
                         "1": [],
                         "2": [],
@@ -506,7 +488,6 @@ class Gig:
         self.ob_mult += len(self.ob_dict["4"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 150)
         self.ob_mult /= self.dag_längd * len(hours_list)
         self.ob_mult *= 1.5
-        print(self.personal, "hi")
 
     def personal_rakna(self, config):
         self.tim_peng = math.floor(self.ob_mult * (config["lönJustering"]) / 10) * 10
@@ -539,7 +520,8 @@ class Gig:
         self.personal_pris_gammal = self.tim_budget * self.tim_peng
         self.personal_kostnad = self.tim_budget_personal * config["levandeVideoLön"] * 1.5
         self.personal_kostnad_gammal = self.tim_budget * config["levandeVideoLön"] * 1.5
-        print(self.tim_budget, self.tim_budget_personal, self.personal_kostnad, self.personal_kostnad_gammal)
+
+
     def post_text(self):
         try:
             if self.i_data["post_text"]:
@@ -563,27 +545,27 @@ class Gig:
         self.gammal_pris = copy.deepcopy(self.pris)
         self.gammal_kostnad = self.pryl_kostnad + self.personal_kostnad_gammal + self.i_data[
             "hyrKostnad"] + self.post_text_kostnad + self.frilans_hyrkostnad
-        print(self.pris, self.gammal_pris)
+        
         if self.personal_pris_gammal != 0:
             self.personal_marginal_gammal = (self.personal_pris_gammal - self.personal_kostnad_gammal) / self.personal_pris_gammal
         else:
             self.personal_marginal_gammal = 0
-        print(self.pris, self.gammal_pris)
+        
         self.kostnad = self.pryl_kostnad + self.personal_kostnad + self.i_data[
             "hyrKostnad"] + self.post_text_kostnad + self.frilans_hyrkostnad
-        print(self.pris, self.gammal_pris)
+        
 
         self.gammal_pris += self.hyr_pris + self.post_text_pris + self.personal_pris_gammal
 
         self.pris += self.hyr_pris + self.post_text_pris + self.personal_pris
 
-        print(self.pris, self.gammal_pris)
+        
         # Prevent div by 0
         if self.personal_pris != 0:
             self.personal_marginal = (self.personal_pris - self.personal_kostnad) / self.personal_pris
         else:
             self.personal_marginal = 0
-        print(self.pris, self.gammal_pris)
+        
         # Prevent div by 0
         if self.pryl_pris != 0:
             self.pryl_marginal = (self.pryl_pris - self.pryl_kostnad) / self.pryl_pris
@@ -591,7 +573,7 @@ class Gig:
             self.pryl_marginal = 0
         # TODO
         #  F19, F20 i arket
-        print(self.pris, self.gammal_pris)
+        
         self.slit_kostnad = self.pryl_pris * config["prylSlit"]
         self.pryl_fonden = self.slit_kostnad * (1 + config["Prylinv (rel slit)"])
 
@@ -602,7 +584,6 @@ class Gig:
         self.avkastning_gammal = round(
             self.gammal_pris - self.slit_kostnad - self.personal_kostnad_gammal - self.i_data["hyrKostnad"]
         )
-        print(self.avkastning, self.avkastning_gammal, "hi")
         self.avkastning_without_pris = -1 * self.slit_kostnad - self.personal_kostnad - self.i_data["hyrKostnad"]
         self.hyr_things = self.i_data["hyrKostnad"] * (1 - config["hyrMulti"] * config["hyrMarginal"])
         self.marginal = round(
@@ -615,8 +596,7 @@ class Gig:
                     self.gammal_pris - self.hyr_things
             ) * 10000
         ) / 100
-        print(self.pris, self.gammal_pris)
-        print(self.marginal, self.marginal_gammal)
+        
 
     def output(self):
         print(self.i_data["dagar"])
@@ -726,7 +706,6 @@ class Gig:
             "leverans_nummer": leverans_nummer,
             "Kund": self.i_data["Kund"][0]["id"]
         }
-        print(self.i_data["projektledare"])
         print(time.time() - self.start_time)
 
         if self.update:
@@ -735,7 +714,6 @@ class Gig:
             output_from_airtable = self.output_table.create(output, typecast=True)
 
         print(time.time() - self.start_time)
-        print(output_from_airtable)
         output_to_json = {
             f"{self.name} #{leverans_nummer}": output
         }
