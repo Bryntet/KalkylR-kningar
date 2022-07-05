@@ -14,7 +14,7 @@ Flask = "^2.0.2"
 requests = "^2.28.1"
 pandas = "^1.4.3"
 ipython = "^8.1.1"
-tabulate = "^0.8.9"
+tabulate = "^0.8.10"
 holidays = "^0.14.2"
 pytz = "^2022.1"
 
