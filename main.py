@@ -383,7 +383,7 @@ class Gig:
         for day in self.bad_day_dict:
             self.day_dict[i] = day
             i += 1
-        print(self.i_data)
+
         date1 = datetime.datetime.fromisoformat(self.i_data["Börja datum"].split(".")[0])
         date2 = datetime.datetime.fromisoformat(self.i_data["slut tid"].split(".")[0])
 
@@ -483,6 +483,7 @@ class Gig:
         avg /= len(hours_list)
 
         self.dag_längd = avg
+
 
         self.ob_mult = 0
         self.ob_mult += len(self.ob_dict["0"]) * config["levandeVideoLön"]
@@ -678,6 +679,10 @@ class Gig:
             self.i_data["Projekt typ"]["name"] = None
         if self.i_data["Beställare"] is None:
             self.i_data["Beställare"] = [{"id":None}]
+        if self.i_data["projektledare"] is None:
+            self.i_data["projektledare"] = [{"id": None}]
+        if self.i_data["producent"] is None:
+            self.i_data["producent"] = [{"id":None}]
         output = {
             "Gig namn": f"{self.name} #{leverans_nummer}",
             "Pris": self.pris,
@@ -742,13 +747,21 @@ class Gig:
             json.dump(log, f, ensure_ascii=False, indent=2)
         # print(output)
         kalender_list = []
+
+        if self.i_data["Frilans"] is not None:
+            frilans_personer = []
+            for record in self.i_data["Frilans"]:
+                frilans_personer.append(record["id"])
+        else:
+            frilans_personer = None
         for getin, getout in self.dagar_list:
             kalender_list.append({
                 "Name": self.name,
                 "Getin-hidden": getin.isoformat(),
                 "Getout-hidden": getout.isoformat(),
                 "Projekt": output_from_airtable["fields"]["Projekt"],
-                "Leverans": [output_from_airtable["id"]]
+                "Leverans": [output_from_airtable["id"]],
+                "Frilans": frilans_personer
             })
 
         self.kalender_table.batch_create(kalender_list)
@@ -931,7 +944,9 @@ def start():
         paket = json.load(f)
     with open('prylar.json', 'r', encoding='utf-8') as f:
         prylar = json.load(f)
-
+    if i_data_name == "Unnamed record":
+        i_data_name = i_data["Unnamed record"]["Projekt"][0]["name"]
+        i_data[i_data_name] = i_data["Unnamed record"]
     Gig(i_data, config, prylar, paket, i_data_name)
 
     return "<3"
