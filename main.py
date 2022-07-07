@@ -14,6 +14,7 @@ import datetime
 import holidays
 import urllib.parse
 
+
 class Bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -137,6 +138,7 @@ class Paketob:
 
 class Gig:
     def __init__(self, i_data, config, prylar, paketen, name):
+        self.url = None
         self.dagar_list = None
         self.extra_gig_tid = None
         self.ob_mult = None
@@ -180,17 +182,14 @@ class Gig:
         self.i_data = i_data[self.name]
         self.frilans_hyrkostnad = 0
         self.frilans_lista = []
-        if "Frilans" in self.i_data:
-            if type(self.i_data["Frilans"]) != type(None):
-                print(self.i_data)
-                self.frilans = len(self.i_data["Frilans"])
-                with open("frilans.json", "r", encoding="utf-8") as f:
-                    frilans_list = json.load(f)
-                for frilans in self.i_data["Frilans"]:
-                    self.frilans_lista.append(frilans["id"])
-                    self.frilans_hyrkostnad += self.i_data["dagar"] * frilans_list[frilans["name"]]["hyrkostnad"]
-            else:
-                self.frilans = 0
+        if self.i_data["Frilans"] is not None:
+            print(self.i_data)
+            self.frilans = len(self.i_data["Frilans"])
+            with open("frilans.json", "r", encoding="utf-8") as f:
+                frilans_list = json.load(f)
+            for frilans in self.i_data["Frilans"]:
+                self.frilans_lista.append(frilans["id"])
+                self.frilans_hyrkostnad += self.i_data["dagar"] * frilans_list[frilans["name"]]["hyrkostnad"]
         else:
             self.frilans = 0
         self.post_text_kostnad = 0
@@ -384,35 +383,59 @@ class Gig:
             self.day_dict[i] = day
             i += 1
 
-        date1 = datetime.datetime.fromisoformat(self.i_data["Börja datum"].split(".")[0])
-        date2 = datetime.datetime.fromisoformat(self.i_data["slut tid"].split(".")[0])
+        start_date = datetime.datetime.fromisoformat(self.i_data["Börja datum"].split(".")[0])
+        end_date = datetime.datetime.fromisoformat(self.i_data["Sluta datum"].split(".")[0])
 
-        hours = date2 - date1
-        hours_list = [math.ceil(hours.seconds / 60 / 60)]
-
-        self.dagar_list = [[date1, date2]]
+        hours_list = []
+        self.dagar_list = []
 
         if self.i_data["tid för gig"] is not None:
             try:
                 self.extra_gig_tid = self.i_data["tid för gig"].split(",")
             except AttributeError:
-                self.extra_gig_tid = [self.i_data["tid för gig"]]
+                self.extra_gig_tid = []
+                for dag in range(int(self.i_data["dagar"])):
+                    self.extra_gig_tid.append(self.i_data["tid för gig"])
+            while len(self.extra_gig_tid) < self.i_data["dagar"]:
+                self.extra_gig_tid.append(self.extra_gig_tid[0])
             i = 1
             for tid in self.extra_gig_tid:
+                self.dagar_list.append([])
+                j = 0
+                next_change = False
+                for temp in tid.split("-"):
+                    print(temp)
+                    temp = temp.split(":")
+                    print(temp)
+                    date = start_date.replace(day=int(start_date.day) + i, hour=int(temp[0]), minute=int(temp[1]))
+
+                    if j % 2 == 0 and j != 0 or next_change:
+                        print(date + datetime.timedelta(hours=1), self.dagar_list[-1][-1])
+                        if date + datetime.timedelta(hours=1) <= self.dagar_list[-1][-1] or next_change:
+                            if next_change:
+                                self.dagar_list[-1].append(date)
+                            else:
+                                del self.dagar_list[-1][-1]
+                                next_change = True
+                        else:
+                            if not next_change:
+                                self.dagar_list.append([])
+                    print(next_change)
+                    if not next_change:
+                        print("hi")
+                        self.dagar_list[-1].append(date)
+                    else:
+                        next_change = False
+                    j += 1
                 temp1 = tid.split("-")[0].split(":")
                 temp2 = tid.split("-")[1].split(":")
 
-                self.dagar_list.append(
-                    [
-                        date1.replace(day=int(date1.day) + i, hour=int(temp1[0]), minute=int(temp1[1])),
-                        date1.replace(day=int(date1.day) + i, hour=int(temp2[0]), minute=int(temp2[1]))
-                    ]
-                )
                 hours_list.append(
                     math.ceil((datetime.timedelta(hours=int(temp2[0]), minutes=int(temp2[1])) - datetime.timedelta(
                         hours=int(temp1[0]), minutes=int(temp1[1]))).seconds / 60 / 60)
                 )
                 i += 1
+            print(hours_list)
         else:
             if self.dagar != 1:
                 for i in range(self.i_data["dagar"] - 1):
@@ -420,6 +443,7 @@ class Gig:
         new_timezone = pytz.timezone("UTC")
         old_timezone = pytz.timezone("Europe/Stockholm")
         temp_dagar_list = []
+        print(self.dagar_list)
         for getin, getout in self.dagar_list:
             localized_timestamp = old_timezone.localize(getin)
             getin = localized_timestamp.astimezone(new_timezone)
@@ -436,14 +460,14 @@ class Gig:
                         "4": []
                         }
         skärtorsdagen = None
-        for date, holiday in holidays.SWE(False, years=date2.year).items():
+        for date, holiday in holidays.SWE(False, years=end_date.year).items():
             if holiday == "Långfredagen":
                 skärtorsdagen = date - datetime.timedelta(days=1)
                 break
         for hour in hours_list:
             # Räkna ut ob och lägg i en dict
             for i in range(hour):
-                pre_tz_temp_date = date1 + datetime.timedelta(hours=i)
+                pre_tz_temp_date = start_date + datetime.timedelta(hours=i)
                 old_timezone = pytz.timezone("UTC")
                 new_timezone = pytz.timezone("Europe/Stockholm")
                 localized_timestamp = old_timezone.localize(pre_tz_temp_date)
@@ -475,7 +499,7 @@ class Gig:
                     self.ob_dict["3"].append(temp_date.timestamp())
                 else:
                     self.ob_dict["0"].append(temp_date.timestamp())
-            date1 += datetime.timedelta(days=1)
+            start_date += datetime.timedelta(days=1)
 
         avg = 0
         for hour in hours_list:
@@ -484,13 +508,13 @@ class Gig:
 
         self.dag_längd = avg
 
-
         self.ob_mult = 0
         self.ob_mult += len(self.ob_dict["0"]) * config["levandeVideoLön"]
         self.ob_mult += len(self.ob_dict["1"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 600)
         self.ob_mult += len(self.ob_dict["2"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 400)
         self.ob_mult += len(self.ob_dict["3"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 300)
         self.ob_mult += len(self.ob_dict["4"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 150)
+        print(self.dag_längd)
         self.ob_mult /= self.dag_längd * len(hours_list)
         self.ob_mult *= 1.5
 
@@ -552,7 +576,7 @@ class Gig:
 
         if self.personal_pris_gammal != 0:
             self.personal_marginal_gammal = (
-                                                        self.personal_pris_gammal - self.personal_kostnad_gammal) / self.personal_pris_gammal
+                                                    self.personal_pris_gammal - self.personal_kostnad_gammal) / self.personal_pris_gammal
         else:
             self.personal_marginal_gammal = 0
 
@@ -628,7 +652,6 @@ class Gig:
             for paket in self.i_data["prylPaket"]:
                 paket_id_list.append(self.paketen[paket]["id"])
 
-
         if self.i_data["extraPrylar"] is not None:
             for pryl in self.i_data["extraPrylar"]:
                 pryl_id_list.append(self.prylar[pryl]["id"])
@@ -678,11 +701,11 @@ class Gig:
             self.i_data["Projekt typ"] = {}
             self.i_data["Projekt typ"]["name"] = None
         if self.i_data["Beställare"] is None:
-            self.i_data["Beställare"] = [{"id":None}]
+            self.i_data["Beställare"] = [{"id": None}]
         if self.i_data["projektledare"] is None:
             self.i_data["projektledare"] = [{"id": None}]
         if self.i_data["producent"] is None:
-            self.i_data["producent"] = [{"id":None}]
+            self.i_data["producent"] = [{"id": None}]
         output = {
             "Gig namn": f"{self.name} #{leverans_nummer}",
             "Pris": self.pris,
@@ -773,16 +796,16 @@ class Gig:
         paket = ""
         prylar = ""
         if "pryl_paket_id" in self.i_data:
-            for id in self.i_data["pryl_paket_id"]:
-                paket += id["id"] + ","
+            for ID in self.i_data["pryl_paket_id"]:
+                paket += ID["id"] + ","
         if "extra_prylar_id" in self.i_data:
-            for id in self.i_data["extra_prylar_id"]:
-                prylar += id["id"] + ","
+            for ID in self.i_data["extra_prylar_id"]:
+                prylar += ID["id"] + ","
         paket = paket[0:-1]
         prylar = prylar[0:-1]
-        print(self.i_data["producent"])
+
         params = {
-            "prefill_projektledare":  self.i_data["projektledare"][0]["id"],
+            "prefill_projektledare": self.i_data["projektledare"][0]["id"],
             "prefill_producent": self.i_data["producent"][0]["id"],
             "prefill_uppdateraa": True,
             "prefill_uppdateraProjekt": self.airtable_record,
@@ -793,7 +816,6 @@ class Gig:
             "prefill_extraPersonal": self.i_data["extraPersonal"],
             "prefill_hyrKostnad": self.i_data["hyrKostnad"],
             "prefill_Börja datum": self.i_data["Börja datum"],
-            "prefill_slut tid": self.i_data["slut tid"],
             "prefill_tid för gig": self.i_data["tid för gig"],
             "prefill_preSluta datum": self.i_data["preSluta datum"],
             "prefill_post_text": self.i_data["post_text"],
@@ -826,7 +848,8 @@ class Gig:
         old_input_id = copy.deepcopy(self.i_data["old_input_id"])
         input_id = copy.deepcopy(self.i_data["input_id"])
         self.i_data["Projekt typ"] = self.i_data["Projekt typ"]["name"]
-        del_list = ["dagar", "specialRigg", "riggTimmar", "Uppdatera", "Created", "Sluta datum", "old_input_id", "extra_prylar_id", "input_id", "pryl_paket_id"]
+        del_list = ["dagar", "specialRigg", "riggTimmar", "Uppdatera", "Created", "Sluta datum", "old_input_id",
+                    "extra_prylar_id", "input_id", "pryl_paket_id"]
         for key in del_list:
             try:
                 del self.i_data[key]
@@ -834,9 +857,9 @@ class Gig:
                 print(key)
                 pass
 
-        input_data_table.update(input_data_table.get(input_id)["fields"]["old_input_id"][0], self.i_data, typecast=True, replace=True)
+        input_data_table.update(input_data_table.get(input_id)["fields"]["old_input_id"][0], self.i_data, typecast=True,
+                                replace=True)
         input_data_table.delete(input_id)
-
 
 
 @app.route("/airtable", methods=["POST"])
