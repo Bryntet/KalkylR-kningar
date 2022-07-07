@@ -427,10 +427,7 @@ class Gig:
                             )
                     else:
                         next_change = False
-
-
                     j += 1
-
                 i += 1
             print(hours_list)
         else:
@@ -533,7 +530,6 @@ class Gig:
             self.tim_budget_frilans = self.tim_budget / self.personal * self.frilans
         else:
             self.tim_budget_frilans = 0
-
         if self.personal - self.frilans != 0:
             self.tim_budget_personal = self.tim_budget / self.personal * (self.personal - self.frilans)
         else:
@@ -771,18 +767,36 @@ class Gig:
                 frilans_personer.append(record["id"])
         else:
             frilans_personer = None
-
+        i = 0
+        record_ids = []
+        if self.update:
+            print(output_from_airtable["fields"])
+            for thing in output_from_airtable["fields"]["Projekt kalender"]:
+                record_ids.append(thing)
         for getin, getout in self.dagar_list:
-            kalender_list.append({
+            dict_thing = {
                 "Name": self.name,
                 "Getin-hidden": getin.isoformat(),
                 "Getout-hidden": getout.isoformat(),
                 "Projekt": output_from_airtable["fields"]["Projekt"],
                 "Leverans": [output_from_airtable["id"]],
                 "Frilans": frilans_personer
-            })
-
-        self.kalender_table.batch_create(kalender_list)
+            }
+            if self.update and len(self.dagar_list) == len(record_ids):
+                kalender_list.append({})
+                kalender_list[-1]["id"] = record_ids[i]
+                kalender_list[-1]["fields"] = dict_thing
+            else:
+                kalender_list.append(dict_thing)
+            i += 1
+        if self.update:
+            if len(kalender_list) != len(record_ids):
+                self.kalender_table.batch_delete(record_ids)
+                self.kalender_table.batch_create(kalender_list)
+            else:
+                self.kalender_table.batch_update(kalender_list)
+        else:
+            self.kalender_table.batch_create(kalender_list)
         print(time.time() - self.start_time)
 
         # self.output_table.create(output)
@@ -963,7 +977,7 @@ def start():
     with open('prylar.json', 'r', encoding='utf-8') as f:
         prylar = json.load(f)
     if i_data_name == "Unnamed record":
-        i_data_name = i_data["Unnamed record"]["Projekt"][0]["name"]
+        i_data_name = re.split(" #\d+", i_data["Unnamed record"]["uppdateraProjekt"][0]["name"])[0]
         i_data[i_data_name] = i_data["Unnamed record"]
     Gig(i_data, config, prylar, paket, i_data_name)
 
