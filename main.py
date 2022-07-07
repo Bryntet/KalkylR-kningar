@@ -12,6 +12,7 @@ import time
 import calendar
 import datetime
 import holidays
+import urllib.parse
 
 class Bcolors:
     HEADER = '\033[95m'
@@ -41,7 +42,6 @@ output_table = Table(api_key, base_id, 'Output table')
 beforeTime = time.time()
 output_tables = []
 
-
 app = Flask(__name__)
 
 
@@ -59,7 +59,6 @@ class Prylob:
         self.mult = 145
         self.mult -= self.livs_längd * 15
         self.mult /= 100
-
 
     def rounding(self, config):
         # Convert to lower price as a percentage of the buy price
@@ -181,16 +180,19 @@ class Gig:
         self.i_data = i_data[self.name]
         self.frilans_hyrkostnad = 0
         self.frilans_lista = []
-        if self.i_data["Frilans"] is not None:
-            self.frilans = len(self.i_data["Frilans"])
-            with open("frilans.json", "r", encoding="utf-8") as f:
-                frilans_list = json.load(f)
-            for frilans in self.i_data["Frilans"]:
-                self.frilans_lista.append(frilans["id"])
-                self.frilans_hyrkostnad += self.i_data["dagar"] * frilans_list[frilans["name"]]["hyrkostnad"]
+        if "Frilans" in self.i_data:
+            if type(self.i_data["Frilans"]) != type(None):
+                print(self.i_data)
+                self.frilans = len(self.i_data["Frilans"])
+                with open("frilans.json", "r", encoding="utf-8") as f:
+                    frilans_list = json.load(f)
+                for frilans in self.i_data["Frilans"]:
+                    self.frilans_lista.append(frilans["id"])
+                    self.frilans_hyrkostnad += self.i_data["dagar"] * frilans_list[frilans["name"]]["hyrkostnad"]
+            else:
+                self.frilans = 0
         else:
             self.frilans = 0
-
         self.post_text_kostnad = 0
         self.post_text_pris = 0
         self.pryl_pris = 0
@@ -223,8 +225,8 @@ class Gig:
         if self.i_data["extraPrylar"] is not None:
             self.check_prylar(prylar)
         # Take all prylar from paket and put them inside a list
-
-        self.check_paket()
+        if self.i_data["prylPaket"] is not None:
+            self.check_paket()
 
         # Add accurate count to all prylar and compile them from list to dict
         self.count_them()
@@ -242,6 +244,11 @@ class Gig:
         self.marginal_rakna(config)
 
         self.output()
+
+        self.url_make()
+
+        if self.update:
+            self.updating()
 
     def check_prylar(self, prylar):
         try:
@@ -274,7 +281,6 @@ class Gig:
     def check_paket(self):
         try:
             if self.i_data["antalPaket"]:
-
                 try:
                     int(self.i_data["antalPaket"])
                     self.i_data["antalPaket"] = [self.i_data["antalPaket"]]
@@ -377,7 +383,7 @@ class Gig:
         for day in self.bad_day_dict:
             self.day_dict[i] = day
             i += 1
-
+        print(self.i_data)
         date1 = datetime.datetime.fromisoformat(self.i_data["Börja datum"].split(".")[0])
         date2 = datetime.datetime.fromisoformat(self.i_data["slut tid"].split(".")[0])
 
@@ -393,7 +399,6 @@ class Gig:
                 self.extra_gig_tid = [self.i_data["tid för gig"]]
             i = 1
             for tid in self.extra_gig_tid:
-
                 temp1 = tid.split("-")[0].split(":")
                 temp2 = tid.split("-")[1].split(":")
 
@@ -511,7 +516,7 @@ class Gig:
             self.tim_budget_frilans = 0
 
         if self.personal - self.frilans != 0:
-            self.tim_budget_personal = self.tim_budget/self.personal*(self.personal-self.frilans)
+            self.tim_budget_personal = self.tim_budget / self.personal * (self.personal - self.frilans)
         else:
             self.tim_budget_personal = 0
         # Timmar gånger peng per timme
@@ -519,7 +524,6 @@ class Gig:
         self.personal_pris_gammal = self.tim_budget * self.tim_peng
         self.personal_kostnad = self.tim_budget_personal * config["levandeVideoLön"] * 1.5
         self.personal_kostnad_gammal = self.tim_budget * config["levandeVideoLön"] * 1.5
-
 
     def post_text(self):
         try:
@@ -546,18 +550,17 @@ class Gig:
             "hyrKostnad"] + self.post_text_kostnad + self.frilans_hyrkostnad
 
         if self.personal_pris_gammal != 0:
-            self.personal_marginal_gammal = (self.personal_pris_gammal - self.personal_kostnad_gammal) / self.personal_pris_gammal
+            self.personal_marginal_gammal = (
+                                                        self.personal_pris_gammal - self.personal_kostnad_gammal) / self.personal_pris_gammal
         else:
             self.personal_marginal_gammal = 0
 
         self.kostnad = self.pryl_kostnad + self.personal_kostnad + self.i_data[
             "hyrKostnad"] + self.post_text_kostnad + self.frilans_hyrkostnad
 
-
         self.gammal_pris += self.hyr_pris + self.post_text_pris + self.personal_pris_gammal
 
         self.pris += self.hyr_pris + self.post_text_pris + self.personal_pris
-
 
         # Prevent div by 0
         if self.personal_pris != 0:
@@ -596,7 +599,6 @@ class Gig:
             ) * 10000
         ) / 100
 
-
     def output(self):
         print(f"Post Text: {self.post_text_pris}")
         print(f"Pryl: {self.pryl_pris}")
@@ -621,11 +623,10 @@ class Gig:
         pryl_id_list = []
 
         # print(self.paketen)
-        try:
+        if self.i_data["prylPaket"] is not None:
             for paket in self.i_data["prylPaket"]:
                 paket_id_list.append(self.paketen[paket]["id"])
-        except KeyError:
-            pass
+
 
         if self.i_data["extraPrylar"] is not None:
             for pryl in self.i_data["extraPrylar"]:
@@ -664,11 +665,19 @@ class Gig:
             old_output = {}
             log = []
         leverans_nummer = 1
-        for key in old_output:
-            # Strip key of number delimiter
-            if re.findall(r"(.*) #\d", key)[0] == self.name:
-                leverans_nummer += 1
+        if not self.update:
+            for key in old_output:
+                # Strip key of number delimiter
+                if re.findall(r"(.*) #\d", key)[0] == self.name:
+                    leverans_nummer += 1
+        if self.i_data["post_text"] is None:
+            self.i_data["post_text"] = False
 
+        if self.i_data["Projekt typ"] is None:
+            self.i_data["Projekt typ"] = {}
+            self.i_data["Projekt typ"]["name"] = None
+        if self.i_data["Beställare"] is None:
+            self.i_data["Beställare"] = [{"id":None}]
         output = {
             "Gig namn": f"{self.name} #{leverans_nummer}",
             "Pris": self.pris,
@@ -705,12 +714,18 @@ class Gig:
             "Svanis": self.svanis,
             "Typ": self.i_data["Projekt typ"]["name"],
             "Adress": self.i_data["Adress"],
-            "Beställare": [self.i_data["Beställare"][0]["id"]]
+            "Beställare": [self.i_data["Beställare"][0]["id"]],
+            "input_that_made_leverans": str(self.i_data),
+            "input_id": self.i_data["input_id"]
         }
         print(time.time() - self.start_time)
 
         if self.update:
+            del output["Gig namn"]
+            del output["Projekt"]
+            print("hi")
             output_from_airtable = self.output_table.update(rec_id, output, typecast=True)
+
         else:
             output_from_airtable = self.output_table.create(output, typecast=True)
 
@@ -718,7 +733,7 @@ class Gig:
         output_to_json = {
             f"{self.name} #{leverans_nummer}": output
         }
-
+        self.airtable_record = output_from_airtable["id"]
         with open("output.json", "w", encoding="utf-8") as f:
             old_output.update(output_to_json)
             json.dump(old_output, f, ensure_ascii=False, indent=2)
@@ -740,6 +755,75 @@ class Gig:
         print(time.time() - self.start_time)
 
         # self.output_table.create(output)
+
+    def url_make(self):
+        paket = ""
+        prylar = ""
+        if "pryl_paket_id" in self.i_data:
+            for id in self.i_data["pryl_paket_id"]:
+                paket += id["id"] + ","
+        if "extra_prylar_id" in self.i_data:
+            for id in self.i_data["extra_prylar_id"]:
+                prylar += id["id"] + ","
+        paket = paket[0:-1]
+        prylar = prylar[0:-1]
+        print(self.i_data["producent"])
+        params = {
+            "prefill_projektledare":  self.i_data["projektledare"][0]["id"],
+            "prefill_producent": self.i_data["producent"][0]["id"],
+            "prefill_uppdateraa": True,
+            "prefill_uppdateraProjekt": self.airtable_record,
+            "prefill_prylPaket": paket,
+            "prefill_extraPrylar": prylar,
+            "prefill_antalPaket": self.i_data["antalPaket"],
+            "prefill_antalPrylar": self.i_data["antalPrylar"],
+            "prefill_extraPersonal": self.i_data["extraPersonal"],
+            "prefill_hyrKostnad": self.i_data["hyrKostnad"],
+            "prefill_Börja datum": self.i_data["Börja datum"],
+            "prefill_slut tid": self.i_data["slut tid"],
+            "prefill_tid för gig": self.i_data["tid för gig"],
+            "prefill_preSluta datum": self.i_data["preSluta datum"],
+            "prefill_post_text": self.i_data["post_text"],
+            "prefill_Textning minuter": self.i_data["Textning minuter"],
+            "prefill_Kund": self.i_data["Kund"][0]["id"],
+            "prefill_Frilans": self.i_data["Frilans"],
+            "prefill_Adress": self.i_data["Adress"],
+            "prefill_gigNamn": self.name,
+            "prefill_Beställare": self.i_data["Beställare"][0]["id"],
+            "prefill_Projekt typ": self.i_data["Projekt typ"]["name"]
+        }
+        del_list = []
+        for key, value in params.items():
+            if value is None:
+                del_list.append(key)
+        for key in del_list:
+            del params[key]
+        self.url = "https://airtable.com/shrQOV05GKoC6rjJz" + "?" + urllib.parse.urlencode(params)
+        print(self.url)
+        self.output_table.update(self.airtable_record, {"link_to_update": self.url})
+
+    def updating(self):
+        input_data_table = Table(api_key, base_id, "Input data")
+        del_list = []
+        for key, value in self.i_data.items():
+            if value is None and key not in ["extraPrylar", "prylPaket"]:
+                del_list.append(key)
+        for key in del_list:
+            del self.i_data[key]
+        old_input_id = copy.deepcopy(self.i_data["old_input_id"])
+        input_id = copy.deepcopy(self.i_data["input_id"])
+        self.i_data["Projekt typ"] = self.i_data["Projekt typ"]["name"]
+        del_list = ["dagar", "specialRigg", "riggTimmar", "Uppdatera", "Created", "Sluta datum", "old_input_id", "extra_prylar_id", "input_id", "pryl_paket_id"]
+        for key in del_list:
+            try:
+                del self.i_data[key]
+            except KeyError:
+                print(key)
+                pass
+
+        input_data_table.update(input_data_table.get(input_id)["fields"]["old_input_id"][0], self.i_data, typecast=True, replace=True)
+        input_data_table.delete(input_id)
+
 
 
 @app.route("/airtable", methods=["POST"])
@@ -807,6 +891,7 @@ def the_basics():
 def start():
     i_data = request.json
     # Clean junk from data
+    print(i_data)
     try:
         if request.json["key"]:
             pass
@@ -819,6 +904,7 @@ def start():
         paket_list = []
         if i_data[key]["extraPrylar"] is not None:
             i = 0
+            i_data[key]["extra_prylar_id"] = copy.deepcopy(i_data[key]["extraPrylar"])
             for pryl in i_data[key]["extraPrylar"]:
                 pryl.pop("id", None)
                 pryl_list.append(i_data[key]["extraPrylar"][i]["name"])
@@ -827,6 +913,7 @@ def start():
 
         if i_data[key]["prylPaket"] is not None:
             i = 0
+            i_data[key]["pryl_paket_id"] = copy.deepcopy(i_data[key]["prylPaket"])
             for paket in i_data[key]["prylPaket"]:
                 paket.pop("id", None)
                 paket_list.append(i_data[key]["prylPaket"][i]["name"])
