@@ -404,13 +404,10 @@ class Gig:
                 j = 0
                 next_change = False
                 for temp in tid.split("-"):
-                    print(temp)
                     temp = temp.split(":")
-                    print(temp)
                     date = start_date.replace(day=int(start_date.day) + i, hour=int(temp[0]), minute=int(temp[1]))
 
                     if j % 2 == 0 and j != 0 or next_change:
-                        print(date + datetime.timedelta(hours=1), self.dagar_list[-1][-1])
                         if date + datetime.timedelta(hours=1) <= self.dagar_list[-1][-1] or next_change:
                             if next_change:
                                 self.dagar_list[-1].append(date)
@@ -420,20 +417,20 @@ class Gig:
                         else:
                             if not next_change:
                                 self.dagar_list.append([])
-                    print(next_change)
                     if not next_change:
-                        print("hi")
                         self.dagar_list[-1].append(date)
+                        if (j + 1) % 2 == 0:
+                            hours_list.append(
+                                math.ceil(
+                                    (self.dagar_list[-1][1] - self.dagar_list[-1][0]).seconds
+                                    / 60 / 60)
+                            )
                     else:
                         next_change = False
-                    j += 1
-                temp1 = tid.split("-")[0].split(":")
-                temp2 = tid.split("-")[1].split(":")
 
-                hours_list.append(
-                    math.ceil((datetime.timedelta(hours=int(temp2[0]), minutes=int(temp2[1])) - datetime.timedelta(
-                        hours=int(temp1[0]), minutes=int(temp1[1]))).seconds / 60 / 60)
-                )
+
+                    j += 1
+
                 i += 1
             print(hours_list)
         else:
@@ -501,11 +498,9 @@ class Gig:
                     self.ob_dict["0"].append(temp_date.timestamp())
             start_date += datetime.timedelta(days=1)
 
-        avg = 0
-        for hour in hours_list:
-            avg += hour
-        avg /= len(hours_list)
+        avg = sum(hours_list) / len(hours_list)
 
+        print(sum(hours_list), avg)
         self.dag_längd = avg
 
         self.ob_mult = 0
@@ -514,7 +509,6 @@ class Gig:
         self.ob_mult += len(self.ob_dict["2"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 400)
         self.ob_mult += len(self.ob_dict["3"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 300)
         self.ob_mult += len(self.ob_dict["4"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 150)
-        print(self.dag_längd)
         self.ob_mult /= self.dag_längd * len(hours_list)
         self.ob_mult *= 1.5
 
@@ -777,6 +771,7 @@ class Gig:
                 frilans_personer.append(record["id"])
         else:
             frilans_personer = None
+
         for getin, getout in self.dagar_list:
             kalender_list.append({
                 "Name": self.name,
