@@ -733,20 +733,40 @@ class Gig:
             "Typ": self.i_data["Projekt typ"]["name"],
             "Adress": self.i_data["Adress"],
             "Beställare": [self.i_data["Beställare"][0]["id"]],
-            "input_that_made_leverans": str(self.i_data),
-            "input_id": self.i_data["input_id"]
+            "input_id": self.i_data["input_id"],
+            "made_by": [self.i_data["input_id"]]
         }
+
         print(time.time() - self.start_time)
+        print(output)
 
         if self.update:
-            del output["Gig namn"]
-            del output["Projekt"]
+            body = {
+                "records": [
+                    {
+                        "id": "recLqX4EkW8DepTNs",
+                        "fields": output
+                    }
+                ],
+                "typecast": True
+            }
+
             print("hi")
-            output_from_airtable = self.output_table.update(rec_id, output, typecast=True)
+            print(rec_id)
+            # print(output["dagLängd"])
+            output_from_airtable = requests.patch(
+                url="https://api.airtable.com/v0/appG1QEArAVGABdjm/Output%20table",
+                json=body,
+                headers={
+                    "Authorization":  "Bearer " + api_key,
+                    "Content-Type": "application/json"
+                }
+            )
+            output_from_airtable = output_from_airtable.json()["records"][0]
+            #output_from_airtable = self.output_table.update(rec_id, output)
 
         else:
             output_from_airtable = self.output_table.create(output, typecast=True)
-
         print(time.time() - self.start_time)
         output_to_json = {
             f"{self.name} #{leverans_nummer}": output
