@@ -90,7 +90,7 @@ class Paketob:
         self.prylar = {}
 
         if self.paket_i_pryl_paket is not None:
-            for paket in self.paket_i_pryl_paket:
+            for paket in self.paket_i_pryl_paket: 
                 for pryl in self.paket_dict[paket["name"]]["prylar"]:
                     if pryl in self.prylar.keys():
                         self.prylar[pryl]["amount"] += 1
@@ -155,7 +155,7 @@ class Gig:
         self.avkastning_without_pris = None
         self.hyr_things = None
         self.pryl_fonden = None
-        self.output_table = Table(api_key, base_id, 'Output table')
+        self.output_table = Table(api_key, base_id, 'Leveranser')
         self.kalender_table = Table(api_key, base_id, 'Projekt kalender')
         self.slit_kostnad = None
         self.avkastning = None
@@ -376,7 +376,7 @@ class Gig:
         return temp_pris
 
     def tid(self, config):
-
+ 
         self.bad_day_dict = dict(zip(calendar.day_name, range(7)))
         i = 1
         for day in self.bad_day_dict:
@@ -404,7 +404,10 @@ class Gig:
                 j = 0
                 next_change = False
                 for temp in tid.split("-"):
-                    temp = temp.split(":")
+                    if ":" in temp:
+                        temp = temp.split(":")
+                    else:
+                        temp = [temp, 0]
                     date = start_date.replace(day=int(start_date.day) + i, hour=int(temp[0]), minute=int(temp[1]))
 
                     if j % 2 == 0 and j != 0 or next_change:
@@ -434,10 +437,12 @@ class Gig:
             if self.dagar != 1:
                 for i in range(self.i_data["dagar"] - 1):
                     hours_list.append(hours_list[0])
+        
         new_timezone = pytz.timezone("UTC")
         old_timezone = pytz.timezone("Europe/Stockholm")
         temp_dagar_list = []
         print(self.dagar_list)
+        
         for getin, getout in self.dagar_list:
             localized_timestamp = old_timezone.localize(getin)
             getin = localized_timestamp.astimezone(new_timezone)
@@ -565,8 +570,7 @@ class Gig:
             "hyrKostnad"] + self.post_text_kostnad + self.frilans_hyrkostnad
 
         if self.personal_pris_gammal != 0:
-            self.personal_marginal_gammal = (
-                                                    self.personal_pris_gammal - self.personal_kostnad_gammal) / self.personal_pris_gammal
+            self.personal_marginal_gammal = (self.personal_pris_gammal - self.personal_kostnad_gammal) / self.personal_pris_gammal
         else:
             self.personal_marginal_gammal = 0
 
@@ -603,17 +607,22 @@ class Gig:
         )
         self.avkastning_without_pris = -1 * self.slit_kostnad - self.personal_kostnad - self.i_data["hyrKostnad"]
         self.hyr_things = self.i_data["hyrKostnad"] * (1 - config["hyrMulti"] * config["hyrMarginal"])
-        self.marginal = round(
-            self.avkastning / (
-                    self.pris - self.hyr_things
-            ) * 10000
-        ) / 100
-        self.marginal_gammal = round(
-            self.avkastning_gammal / (
-                    self.gammal_pris - self.hyr_things
-            ) * 10000
-        ) / 100
-
+        try:
+            self.marginal = round(
+                self.avkastning / (
+                        self.pris - self.hyr_things
+                ) * 10000
+            ) / 100
+        except ZeroDivisionError:
+            self.marginal = 0
+        try:
+            self.marginal_gammal = round(
+                self.avkastning_gammal / (
+                        self.gammal_pris - self.hyr_things
+                ) * 10000
+            ) / 100
+        except ZeroDivisionError:
+            self.marginal_gammal = 0
     def output(self):
         print(f"Post Text: {self.post_text_pris}")
         print(f"Pryl: {self.pryl_pris}")
@@ -696,6 +705,11 @@ class Gig:
             self.i_data["projektledare"] = [{"id": None}]
         if self.i_data["producent"] is None:
             self.i_data["producent"] = [{"id": None}]
+        if self.i_data["Kund"] is None:
+            self.i_data["Kund"] = [{"id": None}]
+        if self.i_data["Beställare"] is None:
+            self.i_data["Beställare"] = [{"id": None}]
+                
         output = {
             "Gig namn": f"{self.name} #{leverans_nummer}",
             "Pris": self.pris,
@@ -736,35 +750,33 @@ class Gig:
             "input_id": self.i_data["input_id"],
             "made_by": [self.i_data["input_id"]]
         }
-
+        
         print(time.time() - self.start_time)
-        print(output)
-
+        print(output["frilans"])
         if self.update:
+            output.pop("Gig namn", None)
             body = {
                 "records": [
                     {
-                        "id": "recLqX4EkW8DepTNs",
+                        "id": self.i_data["uppdateraProjekt"][0]["id"],
                         "fields": output
                     }
                 ],
                 "typecast": True
             }
-
-            print("hi")
-            print(rec_id)
             # print(output["dagLängd"])
             output_from_airtable = requests.patch(
-                url="https://api.airtable.com/v0/appG1QEArAVGABdjm/Output%20table",
+                url="https://api.airtable.com/v0/appG1QEArAVGABdjm/Leveranser",
                 json=body,
                 headers={
                     "Authorization":  "Bearer " + api_key,
                     "Content-Type": "application/json"
                 }
             )
+            print(output_from_airtable.json())
             output_from_airtable = output_from_airtable.json()["records"][0]
-            #output_from_airtable = self.output_table.update(rec_id, output)
 
+            
         else:
             output_from_airtable = self.output_table.create(output, typecast=True)
         print(time.time() - self.start_time)
@@ -836,17 +848,15 @@ class Gig:
         params = {
             "prefill_projektledare": self.i_data["projektledare"][0]["id"],
             "prefill_producent": self.i_data["producent"][0]["id"],
-            "prefill_uppdateraa": True,
-            "prefill_uppdateraProjekt": self.airtable_record,
             "prefill_prylPaket": paket,
             "prefill_extraPrylar": prylar,
             "prefill_antalPaket": self.i_data["antalPaket"],
             "prefill_antalPrylar": self.i_data["antalPrylar"],
             "prefill_extraPersonal": self.i_data["extraPersonal"],
             "prefill_hyrKostnad": self.i_data["hyrKostnad"],
-            "prefill_Börja datum": self.i_data["Börja datum"],
+            
             "prefill_tid för gig": self.i_data["tid för gig"],
-            "prefill_preSluta datum": self.i_data["preSluta datum"],
+            
             "prefill_post_text": self.i_data["post_text"],
             "prefill_Textning minuter": self.i_data["Textning minuter"],
             "prefill_Kund": self.i_data["Kund"][0]["id"],
@@ -856,15 +866,40 @@ class Gig:
             "prefill_Beställare": self.i_data["Beställare"][0]["id"],
             "prefill_Projekt typ": self.i_data["Projekt typ"]["name"]
         }
-        del_list = []
-        for key, value in params.items():
-            if value is None:
-                del_list.append(key)
-        for key in del_list:
-            del params[key]
-        self.url = "https://airtable.com/shrQOV05GKoC6rjJz" + "?" + urllib.parse.urlencode(params)
-        print(self.url)
-        self.output_table.update(self.airtable_record, {"link_to_update": self.url})
+        
+        update_params = copy.deepcopy(params)
+        update_params.update(
+            {
+            "prefill_uppdateraa": True,
+            "prefill_uppdateraProjekt": self.airtable_record,
+            "prefill_Börja datum": self.i_data["Börja datum"],
+            "prefill_preSluta datum": self.i_data["preSluta datum"]
+            
+            }
+        )
+        copy_params = copy.deepcopy(params)
+        copy_params.update(
+            {
+            "prefill_nytt_projekt": True,
+            "prefill_gigNamn": None
+            }
+        )
+        
+        params_list = [update_params, copy_params]
+        # Remove empty dicts
+        for param in params_list:
+            del_list = []
+            for key, value in param.items():
+                if value is None:
+                    del_list.append(key)
+            for key in del_list:
+                del param[key]
+        update_params = params_list[0]
+        copy_params = params_list[1]
+        
+        self.update_url = "https://airtable.com/shrQOV05GKoC6rjJz" + "?" + urllib.parse.urlencode(update_params)
+        self.copy_url = "https://airtable.com/shrQOV05GKoC6rjJz" + "?" + urllib.parse.urlencode(copy_params)
+        self.output_table.update(self.airtable_record, {"link_to_update": self.update_url, "link_to_copy": self.copy_url})
 
     def updating(self):
         input_data_table = Table(api_key, base_id, "Input data")
@@ -1015,6 +1050,8 @@ def get_prylar():
     for configurable in request.json["Config"]:
         request.json["Config"][configurable] = request.json["Config"][configurable]["Siffra i decimal"]
 
+    
+    
     config = request.json["Config"]
 
     # Format prylar better
