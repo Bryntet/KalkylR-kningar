@@ -13,7 +13,7 @@ import calendar
 import datetime
 import holidays
 import urllib.parse
-
+import googlemaps
 
 class Bcolors:
     HEADER = '\033[95m'
@@ -35,7 +35,10 @@ pd.set_option('display.max_rows', None)
 
 api_key = os.environ['api_key']
 base_id = os.environ['base_id']
+#gmaps = googlemaps.Client(key=os.environ['maps_api'])
 
+#gmaps_output = gmaps.distance_matrix(origins="Levande video", destinations="Uppsala kulturhus", mode="driving", units="metric")
+#print(gmaps_output)
 output_table = Table(api_key, base_id, 'Output table')
 
 # time.sleep(10)
@@ -169,7 +172,6 @@ class Gig:
         self.tim_budget = None
         self.restid = None
         self.rigg_timmar = None
-        self.projekt_timmar = None
         self.gig_timmar = None
         self.tim_peng = None
         self.personal = None
@@ -180,6 +182,10 @@ class Gig:
         self.pre_gig_prylar = []
         self.name = name
         self.i_data = i_data[self.name]
+        if self.i_data["projekt_timmar"] is not None:
+            self.projekt_timmar = self.i_data["projekt_timmar"]
+        else:
+            self.projekt_timmar = None
         self.frilans_hyrkostnad = 0
         self.frilans_lista = []
         if self.i_data["Frilans"] is not None:
@@ -523,9 +529,9 @@ class Gig:
             self.rigg_timmar = self.i_data["riggTimmar"]
         else:
             self.rigg_timmar = math.floor(self.pryl_pris * config["andelRiggTimmar"])
-
-        self.projekt_timmar = math.ceil((self.gig_timmar + self.rigg_timmar) * config["projektTid"])
-
+        if self.projekt_timmar is None:
+            self.projekt_timmar = math.ceil((self.gig_timmar + self.rigg_timmar) * config["projektTid"])
+        
         if self.svanis:
             self.restid = 0
         else:
@@ -548,9 +554,6 @@ class Gig:
     def post_text(self):
         try:
             if self.i_data["post_text"]:
-                # Convert from seconds to mins
-                self.i_data["Textning minuter"] = self.i_data["Textning minuter"] / 60
-
                 self.post_text_pris = self.i_data["Textning minuter"] * self.config["textningPostPris"]
                 self.post_text_kostnad = self.i_data["Textning minuter"] * self.config["textningPostKostnad"]
         except KeyError:
@@ -709,6 +712,12 @@ class Gig:
             self.i_data["Kund"] = [{"id": None}]
         if self.i_data["Beställare"] is None:
             self.i_data["Beställare"] = [{"id": None}]
+        if self.i_data["existerande_adress"] is None:
+            if self.i_data["Adress"] is not None:
+                self.i_data["existerande_adress"] = [{"id": self.i_data["Adress"]}]
+            else:
+                self.i_data["existerande_adress"] = [{"id": None}]
+        print(self.i_data["Kund"], self.i_data["Beställare"])
                 
         output = {
             "Gig namn": f"{self.name} #{leverans_nummer}",
@@ -745,14 +754,14 @@ class Gig:
             "Kund": self.i_data["Kund"][0]["id"],
             "Svanis": self.svanis,
             "Typ": self.i_data["Projekt typ"]["name"],
-            "Adress": self.i_data["Adress"],
+            "Adress": self.i_data["existerande_adress"][0]["id"],
             "Beställare": [self.i_data["Beställare"][0]["id"]],
             "input_id": self.i_data["input_id"],
-            "made_by": [self.i_data["input_id"]]
+            "made_by": [self.i_data["input_id"]],
+            "post_deadline": self.i_data["post_deadline"]
         }
         
         print(time.time() - self.start_time)
-        print(output["frilans"])
         if self.update:
             output.pop("Gig namn", None)
             body = {
@@ -773,7 +782,6 @@ class Gig:
                     "Content-Type": "application/json"
                 }
             )
-            print(output_from_airtable.json())
             output_from_airtable = output_from_airtable.json()["records"][0]
 
             
