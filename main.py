@@ -35,7 +35,6 @@ pd.set_option('display.max_rows', None)
 
 api_key = os.environ['api_key']
 base_id = os.environ['base_id']
-#gmaps = googlemaps.Client(key=os.environ['maps_api'])
 
 #gmaps_output = gmaps.distance_matrix(origins="Levande video", destinations="Uppsala kulturhus", mode="driving", units="metric")
 #print(gmaps_output)
@@ -141,6 +140,10 @@ class Paketob:
 
 class Gig:
     def __init__(self, i_data, config, prylar, paketen, name):
+        self.adress_update = False
+        self.tid_to_adress_car = None
+        self.tid_to_adress = None
+        self.gmaps = googlemaps.Client(key=os.environ['maps_api'])
         self.url = None
         self.dagar_list = None
         self.extra_gig_tid = None
@@ -240,6 +243,8 @@ class Gig:
         # Get the total modPris and in_pris from all the prylar
         self.get_pris()
 
+        self.adress_check()
+        
         self.tid(config)
 
         self.post_text()
@@ -254,7 +259,19 @@ class Gig:
 
         if self.update:
             self.updating()
-
+        if self.adress_update:
+            adress_table = Table(api_key, base_id, "Adressbok")
+            for record in adress_table.all():
+                if record["fields"]["Adress"] == self.i_data["existerande_adress"]:
+                    record_id = record["id"]
+                    break
+            adress_table.update(
+                record_id,
+                {
+                    "tid_cykel": self.tid_to_adress,
+                    "tid_bil": self.tid_to_adress_car
+                })
+            
     def check_prylar(self, prylar):
         try:
             if self.i_data["antalPrylar"]:
@@ -380,7 +397,37 @@ class Gig:
         if dagar >= 3:
             temp_pris += pris * dag_tre_multi * (dagar - 2)
         return temp_pris
-
+    
+    def adress_check(self):
+        print("hi", self.i_data["existerande_adress"], self.i_data["Adress"])
+        if (self.i_data["existerande_adress"] is not None) or (self.i_data["Adress"] is not None):
+            if self.i_data["tid_to_adress"] is not None:
+                self.tid_to_adress = self.i_data["tid_to_adress"][0]
+            else:
+                print("using maps api")
+                if self.i_data["existerande_adress"] is not None:
+                    adress = self.i_data["existerande_adress"][0]["name"]
+                else:
+                    adress = self.i_data["Adress"]
+                self.adress_update = True
+                self.car = False
+                self.tid_to_adress = self.gmaps.distance_matrix(
+                    origins = "Levande video", 
+                    destinations = adress, 
+                    mode = "bicycling", 
+                    units = "metric",
+                    avoidHighways = True
+                    )["rows"][0]["elements"][0]["duration"]["value"]
+                if self.tid_to_adress / 60 > 60:
+                    self.car = True
+                    self.tid_to_adress_car = self.gmaps.distance_matrix(
+                    origins = "Levande video", 
+                    destinations = adress, 
+                    mode = "driving", 
+                    units = "metric"
+                    )["rows"][0]["elements"][0]["duration"]["value"]
+                print(self.tid_to_adress, "here")
+                
     def tid(self, config):
  
         self.bad_day_dict = dict(zip(calendar.day_name, range(7)))
@@ -535,7 +582,14 @@ class Gig:
         if self.svanis:
             self.restid = 0
         else:
-            self.restid = self.personal * self.i_data["dagar"] * config["restid"]
+            if self.tid_to_adress:
+                if self.tid_to_adress_car:
+                    self.restid = self.personal * self.i_data["dagar"] * self.tid_to_adress_car / 60 / 60
+                else:
+                    self.restid = self.personal * self.i_data["dagar"] * self.tid_to_adress / 60 / 60
+            else:
+                self.restid = self.personal * self.i_data["dagar"] * config["restid"]
+        self.restid = math.ceil(self.restid)
         self.tim_budget = self.gig_timmar + self.rigg_timmar + self.projekt_timmar + self.restid
         if self.frilans != 0:
             self.tim_budget_frilans = self.tim_budget / self.personal * self.frilans
@@ -626,6 +680,7 @@ class Gig:
             ) / 100
         except ZeroDivisionError:
             self.marginal_gammal = 0
+ 
     def output(self):
         print(f"Post Text: {self.post_text_pris}")
         print(f"Pryl: {self.pryl_pris}")
@@ -714,9 +769,11 @@ class Gig:
             self.i_data["Beställare"] = [{"id": None}]
         if self.i_data["existerande_adress"] is None:
             if self.i_data["Adress"] is not None:
-                self.i_data["existerande_adress"] = [{"id": self.i_data["Adress"]}]
+                self.i_data["existerande_adress"] = self.i_data["Adress"]
             else:
-                self.i_data["existerande_adress"] = [{"id": None}]
+                self.i_data["existerande_adress"] = None
+        else:
+            self.i_data["existerande_adress"] = self.i_data["existerande_adress"][0]["name"]
         print(self.i_data["Kund"], self.i_data["Beställare"])
                 
         output = {
@@ -754,7 +811,7 @@ class Gig:
             "Kund": self.i_data["Kund"][0]["id"],
             "Svanis": self.svanis,
             "Typ": self.i_data["Projekt typ"]["name"],
-            "Adress": self.i_data["existerande_adress"][0]["id"],
+            "Adress": self.i_data["existerande_adress"],
             "Beställare": [self.i_data["Beställare"][0]["id"]],
             "input_id": self.i_data["input_id"],
             "made_by": [self.i_data["input_id"]],
@@ -839,8 +896,6 @@ class Gig:
             self.kalender_table.batch_create(kalender_list)
         print(time.time() - self.start_time)
 
-        # self.output_table.create(output)
-
     def url_make(self):
         paket = ""
         prylar = ""
@@ -911,6 +966,7 @@ class Gig:
 
     def updating(self):
         input_data_table = Table(api_key, base_id, "Input data")
+        
         del_list = []
         for key, value in self.i_data.items():
             if value is None and key not in ["extraPrylar", "prylPaket"]:
@@ -933,6 +989,7 @@ class Gig:
                                 replace=True)
         input_data_table.delete(input_id)
 
+        
 
 @app.route("/airtable", methods=["POST"])
 def fuck_yeah():
@@ -999,7 +1056,6 @@ def the_basics():
 def start():
     i_data = request.json
     # Clean junk from data
-    print(i_data)
     try:
         if request.json["key"]:
             pass
