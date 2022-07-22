@@ -35,7 +35,7 @@ pd.set_option('display.max_rows', None)
 
 api_key = os.environ['api_key']
 base_id = os.environ['base_id']
-
+print(os.environ['maps_api'])
 #gmaps_output = gmaps.distance_matrix(origins="Levande video", destinations="Uppsala kulturhus", mode="driving", units="metric")
 #print(gmaps_output)
 output_table = Table(api_key, base_id, 'Output table')
@@ -415,9 +415,9 @@ class Gig:
                     origins = "Levande video", 
                     destinations = adress, 
                     mode = "bicycling", 
-                    units = "metric",
-                    avoidHighways = True
-                    )["rows"][0]["elements"][0]["duration"]["value"]
+                    units = "metric"
+                    )
+                print(self.tid_to_adress)#["rows"][0]["elements"][0]["duration"]["value"]
                 if self.tid_to_adress / 60 > 60:
                     self.car = True
                     self.tid_to_adress_car = self.gmaps.distance_matrix(
@@ -592,11 +592,11 @@ class Gig:
         self.restid = math.ceil(self.restid)
         self.tim_budget = self.gig_timmar + self.rigg_timmar + self.projekt_timmar + self.restid
         if self.frilans != 0:
-            self.tim_budget_frilans = self.tim_budget / self.personal * self.frilans
+            self.tim_budget_frilans = (self.tim_budget - (self.projekt_timmar*self.frilans)) / self.personal * self.frilans
         else:
             self.tim_budget_frilans = 0
         if self.personal - self.frilans != 0:
-            self.tim_budget_personal = self.tim_budget / self.personal * (self.personal - self.frilans)
+            self.tim_budget_personal = (self.tim_budget + (self.projekt_timmar*self.frilans)) / self.personal * (self.personal - self.frilans)
         else:
             self.tim_budget_personal = 0
         # Timmar gånger peng per timme
@@ -622,7 +622,6 @@ class Gig:
 
         self.hyr_pris = self.i_data["hyrKostnad"] * (1 + config["hyrMulti"])
 
-        self.gammal_pris = copy.deepcopy(self.pris)
         self.gammal_kostnad = self.pryl_kostnad + self.personal_kostnad_gammal + self.i_data[
             "hyrKostnad"] + self.post_text_kostnad + self.frilans_hyrkostnad
 
@@ -634,10 +633,9 @@ class Gig:
         self.kostnad = self.pryl_kostnad + self.personal_kostnad + self.i_data[
             "hyrKostnad"] + self.post_text_kostnad + self.frilans_hyrkostnad
 
-        self.gammal_pris += self.hyr_pris + self.post_text_pris + self.personal_pris_gammal
+        self.pris += self.hyr_pris + self.post_text_pris + self.personal_pris_gammal
 
-        self.pris += self.hyr_pris + self.post_text_pris + self.personal_pris
-
+       
         # Prevent div by 0
         if self.personal_pris != 0:
             self.personal_marginal = (self.personal_pris - self.personal_kostnad) / self.personal_pris
@@ -654,15 +652,17 @@ class Gig:
 
         self.slit_kostnad = self.pryl_pris * config["prylSlit"]
         self.pryl_fonden = self.slit_kostnad * (1 + config["Prylinv (rel slit)"])
-
+        print(self.pris)
         self.avkastning = round(
             self.pris - self.slit_kostnad - self.personal_kostnad - self.i_data["hyrKostnad"]
         )
 
         self.avkastning_gammal = round(
-            self.gammal_pris - self.slit_kostnad - self.personal_kostnad_gammal - self.i_data["hyrKostnad"]
+            self.pris - self.slit_kostnad - self.personal_kostnad_gammal - self.i_data["hyrKostnad"]
         )
         self.avkastning_without_pris = -1 * self.slit_kostnad - self.personal_kostnad - self.i_data["hyrKostnad"]
+        self.avkastning_without_pris_gammal = -1 * self.slit_kostnad - \
+            self.personal_kostnad_gammal - self.i_data["hyrKostnad"]
         self.hyr_things = self.i_data["hyrKostnad"] * (1 - config["hyrMulti"] * config["hyrMarginal"])
         try:
             self.marginal = round(
@@ -675,12 +675,13 @@ class Gig:
         try:
             self.marginal_gammal = round(
                 self.avkastning_gammal / (
-                        self.gammal_pris - self.hyr_things
+                        self.pris - self.hyr_things
                 ) * 10000
             ) / 100
         except ZeroDivisionError:
             self.marginal_gammal = 0
- 
+        print(self.marginal, self.marginal_gammal)
+    
     def output(self):
         print(f"Post Text: {self.post_text_pris}")
         print(f"Pryl: {self.pryl_pris}")
@@ -802,7 +803,6 @@ class Gig:
             "hyrthings": self.hyr_things,
             "avkastWithoutPris": self.avkastning_without_pris,
             "frilanstimmar": self.tim_budget_frilans,
-            "Marginal": self.marginal_gammal / 100,
             "total_tid_ex_frilans": self.tim_budget_personal,
             "frilans": self.frilans_lista,
             "projektledare": self.i_data["projektledare"][0]["id"],
@@ -815,12 +815,15 @@ class Gig:
             "Beställare": [self.i_data["Beställare"][0]["id"]],
             "input_id": self.i_data["input_id"],
             "made_by": [self.i_data["input_id"]],
-            "post_deadline": self.i_data["post_deadline"]
+            "post_deadline": self.i_data["post_deadline"],
+            "avkast2": self.avkastning_without_pris_gammal
         }
         
         print(time.time() - self.start_time)
         if self.update:
             output.pop("Gig namn", None)
+            output.pop("producent", None)
+            output.pop("projektledare", None)
             body = {
                 "records": [
                     {
@@ -867,7 +870,6 @@ class Gig:
         i = 0
         record_ids = []
         if self.update:
-            print(output_from_airtable["fields"])
             for thing in output_from_airtable["fields"]["Projekt kalender"]:
                 record_ids.append(thing)
         for getin, getout in self.dagar_list:
@@ -977,7 +979,7 @@ class Gig:
         input_id = copy.deepcopy(self.i_data["input_id"])
         self.i_data["Projekt typ"] = self.i_data["Projekt typ"]["name"]
         del_list = ["dagar", "specialRigg", "riggTimmar", "Uppdatera", "Created", "Sluta datum", "old_input_id",
-                    "extra_prylar_id", "input_id", "pryl_paket_id"]
+                    "extra_prylar_id", "input_id", "pryl_paket_id", "projektledare", "producent"]
         for key in del_list:
             try:
                 del self.i_data[key]
