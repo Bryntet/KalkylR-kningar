@@ -300,7 +300,7 @@ class Gig:
             if antal:
 
                 try:
-                    for j in range(int(self.i_data["antalPrylar"][i])):
+                    for _ in range(int(self.i_data["antalPrylar"][i])):
                         self.pre_gig_prylar.append({pryl: prylar[pryl]})
                 except IndexError:
                     self.pre_gig_prylar.append({pryl: prylar[pryl]})
@@ -340,7 +340,7 @@ class Gig:
             for pryl in self.paketen[paket]["prylar"]:
                 if antal:
                     try:
-                        for j in range(int(self.i_data["antalPaket"][i])):
+                        for _ in range(int(self.i_data["antalPaket"][i])):
                             self.pre_gig_prylar.append(
                                 {pryl: self.paketen[paket]["prylar"][pryl]})
                     except IndexError:
@@ -461,7 +461,7 @@ class Gig:
                 self.extra_gig_tid = self.i_data["tid för gig"].split(",")
             except AttributeError:
                 self.extra_gig_tid = []
-                for dag in range(int(self.i_data["dagar"])):
+                for _ in range(int(self.i_data["dagar"])):
                     self.extra_gig_tid.append(self.i_data["tid för gig"])
             while len(self.extra_gig_tid) < self.i_data["dagar"]:
                 self.extra_gig_tid.append(self.extra_gig_tid[0])
@@ -789,9 +789,9 @@ class Gig:
         except (KeyError, TypeError):
             pass
         if self.update:
-            rec_id = self.i_data["uppdateraProjekt"][0]["id"]
+            _unusedrec_id = self.i_data["uppdateraProjekt"][0]["id"]
         else:
-            rec_id = None
+            _unusedrec_id = None
 
         try:
             with open("output.json", "r", encoding="utf-8") as f:
@@ -1032,7 +1032,7 @@ class Gig:
                 del_list.append(key)
         for key in del_list:
             del self.i_data[key]
-        old_input_id = copy.deepcopy(self.i_data["old_input_id"])
+        _unused_old_input_id = copy.deepcopy(self.i_data["old_input_id"])
         input_id = copy.deepcopy(self.i_data["input_id"])
         self.i_data["Projekt typ"] = self.i_data["Projekt typ"]["name"]
         del_list = [
