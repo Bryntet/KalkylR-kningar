@@ -1177,4 +1177,3 @@ def server():
 
 
 server()
->>>>>>> parent of d2c0729 (I dont remember)
