@@ -489,7 +489,6 @@ class Gig:
             temp_dagar_list.append([getin, getout])
 
         self.dagar_list = temp_dagar_list
-        # self.dag_längd = math.ceil(hours.seconds / 60 / 60)
         self.ob_dict = {"0": [],
                         "1": [],
                         "2": [],
@@ -690,7 +689,6 @@ class Gig:
         paket_id_list = []
         pryl_id_list = []
 
-        # print(self.paketen)
         if self.i_data["prylPaket"] is not None:
             for paket in self.i_data["prylPaket"]:
                 paket_id_list.append(self.paketen[paket]["id"])
@@ -818,7 +816,6 @@ class Gig:
                 ],
                 "typecast": True
             }
-            # print(output["dagLängd"])
             output_from_airtable = requests.patch(
                 url="https://api.airtable.com/v0/appG1QEArAVGABdjm/Leveranser",
                 json=body,
