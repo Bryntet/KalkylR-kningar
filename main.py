@@ -93,7 +93,7 @@ class Paketob:
         if self.paket_i_pryl_paket is not None:
             for paket in self.paket_i_pryl_paket: 
                 for pryl in self.paket_dict[paket["name"]]["prylar"]:
-                    if pryl in self.prylar.keys():
+                    if pryl in self.prylar:
                         self.prylar[pryl]["amount"] += 1
                     else:
                         self.prylar[pryl] = copy.deepcopy(self.paket_dict[paket["name"]]["prylar"][pryl])
@@ -344,7 +344,7 @@ class Gig:
         i = 0
         for pryl in self.pre_gig_prylar:
             for key in pryl:
-                if key in list(self.gig_prylar.keys()):
+                if key in list(self.gig_prylar):
                     self.gig_prylar[key]["amount"] += copy.deepcopy(self.pre_gig_prylar[i][key]["amount"])
                 else:
                     self.gig_prylar.update(copy.deepcopy(self.pre_gig_prylar[i]))
