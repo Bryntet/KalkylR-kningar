@@ -1,45 +1,21 @@
-import copy
-import json
-import math
-import os
-import re
-import pytz
-import pandas as pd
-import requests
-from flask import Flask, request
-from pyairtable import Table
-import time
-import calendar
-import datetime
-import holidays
-import urllib.parse
-import googlemaps
+# This is a sample Python script.
 
-class Bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+# Press ⌃R to execute it or replace it with your code.
+# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 
 
-# pd.set_option('display.max_colwidth', None)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
+def print_hi(name):
+    # Use a breakpoint in the code line below to debug your script.
+    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
 
-# pd.set_option('display.width', 150)
 
-api_key = os.environ['api_key']
-base_id = os.environ['base_id']
-print(os.environ['maps_api'])
-#gmaps_output = gmaps.distance_matrix(origins="Levande video", destinations="Uppsala kulturhus", mode="driving", units="metric")
-#print(gmaps_output)
-output_table = Table(api_key, base_id, 'Output table')
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    print_hi('PyCharm')
 
+<<<<<<< HEAD
+# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+=======
 # time.sleep(10)
 
 beforeTime = time.time()
@@ -824,14 +800,11 @@ class Gig:
             output.pop("Gig namn", None)
             output.pop("producent", None)
             output.pop("projektledare", None)
-            output.pop("Kund")
-            output.pop("Beställare")
             body = {
                 "records": [
                     {
                         "id": self.i_data["uppdateraProjekt"][0]["id"],
                         "fields": output
-                        
                     }
                 ],
                 "typecast": True
@@ -843,7 +816,6 @@ class Gig:
                 headers={
                     "Authorization":  "Bearer " + api_key,
                     "Content-Type": "application/json"
-                    
                 }
             )
             output_from_airtable = output_from_airtable.json()["records"][0]
@@ -1181,3 +1153,4 @@ def server():
 
 
 server()
+>>>>>>> parent of d2c0729 (I dont remember)
