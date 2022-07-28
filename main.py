@@ -980,7 +980,6 @@ class Gig:
             try:
                 del self.i_data[key]
             except KeyError:
-                print(key)
                 pass
 
         input_data_table.update(input_data_table.get(input_id)["fields"]["old_input_id"][0], self.i_data, typecast=True,
