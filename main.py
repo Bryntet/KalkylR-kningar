@@ -27,19 +27,14 @@ class Bcolors:
     UNDERLINE = '\033[4m'
 
 
-# pd.set_option('display.max_colwidth', None)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
-# pd.set_option('display.width', 150)
 
 api_key = os.environ['api_key']
 base_id = os.environ['base_id']
-#gmaps_output = gmaps.distance_matrix(origins="Levande video", destinations="Uppsala kulturhus", mode="driving", units="metric")
-#print(gmaps_output)
 output_table = Table(api_key, base_id, 'Output table')
 
-# time.sleep(10)
 
 beforeTime = time.time()
 output_tables = []
