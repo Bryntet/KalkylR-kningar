@@ -278,10 +278,7 @@ class Gig:
                     self.i_data["antalPrylar"] = [self.i_data["antalPrylar"]]
                 except ValueError:
                     self.i_data["antalPrylar"] = self.i_data["antalPrylar"].split(",")
-            if self.i_data["antalPrylar"] is not None:
-                antal = True
-            else:
-                antal = False
+            antal = self.i_data["antalPrylar"] is not None
         except KeyError:
             antal = False
         i = 0
@@ -306,10 +303,7 @@ class Gig:
                     self.i_data["antalPaket"] = [self.i_data["antalPaket"]]
                 except ValueError:
                     self.i_data["antalPaket"] = self.i_data["antalPaket"].split(",")
-            if self.i_data["antalPaket"] is not None:
-                antal = True
-            else:
-                antal = False
+            antal = self.i_data["antalPaket"] is not None
         except KeyError:
             antal = False
 
