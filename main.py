@@ -1094,7 +1094,7 @@ def start():
     with open('prylar.json', 'r', encoding='utf-8') as f:
         prylar = json.load(f)
     if i_data_name == "Unnamed record":
-        i_data_name = re.split(" #\d+", i_data["Unnamed record"]["uppdateraProjekt"][0]["name"])[0]
+        i_data_name = re.split(r" #\d+", i_data["Unnamed record"]["uppdateraProjekt"][0]["name"])[0]
         i_data[i_data_name] = i_data["Unnamed record"]
     Gig(i_data, config, prylar, paket, i_data_name)
 
