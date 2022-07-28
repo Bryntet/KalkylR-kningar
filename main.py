@@ -734,7 +734,7 @@ class Gig:
             self.pryl_marginal = (self.pryl_pris - self.pryl_kostnad) / self.pryl_pris
         else:
             self.pryl_marginal = 0
-       
+
         self.slit_kostnad = self.pryl_pris * config["prylSlit"]
         self.pryl_fonden = self.slit_kostnad * (1 + config["Prylinv (rel slit)"])
         print(self.pris)
