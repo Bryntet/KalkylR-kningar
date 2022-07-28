@@ -1,40 +1,40 @@
+import calendar
 import copy
+import datetime
 import json
 import math
 import os
 import re
-import pytz
+import time
+import urllib.parse
+
+import googlemaps
+import holidays
 import pandas as pd
+import pytz
 import requests
 from flask import Flask, request
 from pyairtable import Table
-import time
-import calendar
-import datetime
-import holidays
-import urllib.parse
-import googlemaps
+
 
 class Bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
 
 
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
+pd.set_option("display.max_columns", None)
+pd.set_option("display.max_rows", None)
 
-
-api_key = os.environ['api_key']
-base_id = os.environ['base_id']
-output_table = Table(api_key, base_id, 'Output table')
-
+api_key = os.environ["api_key"]
+base_id = os.environ["base_id"]
+output_table = Table(api_key, base_id, "Output table")
 
 beforeTime = time.time()
 output_tables = []
@@ -43,6 +43,7 @@ app = Flask(__name__)
 
 
 class Prylob:
+
     def __init__(self, **kwargs):
         # Gets all attributes provided and adds them to self
         # Current args: name, in_pris, pris
@@ -59,12 +60,14 @@ class Prylob:
 
     def rounding(self, config):
         # Convert to lower price as a percentage of the buy price
-        self.pris = math.floor((float(self.in_pris) * config["prylKostnadMulti"]) / 10 * self.mult) * 10
+        self.pris = (math.floor(
+            (float(self.in_pris) * config["prylKostnadMulti"]) / 10 *
+            self.mult) * 10)
 
     def dict_make(self):
         temp_dict = vars(self)
         out_dict = {temp_dict["name"]: temp_dict}
-        out_dict[temp_dict["name"]].pop('name', None)
+        out_dict[temp_dict["name"]].pop("name", None)
         return out_dict
 
     def amount_calc(self, ind, antal_av_pryl):
@@ -72,6 +75,7 @@ class Prylob:
 
 
 class Paketob:
+
     def __init__(self, prylar, args):
         # Gets all kwargs provided and adds them to self
         # Current kwargs:
@@ -86,12 +90,13 @@ class Paketob:
         self.prylar = {}
 
         if self.paket_i_pryl_paket is not None:
-            for paket in self.paket_i_pryl_paket: 
+            for paket in self.paket_i_pryl_paket:
                 for pryl in self.paket_dict[paket["name"]]["prylar"]:
                     if pryl in self.prylar:
                         self.prylar[pryl]["amount"] += 1
                     else:
-                        self.prylar[pryl] = copy.deepcopy(self.paket_dict[paket["name"]]["prylar"][pryl])
+                        self.prylar[pryl] = copy.deepcopy(
+                            self.paket_dict[paket["name"]]["prylar"][pryl])
         else:
             if self.antal_av_pryl is not None:
                 # Add pryl objects to self list of all prylar in paket
@@ -112,32 +117,39 @@ class Paketob:
 
         # Set total price of prylar in paket
         for pryl in self.prylar:
-            self.pris += (self.prylar[pryl]["pris"] * self.prylar[pryl]["amount"])
+            self.pris += self.prylar[pryl]["pris"] * \
+                self.prylar[pryl]["amount"]
 
     def dict_make(self):
         temp_dict = vars(self)
         out_dict = {temp_dict["name"]: temp_dict}
-        out_dict[temp_dict["name"]].pop('paket_prylar', None)
+        out_dict[temp_dict["name"]].pop("paket_prylar", None)
         bok = {}
         if out_dict[temp_dict["name"]]["paket_i_pryl_paket"] is not None:
-            for dubbelPaket in out_dict[temp_dict["name"]]["paket_i_pryl_paket"][0]:
-                bok.update({"name": out_dict[temp_dict["name"]]["paket_i_pryl_paket"][0][dubbelPaket]})
+            for dubbelPaket in out_dict[
+                    temp_dict["name"]]["paket_i_pryl_paket"][0]:
+                bok.update({
+                    "name":
+                    out_dict[temp_dict["name"]]["paket_i_pryl_paket"][0]
+                    [dubbelPaket]
+                })
             out_dict[temp_dict["name"]]["paket_i_pryl_paket"] = bok
 
-        out_dict[temp_dict["name"]].pop('paket_dict', None)
-        out_dict[temp_dict["name"]].pop('Input data', None)
-        out_dict[temp_dict["name"]].pop('Output table', None)
-        out_dict[temp_dict["name"]].pop('name', None)
+        out_dict[temp_dict["name"]].pop("paket_dict", None)
+        out_dict[temp_dict["name"]].pop("Input data", None)
+        out_dict[temp_dict["name"]].pop("Output table", None)
+        out_dict[temp_dict["name"]].pop("name", None)
 
         return out_dict
 
 
 class Gig:
+
     def __init__(self, i_data, config, prylar, paketen, name):
         self.adress_update = False
         self.tid_to_adress_car = None
         self.tid_to_adress = None
-        self.gmaps = googlemaps.Client(key=os.environ['maps_api'])
+        self.gmaps = googlemaps.Client(key=os.environ["maps_api"])
         self.url = None
         self.dagar_list = None
         self.extra_gig_tid = None
@@ -155,8 +167,8 @@ class Gig:
         self.avkastning_without_pris = None
         self.hyr_things = None
         self.pryl_fonden = None
-        self.output_table = Table(api_key, base_id, 'Leveranser')
-        self.kalender_table = Table(api_key, base_id, 'Projekt kalender')
+        self.output_table = Table(api_key, base_id, "Leveranser")
+        self.kalender_table = Table(api_key, base_id, "Projekt kalender")
         self.slit_kostnad = None
         self.avkastning = None
         self.pryl_marginal = None
@@ -191,7 +203,9 @@ class Gig:
                 frilans_list = json.load(f)
             for frilans in self.i_data["Frilans"]:
                 self.frilans_lista.append(frilans["id"])
-                self.frilans_hyrkostnad += self.i_data["dagar"] * frilans_list[frilans["name"]]["hyrkostnad"]
+                self.frilans_hyrkostnad += (
+                    self.i_data["dagar"] *
+                    frilans_list[frilans["name"]]["hyrkostnad"])
         else:
             self.frilans = 0
         self.post_text_kostnad = 0
@@ -255,7 +269,8 @@ class Gig:
         if self.adress_update:
             adress_table = Table(api_key, base_id, "Adressbok")
             for record in adress_table.all():
-                if record["fields"]["Adress"] == self.i_data["existerande_adress"]:
+                if record["fields"]["Adress"] == self.i_data[
+                        "existerande_adress"]:
                     record_id = record["id"]
                     break
             adress_table.update(
@@ -263,7 +278,8 @@ class Gig:
                 {
                     "tid_cykel": self.tid_to_adress,
                     "tid_bil": self.tid_to_adress_car
-                })
+                },
+            )
 
     def check_prylar(self, prylar):
         try:
@@ -272,7 +288,8 @@ class Gig:
                     int(self.i_data["antalPrylar"])
                     self.i_data["antalPrylar"] = [self.i_data["antalPrylar"]]
                 except ValueError:
-                    self.i_data["antalPrylar"] = self.i_data["antalPrylar"].split(",")
+                    self.i_data["antalPrylar"] = self.i_data[
+                        "antalPrylar"].split(",")
             antal = self.i_data["antalPrylar"] is not None
         except KeyError:
             antal = False
@@ -297,7 +314,8 @@ class Gig:
                     int(self.i_data["antalPaket"])
                     self.i_data["antalPaket"] = [self.i_data["antalPaket"]]
                 except ValueError:
-                    self.i_data["antalPaket"] = self.i_data["antalPaket"].split(",")
+                    self.i_data["antalPaket"] = self.i_data[
+                        "antalPaket"].split(",")
             antal = self.i_data["antalPaket"] is not None
         except KeyError:
             antal = False
@@ -321,12 +339,15 @@ class Gig:
                 if antal:
                     try:
                         for j in range(int(self.i_data["antalPaket"][i])):
-                            self.pre_gig_prylar.append({pryl: self.paketen[paket]["prylar"][pryl]})
+                            self.pre_gig_prylar.append(
+                                {pryl: self.paketen[paket]["prylar"][pryl]})
                     except IndexError:
-                        self.pre_gig_prylar.append({pryl: self.paketen[paket]["prylar"][pryl]})
+                        self.pre_gig_prylar.append(
+                            {pryl: self.paketen[paket]["prylar"][pryl]})
                 else:
                     # Add pryl from paket to prylList
-                    self.pre_gig_prylar.append({pryl: self.paketen[paket]["prylar"][pryl]})
+                    self.pre_gig_prylar.append(
+                        {pryl: self.paketen[paket]["prylar"][pryl]})
             i += 1
 
     def count_them(self):
@@ -334,9 +355,11 @@ class Gig:
         for pryl in self.pre_gig_prylar:
             for key in pryl:
                 if key in list(self.gig_prylar):
-                    self.gig_prylar[key]["amount"] += copy.deepcopy(self.pre_gig_prylar[i][key]["amount"])
+                    self.gig_prylar[key]["amount"] += copy.deepcopy(
+                        self.pre_gig_prylar[i][key]["amount"])
                 else:
-                    self.gig_prylar.update(copy.deepcopy(self.pre_gig_prylar[i]))
+                    self.gig_prylar.update(
+                        copy.deepcopy(self.pre_gig_prylar[i]))
             i += 1
 
     def pryl_mod(self, config):
@@ -345,7 +368,8 @@ class Gig:
             self.in_pris += self.gig_prylar[pryl]["in_pris"]
 
             # Make new pryl attribute "mod" where price modifications happen
-            self.gig_prylar[pryl]["mod"] = copy.deepcopy(self.gig_prylar[pryl]["pris"])
+            self.gig_prylar[pryl]["mod"] = copy.deepcopy(
+                self.gig_prylar[pryl]["pris"])
             mod_pryl = self.gig_prylar[pryl]["mod"]
 
             # Mult price by amount of pryl
@@ -380,13 +404,14 @@ class Gig:
         if dagar < 1:
             temp_pris = 0
         elif dagar >= 2:
-            temp_pris *= (1 + dag_tva_multi)
+            temp_pris *= 1 + dag_tva_multi
         if dagar >= 3:
             temp_pris += pris * dag_tre_multi * (dagar - 2)
         return temp_pris
 
     def adress_check(self):
-        if (self.i_data["existerande_adress"] is not None) or (self.i_data["Adress"] is not None):
+        if (self.i_data["existerande_adress"]
+                is not None) or (self.i_data["Adress"] is not None):
             if self.i_data["tid_to_adress"] is not None:
                 self.tid_to_adress = self.i_data["tid_to_adress"][0]
             else:
@@ -398,18 +423,18 @@ class Gig:
                 self.adress_update = True
                 self.car = False
                 self.tid_to_adress = self.gmaps.distance_matrix(
-                    origins = "Levande video", 
-                    destinations = adress, 
-                    mode = "bicycling", 
-                    units = "metric"
-                    )
+                    origins="Levande video",
+                    destinations=adress,
+                    mode="bicycling",
+                    units="metric",
+                )
                 if self.tid_to_adress / 60 > 60:
                     self.car = True
                     self.tid_to_adress_car = self.gmaps.distance_matrix(
-                    origins = "Levande video", 
-                    destinations = adress, 
-                    mode = "driving", 
-                    units = "metric"
+                        origins="Levande video",
+                        destinations=adress,
+                        mode="driving",
+                        units="metric",
                     )["rows"][0]["elements"][0]["duration"]["value"]
                 print(self.tid_to_adress, "here")
 
@@ -421,8 +446,10 @@ class Gig:
             self.day_dict[i] = day
             i += 1
 
-        start_date = datetime.datetime.fromisoformat(self.i_data["Börja datum"].split(".")[0])
-        end_date = datetime.datetime.fromisoformat(self.i_data["Sluta datum"].split(".")[0])
+        start_date = datetime.datetime.fromisoformat(
+            self.i_data["Börja datum"].split(".")[0])
+        end_date = datetime.datetime.fromisoformat(
+            self.i_data["Sluta datum"].split(".")[0])
 
         hours_list = []
         self.dagar_list = []
@@ -446,10 +473,15 @@ class Gig:
                         temp = temp.split(":")
                     else:
                         temp = [temp, 0]
-                    date = start_date.replace(day=int(start_date.day) + i, hour=int(temp[0]), minute=int(temp[1]))
+                    date = start_date.replace(
+                        day=int(start_date.day) + i,
+                        hour=int(temp[0]),
+                        minute=int(temp[1]),
+                    )
 
                     if j % 2 == 0 and j != 0 or next_change:
-                        if date + datetime.timedelta(hours=1) <= self.dagar_list[-1][-1] or next_change:
+                        if (date + datetime.timedelta(hours=1) <=
+                                self.dagar_list[-1][-1] or next_change):
                             if next_change:
                                 self.dagar_list[-1].append(date)
                             else:
@@ -462,10 +494,9 @@ class Gig:
                         self.dagar_list[-1].append(date)
                         if (j + 1) % 2 == 0:
                             hours_list.append(
-                                math.ceil(
-                                    (self.dagar_list[-1][1] - self.dagar_list[-1][0]).seconds
-                                    / 60 / 60)
-                            )
+                                math.ceil((self.dagar_list[-1][1] -
+                                           self.dagar_list[-1][0]).seconds /
+                                          60 / 60))
                     else:
                         next_change = False
                     j += 1
@@ -489,12 +520,7 @@ class Gig:
             temp_dagar_list.append([getin, getout])
 
         self.dagar_list = temp_dagar_list
-        self.ob_dict = {"0": [],
-                        "1": [],
-                        "2": [],
-                        "3": [],
-                        "4": []
-                        }
+        self.ob_dict = {"0": [], "1": [], "2": [], "3": [], "4": []}
         skärtorsdagen = None
         for date, holiday in holidays.SWE(False, years=end_date.year).items():
             if holiday == "Långfredagen":
@@ -509,20 +535,27 @@ class Gig:
                 localized_timestamp = old_timezone.localize(pre_tz_temp_date)
                 temp_date = localized_timestamp.astimezone(new_timezone)
                 if temp_date in holidays.SWE(False, years=temp_date.year):
-                    if holidays.SWE(False, years=temp_date.year)[temp_date] in ["Trettondedag jul",
-                                                                                "Kristi himmelsfärdsdag",
-                                                                                "Alla helgons dag"] and temp_date.hour >= 7:
+                    if (holidays.SWE(False, years=temp_date.year)[temp_date]
+                            in [
+                                "Trettondedag jul",
+                                "Kristi himmelsfärdsdag",
+                                "Alla helgons dag",
+                    ] and temp_date.hour >= 7):
                         self.ob_dict["3"].append(temp_date.timestamp())
-                    elif holidays.SWE(False, years=temp_date.year)[temp_date] in [
-                        "Nyårsafton"] and temp_date.hour >= 18 or \
-                            holidays.SWE(False, years=temp_date.year)[temp_date] in ["Pingstdagen",
-                                                                                     "Sveriges nationaldag",
-                                                                                     "Midsommarafton",
-                                                                                     "Julafton"] and temp_date.hour >= 7:
+                    elif (holidays.SWE(False, years=temp_date.year)[temp_date]
+                          in ["Nyårsafton"] and temp_date.hour >= 18
+                          or holidays.SWE(False,
+                                          years=temp_date.year)[temp_date] in [
+                                              "Pingstdagen",
+                                              "Sveriges nationaldag",
+                                              "Midsommarafton",
+                                              "Julafton",
+                    ] and temp_date.hour >= 7):
                         self.ob_dict["4"].append(temp_date.timestamp())
                     else:
                         self.ob_dict["0"].append(temp_date.timestamp())
-                elif str(temp_date).split(" ")[0] == str(skärtorsdagen) and temp_date.hour >= 18:
+                elif (str(temp_date).split(" ")[0] == str(skärtorsdagen)
+                      and temp_date.hour >= 18):
                     self.ob_dict["4"].append(temp_date.timestamp())
                 elif 1 > temp_date.isoweekday() > 5:
                     if temp_date.hour >= 18:
@@ -531,7 +564,8 @@ class Gig:
                         self.ob_dict["2"].append(temp_date.timestamp())
                     else:
                         self.ob_dict["0"].append(temp_date.timestamp())
-                elif temp_date.isoweekday() == 6 or temp_date.isoweekday() == 7:
+                elif temp_date.isoweekday() == 6 or temp_date.isoweekday(
+                ) == 7:
                     self.ob_dict["3"].append(temp_date.timestamp())
                 else:
                     self.ob_dict["0"].append(temp_date.timestamp())
@@ -544,56 +578,76 @@ class Gig:
 
         self.ob_mult = 0
         self.ob_mult += len(self.ob_dict["0"]) * config["levandeVideoLön"]
-        self.ob_mult += len(self.ob_dict["1"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 600)
-        self.ob_mult += len(self.ob_dict["2"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 400)
-        self.ob_mult += len(self.ob_dict["3"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 300)
-        self.ob_mult += len(self.ob_dict["4"]) * (config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 150)
+        self.ob_mult += len(self.ob_dict["1"]) * (
+            config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 600)
+        self.ob_mult += len(self.ob_dict["2"]) * (
+            config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 400)
+        self.ob_mult += len(self.ob_dict["3"]) * (
+            config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 300)
+        self.ob_mult += len(self.ob_dict["4"]) * (
+            config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 150)
         self.ob_mult /= self.dag_längd * len(hours_list)
         self.ob_mult *= 1.5
 
     def personal_rakna(self, config):
-        self.tim_peng = math.floor(self.ob_mult * (config["lönJustering"]) / 10) * 10
+        self.tim_peng = math.floor(self.ob_mult *
+                                   (config["lönJustering"]) / 10) * 10
 
-        self.gig_timmar = round(self.dag_längd * self.personal * self.i_data["dagar"])
+        self.gig_timmar = round(self.dag_längd * self.personal *
+                                self.i_data["dagar"])
 
         if self.i_data["specialRigg"]:
             self.rigg_timmar = self.i_data["riggTimmar"]
         else:
-            self.rigg_timmar = math.floor(self.pryl_pris * config["andelRiggTimmar"])
+            self.rigg_timmar = math.floor(self.pryl_pris *
+                                          config["andelRiggTimmar"])
         if self.projekt_timmar is None:
-            self.projekt_timmar = math.ceil((self.gig_timmar + self.rigg_timmar) * config["projektTid"])
+            self.projekt_timmar = math.ceil(
+                (self.gig_timmar + self.rigg_timmar) * config["projektTid"])
 
         if self.svanis:
             self.restid = 0
         else:
             if self.tid_to_adress:
                 if self.tid_to_adress_car:
-                    self.restid = self.personal * self.i_data["dagar"] * self.tid_to_adress_car / 60 / 60
+                    self.restid = (self.personal * self.i_data["dagar"] *
+                                   self.tid_to_adress_car / 60 / 60)
                 else:
-                    self.restid = self.personal * self.i_data["dagar"] * self.tid_to_adress / 60 / 60
+                    self.restid = (self.personal * self.i_data["dagar"] *
+                                   self.tid_to_adress / 60 / 60)
             else:
-                self.restid = self.personal * self.i_data["dagar"] * config["restid"]
+                self.restid = self.personal * self.i_data["dagar"] * config[
+                    "restid"]
         self.restid = math.ceil(self.restid)
-        self.tim_budget = self.gig_timmar + self.rigg_timmar + self.projekt_timmar + self.restid
+        self.tim_budget = (self.gig_timmar + self.rigg_timmar +
+                           self.projekt_timmar + self.restid)
         if self.frilans != 0:
-            self.tim_budget_frilans = (self.tim_budget - (self.projekt_timmar*self.frilans)) / self.personal * self.frilans
+            self.tim_budget_frilans = ((self.tim_budget -
+                                        (self.projekt_timmar * self.frilans)) /
+                                       self.personal * self.frilans)
         else:
             self.tim_budget_frilans = 0
         if self.personal - self.frilans != 0:
-            self.tim_budget_personal = (self.tim_budget + (self.projekt_timmar*self.frilans)) / self.personal * (self.personal - self.frilans)
+            self.tim_budget_personal = (
+                (self.tim_budget + (self.projekt_timmar * self.frilans)) /
+                self.personal * (self.personal - self.frilans))
         else:
             self.tim_budget_personal = 0
         # Timmar gånger peng per timme
         self.personal_pris = self.tim_budget_personal * self.tim_peng
         self.personal_pris_gammal = self.tim_budget * self.tim_peng
-        self.personal_kostnad = self.tim_budget_personal * config["levandeVideoLön"] * 1.5
-        self.personal_kostnad_gammal = self.tim_budget * config["levandeVideoLön"] * 1.5
+        self.personal_kostnad = (self.tim_budget_personal *
+                                 config["levandeVideoLön"] * 1.5)
+        self.personal_kostnad_gammal = self.tim_budget * config[
+            "levandeVideoLön"] * 1.5
 
     def post_text(self):
         try:
             if self.i_data["post_text"]:
-                self.post_text_pris = self.i_data["Textning minuter"] * self.config["textningPostPris"]
-                self.post_text_kostnad = self.i_data["Textning minuter"] * self.config["textningPostKostnad"]
+                self.post_text_pris = (self.i_data["Textning minuter"] *
+                                       self.config["textningPostPris"])
+                self.post_text_kostnad = (self.i_data["Textning minuter"] *
+                                          self.config["textningPostKostnad"])
         except KeyError:
             pass
 
@@ -606,62 +660,71 @@ class Gig:
 
         self.hyr_pris = self.i_data["hyrKostnad"] * (1 + config["hyrMulti"])
 
-        self.gammal_kostnad = self.pryl_kostnad + self.personal_kostnad_gammal + self.i_data[
-            "hyrKostnad"] + self.post_text_kostnad + self.frilans_hyrkostnad
+        self.gammal_kostnad = (self.pryl_kostnad +
+                               self.personal_kostnad_gammal +
+                               self.i_data["hyrKostnad"] +
+                               self.post_text_kostnad +
+                               self.frilans_hyrkostnad)
 
         if self.personal_pris_gammal != 0:
-            self.personal_marginal_gammal = (self.personal_pris_gammal - self.personal_kostnad_gammal) / self.personal_pris_gammal
+            self.personal_marginal_gammal = (
+                self.personal_pris_gammal -
+                self.personal_kostnad_gammal) / self.personal_pris_gammal
         else:
             self.personal_marginal_gammal = 0
 
-        self.kostnad = self.pryl_kostnad + self.personal_kostnad + self.i_data[
-            "hyrKostnad"] + self.post_text_kostnad + self.frilans_hyrkostnad
+        self.kostnad = (self.pryl_kostnad + self.personal_kostnad +
+                        self.i_data["hyrKostnad"] + self.post_text_kostnad +
+                        self.frilans_hyrkostnad)
 
         self.pris += self.hyr_pris + self.post_text_pris + self.personal_pris_gammal
 
-
         # Prevent div by 0
         if self.personal_pris != 0:
-            self.personal_marginal = (self.personal_pris - self.personal_kostnad) / self.personal_pris
+            self.personal_marginal = (
+                self.personal_pris -
+                self.personal_kostnad) / self.personal_pris
         else:
             self.personal_marginal = 0
 
         # Prevent div by 0
         if self.pryl_pris != 0:
-            self.pryl_marginal = (self.pryl_pris - self.pryl_kostnad) / self.pryl_pris
+            self.pryl_marginal = (self.pryl_pris -
+                                  self.pryl_kostnad) / self.pryl_pris
         else:
             self.pryl_marginal = 0
         # TODO
         #  F19, F20 i arket
 
         self.slit_kostnad = self.pryl_pris * config["prylSlit"]
-        self.pryl_fonden = self.slit_kostnad * (1 + config["Prylinv (rel slit)"])
+        self.pryl_fonden = self.slit_kostnad * (1 +
+                                                config["Prylinv (rel slit)"])
         print(self.pris)
-        self.avkastning = round(
-            self.pris - self.slit_kostnad - self.personal_kostnad - self.i_data["hyrKostnad"]
-        )
+        self.avkastning = round(self.pris - self.slit_kostnad -
+                                self.personal_kostnad -
+                                self.i_data["hyrKostnad"])
 
-        self.avkastning_gammal = round(
-            self.pris - self.slit_kostnad - self.personal_kostnad_gammal - self.i_data["hyrKostnad"]
-        )
-        self.avkastning_without_pris = -1 * self.slit_kostnad - self.personal_kostnad - self.i_data["hyrKostnad"]
-        self.avkastning_without_pris_gammal = -1 * self.slit_kostnad - \
-            self.personal_kostnad_gammal - self.i_data["hyrKostnad"]
-        self.hyr_things = self.i_data["hyrKostnad"] * (1 - config["hyrMulti"] * config["hyrMarginal"])
+        self.avkastning_gammal = round(self.pris - self.slit_kostnad -
+                                       self.personal_kostnad_gammal -
+                                       self.i_data["hyrKostnad"])
+        self.avkastning_without_pris = (-1 * self.slit_kostnad -
+                                        self.personal_kostnad -
+                                        self.i_data["hyrKostnad"])
+        self.avkastning_without_pris_gammal = (-1 * self.slit_kostnad -
+                                               self.personal_kostnad_gammal -
+                                               self.i_data["hyrKostnad"])
+        self.hyr_things = self.i_data["hyrKostnad"] * (
+            1 - config["hyrMulti"] * config["hyrMarginal"])
         try:
-            self.marginal = round(
-                self.avkastning / (
-                        self.pris - self.hyr_things
-                ) * 10000
-            ) / 100
+            self.marginal = (round(self.avkastning /
+                                   (self.pris - self.hyr_things) * 10000) /
+                             100)
         except ZeroDivisionError:
             self.marginal = 0
         try:
-            self.marginal_gammal = round(
-                self.avkastning_gammal / (
-                        self.pris - self.hyr_things
-                ) * 10000
-            ) / 100
+            self.marginal_gammal = (
+                round(self.avkastning_gammal /
+                      (self.pris - self.hyr_things) * 10000) / 100)
         except ZeroDivisionError:
             self.marginal_gammal = 0
         print(self.marginal, self.marginal_gammal)
@@ -674,17 +737,24 @@ class Gig:
         print(f"Avkastning: {self.avkastning}")
 
         if self.marginal > 65:
-            print(f"Marginal: {Bcolors.OKGREEN + str(self.marginal)}%{Bcolors.ENDC}")
+            print(
+                f"Marginal: {Bcolors.OKGREEN + str(self.marginal)}%{Bcolors.ENDC}"
+            )
         else:
-            print(f"Marginal: {Bcolors.FAIL + str(self.marginal)}%{Bcolors.ENDC}")
+            print(
+                f"Marginal: {Bcolors.FAIL + str(self.marginal)}%{Bcolors.ENDC}"
+            )
 
-        self.gig_prylar = dict(sorted(self.gig_prylar.items(), key=lambda item: -1 * item[1]["amount"]))
+        self.gig_prylar = dict(
+            sorted(self.gig_prylar.items(),
+                   key=lambda item: -1 * item[1]["amount"]))
         packlista = "# Packlista:\n\n"
         for pryl in self.gig_prylar:
             packlista += f"### {self.gig_prylar[pryl]['amount']}st {pryl}\n\n"
             print(
                 f"\t{self.gig_prylar[pryl]['amount']}st {pryl} - {self.gig_prylar[pryl]['mod']} kr ",
-                f"- {self.gig_prylar[pryl]['dagarMod']} kr pga {self.i_data['dagar']} dagar")
+                f"- {self.gig_prylar[pryl]['dagarMod']} kr pga {self.i_data['dagar']} dagar",
+            )
 
         paket_id_list = []
         pryl_id_list = []
@@ -757,7 +827,8 @@ class Gig:
             else:
                 self.i_data["existerande_adress"] = None
         else:
-            self.i_data["existerande_adress"] = self.i_data["existerande_adress"][0]["name"]
+            self.i_data["existerande_adress"] = self.i_data[
+                "existerande_adress"][0]["name"]
         print(self.i_data["Kund"], self.i_data["Beställare"])
 
         output = {
@@ -799,7 +870,7 @@ class Gig:
             "input_id": self.i_data["input_id"],
             "made_by": [self.i_data["input_id"]],
             "post_deadline": self.i_data["post_deadline"],
-            "avkast2": self.avkastning_without_pris_gammal
+            "avkast2": self.avkastning_without_pris_gammal,
         }
 
         print(time.time() - self.start_time)
@@ -808,31 +879,28 @@ class Gig:
             output.pop("producent", None)
             output.pop("projektledare", None)
             body = {
-                "records": [
-                    {
-                        "id": self.i_data["uppdateraProjekt"][0]["id"],
-                        "fields": output
-                    }
-                ],
-                "typecast": True
+                "records": [{
+                    "id": self.i_data["uppdateraProjekt"][0]["id"],
+                    "fields": output
+                }],
+                "typecast":
+                True,
             }
             output_from_airtable = requests.patch(
                 url="https://api.airtable.com/v0/appG1QEArAVGABdjm/Leveranser",
                 json=body,
                 headers={
-                    "Authorization":  "Bearer " + api_key,
-                    "Content-Type": "application/json"
-                }
+                    "Authorization": "Bearer " + api_key,
+                    "Content-Type": "application/json",
+                },
             )
             output_from_airtable = output_from_airtable.json()["records"][0]
 
-
         else:
-            output_from_airtable = self.output_table.create(output, typecast=True)
+            output_from_airtable = self.output_table.create(output,
+                                                            typecast=True)
         print(time.time() - self.start_time)
-        output_to_json = {
-            f"{self.name} #{leverans_nummer}": output
-        }
+        output_to_json = {f"{self.name} #{leverans_nummer}": output}
         self.airtable_record = output_from_airtable["id"]
         with open("output.json", "w", encoding="utf-8") as f:
             old_output.update(output_to_json)
@@ -861,7 +929,7 @@ class Gig:
                 "Getout-hidden": getout.isoformat(),
                 "Projekt": output_from_airtable["fields"]["Projekt"],
                 "Leverans": [output_from_airtable["id"]],
-                "Frilans": frilans_personer
+                "Frilans": frilans_personer,
             }
             if self.update and len(self.dagar_list) == len(record_ids):
                 kalender_list.append({})
@@ -901,9 +969,7 @@ class Gig:
             "prefill_antalPrylar": self.i_data["antalPrylar"],
             "prefill_extraPersonal": self.i_data["extraPersonal"],
             "prefill_hyrKostnad": self.i_data["hyrKostnad"],
-
             "prefill_tid för gig": self.i_data["tid för gig"],
-
             "prefill_post_text": self.i_data["post_text"],
             "prefill_Textning minuter": self.i_data["Textning minuter"],
             "prefill_Kund": self.i_data["Kund"][0]["id"],
@@ -911,26 +977,25 @@ class Gig:
             "prefill_Adress": self.i_data["Adress"],
             "prefill_gigNamn": self.name,
             "prefill_Beställare": self.i_data["Beställare"][0]["id"],
-            "prefill_Projekt typ": self.i_data["Projekt typ"]["name"]
+            "prefill_Projekt typ": self.i_data["Projekt typ"]["name"],
         }
 
         update_params = copy.deepcopy(params)
-        update_params.update(
-            {
-            "prefill_uppdateraa": True,
-            "prefill_uppdateraProjekt": self.airtable_record,
-            "prefill_Börja datum": self.i_data["Börja datum"],
-            "prefill_preSluta datum": self.i_data["preSluta datum"]
-
-            }
-        )
+        update_params.update({
+            "prefill_uppdateraa":
+            True,
+            "prefill_uppdateraProjekt":
+            self.airtable_record,
+            "prefill_Börja datum":
+            self.i_data["Börja datum"],
+            "prefill_preSluta datum":
+            self.i_data["preSluta datum"],
+        })
         copy_params = copy.deepcopy(params)
-        copy_params.update(
-            {
+        copy_params.update({
             "prefill_nytt_projekt": True,
             "prefill_gigNamn": None
-            }
-        )
+        })
 
         params_list = [update_params, copy_params]
         # Remove empty dicts
@@ -944,9 +1009,17 @@ class Gig:
         update_params = params_list[0]
         copy_params = params_list[1]
 
-        self.update_url = "https://airtable.com/shrQOV05GKoC6rjJz" + "?" + urllib.parse.urlencode(update_params)
-        self.copy_url = "https://airtable.com/shrQOV05GKoC6rjJz" + "?" + urllib.parse.urlencode(copy_params)
-        self.output_table.update(self.airtable_record, {"link_to_update": self.update_url, "link_to_copy": self.copy_url})
+        self.update_url = ("https://airtable.com/shrQOV05GKoC6rjJz" + "?" +
+                           urllib.parse.urlencode(update_params))
+        self.copy_url = ("https://airtable.com/shrQOV05GKoC6rjJz" + "?" +
+                         urllib.parse.urlencode(copy_params))
+        self.output_table.update(
+            self.airtable_record,
+            {
+                "link_to_update": self.update_url,
+                "link_to_copy": self.copy_url
+            },
+        )
 
     def updating(self):
         input_data_table = Table(api_key, base_id, "Input data")
@@ -960,29 +1033,44 @@ class Gig:
         old_input_id = copy.deepcopy(self.i_data["old_input_id"])
         input_id = copy.deepcopy(self.i_data["input_id"])
         self.i_data["Projekt typ"] = self.i_data["Projekt typ"]["name"]
-        del_list = ["dagar", "specialRigg", "riggTimmar", "Uppdatera", "Created", "Sluta datum", "old_input_id",
-                    "extra_prylar_id", "input_id", "pryl_paket_id", "projektledare", "producent"]
+        del_list = [
+            "dagar",
+            "specialRigg",
+            "riggTimmar",
+            "Uppdatera",
+            "Created",
+            "Sluta datum",
+            "old_input_id",
+            "extra_prylar_id",
+            "input_id",
+            "pryl_paket_id",
+            "projektledare",
+            "producent",
+        ]
         for key in del_list:
             try:
                 del self.i_data[key]
             except KeyError:
                 pass
 
-        input_data_table.update(input_data_table.get(input_id)["fields"]["old_input_id"][0], self.i_data, typecast=True,
-                                replace=True)
+        input_data_table.update(
+            input_data_table.get(input_id)["fields"]["old_input_id"][0],
+            self.i_data,
+            typecast=True,
+            replace=True,
+        )
         input_data_table.delete(input_id)
-
 
 
 @app.route("/airtable", methods=["POST"])
 def fuck_yeah():
     i_data = request.json
     # Load all the important data
-    with open('config.json', 'r', encoding='utf-8') as f:
+    with open("config.json", "r", encoding="utf-8") as f:
         config = json.load(f)
-    with open('paket.json', 'r', encoding='utf-8') as f:
+    with open("paket.json", "r", encoding="utf-8") as f:
         paket = json.load(f)
-    with open('prylar.json', 'r', encoding='utf-8') as f:
+    with open("prylar.json", "r", encoding="utf-8") as f:
         prylar = json.load(f)
     i_data_name = list(i_data.keys())[-1]
 
@@ -994,15 +1082,15 @@ def fuck_yeah():
 def delete():
     record_name = request.json["content"]
     # Load all the important data
-    with open('output.json', 'r', encoding='utf-8') as f:
+    with open("output.json", "r", encoding="utf-8") as f:
         output = json.load(f)
 
-    with open('output_backup.json', 'w', encoding='utf-8') as f:
+    with open("output_backup.json", "w", encoding="utf-8") as f:
         json.dump(output[record_name], f, ensure_ascii=False, indent=2)
 
     output.pop(record_name, None)
 
-    with open('output.json', 'w', encoding='utf-8') as f:
+    with open("output.json", "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
 
     return "<3"
@@ -1021,8 +1109,9 @@ def take_back():
     backup["update"] = False
     requests.post(
         url="https://hooks.airtable.com/workflows/v1/genericWebhook/appG1QEArAVGABdjm/wflcP4lYCTDwmSs4g"
-            "/wtrzRoN98kiDzdU05",
-        json=backup)
+        "/wtrzRoN98kiDzdU05",
+        json=backup,
+    )
 
     with open("output.json", "w", encoding="utf-8") as f:
         output[backup["Gig namn"]] = backup
@@ -1049,7 +1138,8 @@ def start():
         paket_list = []
         if i_data[key]["extraPrylar"] is not None:
             i = 0
-            i_data[key]["extra_prylar_id"] = copy.deepcopy(i_data[key]["extraPrylar"])
+            i_data[key]["extra_prylar_id"] = copy.deepcopy(
+                i_data[key]["extraPrylar"])
             for pryl in i_data[key]["extraPrylar"]:
                 pryl.pop("id", None)
                 pryl_list.append(i_data[key]["extraPrylar"][i]["name"])
@@ -1058,7 +1148,8 @@ def start():
 
         if i_data[key]["prylPaket"] is not None:
             i = 0
-            i_data[key]["pryl_paket_id"] = copy.deepcopy(i_data[key]["prylPaket"])
+            i_data[key]["pryl_paket_id"] = copy.deepcopy(
+                i_data[key]["prylPaket"])
             for paket in i_data[key]["prylPaket"]:
                 paket.pop("id", None)
                 paket_list.append(i_data[key]["prylPaket"][i]["name"])
@@ -1066,18 +1157,20 @@ def start():
             i_data[key]["prylPaket"] = paket_list
 
     # Save data just because
-    with open('input.json', 'w', encoding='utf-8') as f:
+    with open("input.json", "w", encoding="utf-8") as f:
         json.dump(i_data, f, ensure_ascii=False, indent=2)
 
     # Load all the important data
-    with open('config.json', 'r', encoding='utf-8') as f:
+    with open("config.json", "r", encoding="utf-8") as f:
         config = json.load(f)
-    with open('paket.json', 'r', encoding='utf-8') as f:
+    with open("paket.json", "r", encoding="utf-8") as f:
         paket = json.load(f)
-    with open('prylar.json', 'r', encoding='utf-8') as f:
+    with open("prylar.json", "r", encoding="utf-8") as f:
         prylar = json.load(f)
     if i_data_name == "Unnamed record":
-        i_data_name = re.split(r" #\d+", i_data["Unnamed record"]["uppdateraProjekt"][0]["name"])[0]
+        i_data_name = re.split(
+            r" #\d+",
+            i_data["Unnamed record"]["uppdateraProjekt"][0]["name"])[0]
         i_data[i_data_name] = i_data["Unnamed record"]
     Gig(i_data, config, prylar, paket, i_data_name)
 
@@ -1092,9 +1185,8 @@ data = ["test0", "test1"]
 def get_prylar():
     # Make the key of configs go directly to the value
     for configurable in request.json["Config"]:
-        request.json["Config"][configurable] = request.json["Config"][configurable]["Siffra i decimal"]
-
-
+        request.json["Config"][configurable] = request.json["Config"][
+            configurable]["Siffra i decimal"]
 
     config = request.json["Config"]
 
@@ -1102,8 +1194,11 @@ def get_prylar():
     prylarna = request.json["Prylar"]
     pryl_dict = {}
     for prylNamn in prylarna:
-        pryl = Prylob(in_pris=prylarna[prylNamn]["pris"], name=prylNamn,
-                      livs_längd=int(prylarna[prylNamn]["livsLängd"]["name"]))
+        pryl = Prylob(
+            in_pris=prylarna[prylNamn]["pris"],
+            name=prylNamn,
+            livs_längd=int(prylarna[prylNamn]["livsLängd"]["name"]),
+        )
         pryl.rounding(config)
         pryl_dict.update(pryl.dict_make())
 
@@ -1126,32 +1221,34 @@ def get_prylar():
     prylar_table = Table(api_key, base_id, "Prylar")
     paket_table = Table(api_key, base_id, "Pryl Paket")
     for record in prylar_table.all():
-        pryl_dict[str(record["fields"]["Pryl Namn"])].update({"id": record["id"]})
+        pryl_dict[str(record["fields"]["Pryl Namn"])].update(
+            {"id": record["id"]})
     for record in paket_table.all():
-        paket_dict[str(record["fields"]["Paket Namn"])].update({"id": record["id"]})
+        paket_dict[str(record["fields"]["Paket Namn"])].update(
+            {"id": record["id"]})
 
     # Save data to file
-    with open('prylar.json', 'w', encoding='utf-8') as f:
+    with open("prylar.json", "w", encoding="utf-8") as f:
         json.dump(pryl_dict, f, ensure_ascii=False, indent=2)
 
-    with open('config.json', 'w', encoding='utf-8') as f:
+    with open("config.json", "w", encoding="utf-8") as f:
         json.dump(request.json["Config"], f, ensure_ascii=False, indent=2)
-    with open('paket.json', 'w', encoding='utf-8') as f:
+    with open("paket.json", "w", encoding="utf-8") as f:
         json.dump(paket_dict, f, ensure_ascii=False, indent=2)
-    with open('frilans.json', 'w', encoding='utf-8') as f:
+    with open("frilans.json", "w", encoding="utf-8") as f:
         json.dump(request.json["Frilans"], f, ensure_ascii=False, indent=2)
     return "Tack"
 
 
 @app.route("/update", methods=["POST"])
 def update():
-    with open('everything.json', 'w', encoding='utf-8') as f:
+    with open("everything.json", "w", encoding="utf-8") as f:
         json.dump(request.json, f, ensure_ascii=False, indent=2)
     return "<3"
 
 
 def server():
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host="0.0.0.0", port=5000)
 
 
 server()
