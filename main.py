@@ -35,7 +35,6 @@ pd.set_option('display.max_rows', None)
 
 api_key = os.environ['api_key']
 base_id = os.environ['base_id']
-print(os.environ['maps_api'])
 #gmaps_output = gmaps.distance_matrix(origins="Levande video", destinations="Uppsala kulturhus", mode="driving", units="metric")
 #print(gmaps_output)
 output_table = Table(api_key, base_id, 'Output table')
@@ -192,7 +191,6 @@ class Gig:
         self.frilans_hyrkostnad = 0
         self.frilans_lista = []
         if self.i_data["Frilans"] is not None:
-            print(self.i_data)
             self.frilans = len(self.i_data["Frilans"])
             with open("frilans.json", "r", encoding="utf-8") as f:
                 frilans_list = json.load(f)
@@ -399,7 +397,6 @@ class Gig:
         return temp_pris
     
     def adress_check(self):
-        print("hi", self.i_data["existerande_adress"], self.i_data["Adress"])
         if (self.i_data["existerande_adress"] is not None) or (self.i_data["Adress"] is not None):
             if self.i_data["tid_to_adress"] is not None:
                 self.tid_to_adress = self.i_data["tid_to_adress"][0]
@@ -417,7 +414,6 @@ class Gig:
                     mode = "bicycling", 
                     units = "metric"
                     )
-                print(self.tid_to_adress)#["rows"][0]["elements"][0]["duration"]["value"]
                 if self.tid_to_adress / 60 > 60:
                     self.car = True
                     self.tid_to_adress_car = self.gmaps.distance_matrix(
