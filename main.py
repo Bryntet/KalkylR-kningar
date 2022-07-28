@@ -242,7 +242,7 @@ class Gig:
         self.get_pris()
 
         self.adress_check()
-        
+
         self.tid(config)
 
         self.post_text()
@@ -269,7 +269,7 @@ class Gig:
                     "tid_cykel": self.tid_to_adress,
                     "tid_bil": self.tid_to_adress_car
                 })
-            
+
     def check_prylar(self, prylar):
         try:
             if self.i_data["antalPrylar"]:
@@ -389,7 +389,7 @@ class Gig:
         if dagar >= 3:
             temp_pris += pris * dag_tre_multi * (dagar - 2)
         return temp_pris
-    
+
     def adress_check(self):
         if (self.i_data["existerande_adress"] is not None) or (self.i_data["Adress"] is not None):
             if self.i_data["tid_to_adress"] is not None:
@@ -417,9 +417,9 @@ class Gig:
                     units = "metric"
                     )["rows"][0]["elements"][0]["duration"]["value"]
                 print(self.tid_to_adress, "here")
-                
+
     def tid(self, config):
- 
+
         self.bad_day_dict = dict(zip(calendar.day_name, range(7)))
         i = 1
         for day in self.bad_day_dict:
@@ -480,12 +480,12 @@ class Gig:
             if self.dagar != 1:
                 for i in range(self.i_data["dagar"] - 1):
                     hours_list.append(hours_list[0])
-        
+
         new_timezone = pytz.timezone("UTC")
         old_timezone = pytz.timezone("Europe/Stockholm")
         temp_dagar_list = []
         print(self.dagar_list)
-        
+
         for getin, getout in self.dagar_list:
             localized_timestamp = old_timezone.localize(getin)
             getin = localized_timestamp.astimezone(new_timezone)
@@ -568,7 +568,7 @@ class Gig:
             self.rigg_timmar = math.floor(self.pryl_pris * config["andelRiggTimmar"])
         if self.projekt_timmar is None:
             self.projekt_timmar = math.ceil((self.gig_timmar + self.rigg_timmar) * config["projektTid"])
-        
+
         if self.svanis:
             self.restid = 0
         else:
@@ -625,7 +625,7 @@ class Gig:
 
         self.pris += self.hyr_pris + self.post_text_pris + self.personal_pris_gammal
 
-       
+
         # Prevent div by 0
         if self.personal_pris != 0:
             self.personal_marginal = (self.personal_pris - self.personal_kostnad) / self.personal_pris
@@ -671,7 +671,7 @@ class Gig:
         except ZeroDivisionError:
             self.marginal_gammal = 0
         print(self.marginal, self.marginal_gammal)
-    
+
     def output(self):
         print(f"Post Text: {self.post_text_pris}")
         print(f"Pryl: {self.pryl_pris}")
@@ -766,7 +766,7 @@ class Gig:
         else:
             self.i_data["existerande_adress"] = self.i_data["existerande_adress"][0]["name"]
         print(self.i_data["Kund"], self.i_data["Beställare"])
-                
+
         output = {
             "Gig namn": f"{self.name} #{leverans_nummer}",
             "Pris": self.pris,
@@ -808,7 +808,7 @@ class Gig:
             "post_deadline": self.i_data["post_deadline"],
             "avkast2": self.avkastning_without_pris_gammal
         }
-        
+
         print(time.time() - self.start_time)
         if self.update:
             output.pop("Gig namn", None)
@@ -834,7 +834,7 @@ class Gig:
             )
             output_from_airtable = output_from_airtable.json()["records"][0]
 
-            
+
         else:
             output_from_airtable = self.output_table.create(output, typecast=True)
         print(time.time() - self.start_time)
@@ -909,9 +909,9 @@ class Gig:
             "prefill_antalPrylar": self.i_data["antalPrylar"],
             "prefill_extraPersonal": self.i_data["extraPersonal"],
             "prefill_hyrKostnad": self.i_data["hyrKostnad"],
-            
+
             "prefill_tid för gig": self.i_data["tid för gig"],
-            
+
             "prefill_post_text": self.i_data["post_text"],
             "prefill_Textning minuter": self.i_data["Textning minuter"],
             "prefill_Kund": self.i_data["Kund"][0]["id"],
@@ -921,7 +921,7 @@ class Gig:
             "prefill_Beställare": self.i_data["Beställare"][0]["id"],
             "prefill_Projekt typ": self.i_data["Projekt typ"]["name"]
         }
-        
+
         update_params = copy.deepcopy(params)
         update_params.update(
             {
@@ -929,7 +929,7 @@ class Gig:
             "prefill_uppdateraProjekt": self.airtable_record,
             "prefill_Börja datum": self.i_data["Börja datum"],
             "prefill_preSluta datum": self.i_data["preSluta datum"]
-            
+
             }
         )
         copy_params = copy.deepcopy(params)
@@ -939,7 +939,7 @@ class Gig:
             "prefill_gigNamn": None
             }
         )
-        
+
         params_list = [update_params, copy_params]
         # Remove empty dicts
         for param in params_list:
@@ -951,14 +951,14 @@ class Gig:
                 del param[key]
         update_params = params_list[0]
         copy_params = params_list[1]
-        
+
         self.update_url = "https://airtable.com/shrQOV05GKoC6rjJz" + "?" + urllib.parse.urlencode(update_params)
         self.copy_url = "https://airtable.com/shrQOV05GKoC6rjJz" + "?" + urllib.parse.urlencode(copy_params)
         self.output_table.update(self.airtable_record, {"link_to_update": self.update_url, "link_to_copy": self.copy_url})
 
     def updating(self):
         input_data_table = Table(api_key, base_id, "Input data")
-        
+
         del_list = []
         for key, value in self.i_data.items():
             if value is None and key not in ["extraPrylar", "prylPaket"]:
@@ -981,7 +981,7 @@ class Gig:
                                 replace=True)
         input_data_table.delete(input_id)
 
-        
+
 
 @app.route("/airtable", methods=["POST"])
 def fuck_yeah():
@@ -1105,8 +1105,8 @@ def get_prylar():
     for configurable in request.json["Config"]:
         request.json["Config"][configurable] = request.json["Config"][configurable]["Siffra i decimal"]
 
-    
-    
+
+
     config = request.json["Config"]
 
     # Format prylar better
