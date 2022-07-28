@@ -17,10 +17,8 @@ from flask import Flask, request
 from pyairtable import Table
 
 
-class Bcolors:
-    """
-    Colours!
-    """
+class Bcolors
+    """Colours!"""
 
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
