@@ -1044,8 +1044,6 @@ def start():
     i_data = request.json
     # Clean junk from data
     try:
-        if request.json["key"]:
-            pass
         i_data_name = request.json["key"]
     except KeyError:
         i_data_name = list(i_data.keys())[-1]
