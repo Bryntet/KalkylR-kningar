@@ -17,3 +17,4 @@ log.json
 output_backup.json
 .idea/inspectionProfiles/Project_Default.xml
 frilans.json
+newrelic.ini
