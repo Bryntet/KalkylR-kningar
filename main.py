@@ -824,11 +824,14 @@ class Gig:
             output.pop("Gig namn", None)
             output.pop("producent", None)
             output.pop("projektledare", None)
+            output.pop("Kund")
+            output.pop("Beställare")
             body = {
                 "records": [
                     {
                         "id": self.i_data["uppdateraProjekt"][0]["id"],
                         "fields": output
+                        
                     }
                 ],
                 "typecast": True
@@ -840,6 +843,7 @@ class Gig:
                 headers={
                     "Authorization":  "Bearer " + api_key,
                     "Content-Type": "application/json"
+                    
                 }
             )
             output_from_airtable = output_from_airtable.json()["records"][0]
