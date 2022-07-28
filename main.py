@@ -1126,7 +1126,7 @@ def the_basics():
     return "Hello <3"
 
 
-@app.route("/start", methods=["POST", "GET"])
+@app.route("/start", methods=["POST"])
 def start():
     i_data = request.json
     # Clean junk from data
