@@ -18,6 +18,8 @@ from pyairtable import Table
 
 
 class Bcolors:
+    """Colours!"""
+
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
     OKCYAN = "\033[96m"
@@ -1248,7 +1250,7 @@ def update():
 
 
 def server():
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000)  # skipcq BAN-B104
 
 
 server()
