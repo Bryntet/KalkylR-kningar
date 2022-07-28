@@ -92,7 +92,7 @@ class Paketob:
         self.prylar = {}
 
         if self.paket_i_pryl_paket is not None:
-            for paket in self.paket_i_pryl_paket:
+            for paket in self.paket_i_pryl_paket:  # skipcq PYL-E1133
                 for pryl in self.paket_dict[paket["name"]]["prylar"]:
                     if pryl in self.prylar:
                         self.prylar[pryl]["amount"] += 1
@@ -505,7 +505,7 @@ class Gig:
                 i += 1
             print(hours_list)
         else:
-            if self.dagar != 1:
+            if self.i_data["dagar"] != 1:
                 for i in range(self.i_data["dagar"] - 1):
                     hours_list.append(hours_list[0])
 
