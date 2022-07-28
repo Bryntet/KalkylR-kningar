@@ -1107,7 +1107,6 @@ data = ["test0", "test1"]
 # Route for updating the configurables
 @app.route("/update/config", methods=["POST"])
 def get_prylar():
-    global api_key, base_id
     # Make the key of configs go directly to the value
     for configurable in request.json["Config"]:
         request.json["Config"][configurable] = request.json["Config"][configurable]["Siffra i decimal"]
