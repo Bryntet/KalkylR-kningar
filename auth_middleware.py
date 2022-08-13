@@ -13,7 +13,7 @@ def token_required(f):
             return {
                 "message": "Authentication Token is missing!",
                 "data": None,
-                "error": "Unauthorized"
+                "error": "Unauthorized",
             }, 401
         if token == current_app.config["SECRET_KEY"]:
             return f(*args, **kwargs)
