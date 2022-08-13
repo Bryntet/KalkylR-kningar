@@ -16,18 +16,20 @@ for (let record of query.records) {
     records[record.name]["input_id"] = record.id
 }
 
-//output.inspect(records);
 
-
-//console.log(JSON.stringify(records))
-await remoteFetchAsync("http://pi.levandevideo.se:5000/start", {
-    method: "POST",
-    body: JSON.stringify(records),
-    headers: {
-        'Content-Type': 'application/json',
-    },
-})
-
-records = {}
-
+let config_table = base.getTable("Config")
+let auth_rec = await config_table.selectRecordAsync('recd7WhiqtNbEVZzZ')
+if (auth_rec) {
+    let auth_key = await auth_rec.getCellValue("key")
+    if (auth_key) {
+        await remoteFetchAsync("http://pi.levandevideo.se:5000/start", {
+            method: "POST",
+            body: JSON.stringify(records),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': auth_key
+            },
+        })
+    }
+}
 
