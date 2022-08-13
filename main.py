@@ -909,7 +909,7 @@ class Gig:
             log.append(output_to_json)
             json.dump(log, f, ensure_ascii=False, indent=2)
         # print(output)
-        kalender_list = []
+        projektkalender_records = []
 
         if self.i_data["Frilans"] is not None:
             frilans_personer = []
@@ -919,11 +919,15 @@ class Gig:
             frilans_personer = None
         i = 0
         record_ids = []
+        # Add the dates to the projektkalender table
         if self.update:
-            for thing in output_from_airtable["fields"]["Projekt kalender"]:
-                record_ids.append(thing)
+            for item in output_from_airtable["fields"]["Projekt kalender"]:
+                # Get all record ids of the already existing linked records in the projektkalender table
+                record_ids.append(item)
+
         for getin, getout in self.dagar_list:
-            dict_thing = {
+
+            kalender_dict = {
                 "Name": self.name,
                 "Getin-hidden": getin.isoformat(),
                 "Getout-hidden": getout.isoformat(),
@@ -932,20 +936,21 @@ class Gig:
                 "Frilans": frilans_personer,
             }
             if self.update and len(self.dagar_list) == len(record_ids):
-                kalender_list.append({})
-                kalender_list[-1]["id"] = record_ids[i]
-                kalender_list[-1]["fields"] = dict_thing
+                projektkalender_records.append({
+                    "id": record_ids[i],
+                    "fields": kalender_dict
+                })
             else:
-                kalender_list.append(dict_thing)
+                projektkalender_records.append(kalender_dict)
             i += 1
         if self.update:
-            if len(kalender_list) != len(record_ids):
+            if len(projektkalender_records) != len(record_ids):
                 self.kalender_table.batch_delete(record_ids)
-                self.kalender_table.batch_create(kalender_list)
+                self.kalender_table.batch_create(projektkalender_records)
             else:
-                self.kalender_table.batch_update(kalender_list)
+                self.kalender_table.batch_update(projektkalender_records)
         else:
-            self.kalender_table.batch_create(kalender_list)
+            self.kalender_table.batch_create(projektkalender_records)
         print(time.time() - self.start_time)
 
     def url_make(self):
