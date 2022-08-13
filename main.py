@@ -150,6 +150,7 @@ class Paketob:
 class Gig:
 
     def __init__(self, i_data, config, prylar, paketen, name):
+        self.i_data = i_data[self.name]
         self.adress_update = False
         self.tid_to_adress_car = None
         self.tid_to_adress = None
@@ -187,14 +188,33 @@ class Gig:
         self.rigg_timmar = None
         self.gig_timmar = None
         self.tim_peng = None
-        self.personal = None
+        
+        if i_data["Mer personal"]:
+            self.specifik_personal = i_data["Mer personal"]
+            self.specifik_personal = {"Empty": False, "actual": self.specifik_personal}
+        else:
+            self.specifik_personal = {"Empty": True, "actual": [{"id": None, "name": None}]}
+        try:
+            if self.i_data["extraPersonal"] is not None:
+                self.personal = self.i_data["extraPersonal"] + len(self.specifik_personal)
+            else:
+                self.personal = 0 + len(self.specifik_personal)
+        except KeyError:
+            self.personal = 0 + len(self.specifik_personal)
+        if self.specifik_personal["Empty"]:
+            self.personal -= 1
+            self.specifik_personal = self.specifik_personal["actual"]
+        else:
+            self.specifik_personal = self.specifik_personal["actual"]
+            
         self.paketen = paketen
         self.prylar = prylar
         self.marginal = 0
         self.gig_prylar = {}
         self.pre_gig_prylar = []
         self.name = name
-        self.i_data = i_data[self.name]
+
+        
         if self.i_data["projekt_timmar"] is not None:
             self.projekt_timmar = self.i_data["projekt_timmar"]
         else:
@@ -227,13 +247,7 @@ class Gig:
         except KeyError:
             pass
 
-        try:
-            if self.i_data["extraPersonal"] is not None:
-                self.personal = self.i_data["extraPersonal"]
-            else:
-                self.personal = 0
-        except KeyError:
-            self.personal = 0
+
         try:
             if i_data["svanis"]:
                 self.svanis = True
@@ -952,6 +966,8 @@ class Gig:
         else:
             self.kalender_table.batch_create(projektkalender_records)
         print(time.time() - self.start_time)
+
+
 
     def url_make(self):
         paket = ""
