@@ -17,6 +17,7 @@ from flask import Flask, request
 from pyairtable import Table
 from auth_middleware import token_required
 
+
 class Bcolors:
     """Colours!"""
 
@@ -40,10 +41,11 @@ output_table = Table(api_key, base_id, "Output table")
 
 beforeTime = time.time()
 output_tables = []
-SECRET_KEY = os.environ.get('my_secret')
+SECRET_KEY = os.environ.get("my_secret")
 app = Flask(__name__)
 
-app.config['SECRET_KEY'] = SECRET_KEY
+app.config["SECRET_KEY"] = SECRET_KEY
+
 
 class Prylob:
     def __init__(self, **kwargs):
@@ -479,7 +481,7 @@ class Gig:
                     date = start_date.replace(
                         day=int(start_date.day) + i,
                         hour=int(temp[0]),
-                        minute=int(temp[1])
+                        minute=int(temp[1]),
                     )
 
                     if j % 2 == 0 and j != 0 or next_change:
@@ -1171,6 +1173,7 @@ def the_basics():
 @token_required
 def auth_test():
     return "OK!", 200
+
 
 @app.route("/start", methods=["POST"])
 @token_required
