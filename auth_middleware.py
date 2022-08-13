@@ -17,16 +17,8 @@ def token_required(f):
                 "data": None,
                 "error": "Unauthorized"
             }, 401
-        try:
-            if token == current_app.config["SECRET_KEY"]:
-                return f(*args, **kwargs)
-                        
-        except Exception as e:
-            return {
-                "message": "Something went wrong",
-                "data": None,
-                "error": str(e)
-            }, 500
+        if token == current_app.config["SECRET_KEY"]:
+            return f(*args, **kwargs)
 
         return f(*args, **kwargs)
 
