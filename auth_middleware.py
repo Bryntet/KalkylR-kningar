@@ -2,7 +2,6 @@ from functools import wraps
 import jwt
 from flask import request, abort
 from flask import current_app
-import models
 
 
 def token_required(f):
@@ -11,7 +10,7 @@ def token_required(f):
     def decorated(*args, **kwargs):
         token = None
         if "Authorization" in request.headers:
-            token = request.headers["Authorization"].split(" ")[1]
+            token = request.headers["Authorization"]
         if not token:
             return {
                 "message": "Authentication Token is missing!",

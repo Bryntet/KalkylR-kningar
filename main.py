@@ -13,51 +13,9 @@ import holidays
 import pandas as pd
 import pytz
 import requests
-from flask import Flask, request, abort
+from flask import Flask, request
 from pyairtable import Table
-
-from functools import wraps
-import jwt
-from flask import current_app
-import models
-
-
-def token_required(f):
-
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
-        if "Authorization" in request.headers:
-            token = request.headers["Authorization"].split(" ")[1]
-        if not token:
-            return {
-                "message": "Authentication Token is missing!",
-                "data": None,
-                "error": "Unauthorized"
-            }, 401
-        try:
-            data = jwt.decode(token,
-                              current_app.config["SECRET_KEY"],
-                              algorithms=["HS256"])
-            current_user = models.User().get_by_id(data["user_id"])
-            if current_user is None:
-                return {
-                    "message": "Invalid Authentication token!",
-                    "data": None,
-                    "error": "Unauthorized"
-                }, 401
-            if not current_user["active"]:
-                abort(403)
-        except Exception as e:
-            return {
-                "message": "Something went wrong",
-                "data": None,
-                "error": str(e)
-            }, 500
-
-        return f(current_user, *args, **kwargs)
-
-    return decorated
+from auth_middleware import token_required
 
 class Bcolors:
     """Colours!"""
@@ -82,7 +40,7 @@ output_table = Table(api_key, base_id, "Output table")
 
 beforeTime = time.time()
 output_tables = []
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = os.environ.get('my_secret')
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -214,7 +172,7 @@ class Gig:
         self.hyr_things = None
         self.pryl_fonden = None
         self.output_table = Table(api_key, base_id, "Leveranser")
-        self.kalender_table = Table(api_key, base_id, "Projekt kalender")
+        self.kalender_table = Table(api_key, base_id, "Projektkalender")
         self.slit_kostnad = None
         self.avkastning = None
         self.pryl_marginal = None
@@ -1146,6 +1104,7 @@ class Gig:
 
 
 @app.route("/airtable", methods=["POST"])
+@token_required
 def fuck_yeah():
     i_data = request.json
     # Load all the important data
@@ -1158,10 +1117,11 @@ def fuck_yeah():
     i_data_name = list(i_data.keys())[-1]
 
     Gig(i_data, config, prylar, paket, i_data_name)
-    return "<3"
+    return "OK!", 200
 
 
 @app.route("/delete", methods=["POST"])
+@token_required
 def delete():
     record_name = request.json["content"]
     # Load all the important data
@@ -1176,7 +1136,7 @@ def delete():
     with open("output.json", "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
 
-    return "<3"
+    return "OK!", 200
 
 
 @app.route("/ifuckedup", methods=["GET"])
@@ -1199,15 +1159,21 @@ def take_back():
     with open("output.json", "w", encoding="utf-8") as f:
         output[backup["Gig namn"]] = backup
         json.dump(output, f, ensure_ascii=False, indent=2)
-    return "fixed"
+    return "OK!", 200
 
 
 @app.route("/", methods=["GET"])
 def the_basics():
-    return "Hello <3"
+    return "OK!", 200
 
+
+@app.route("/test-auth", methods=["POST"])
+@token_required
+def auth_test():
+    return "OK!", 200
 
 @app.route("/start", methods=["POST"])
+@token_required
 def start():
     i_data = request.json
     # Clean junk from data
@@ -1257,7 +1223,7 @@ def start():
         i_data[i_data_name] = i_data["Unnamed record"]
     Gig(i_data, config, prylar, paket, i_data_name)
 
-    return "<3"
+    return "OK!", 200
 
 
 data = ["test0", "test1"]
@@ -1265,7 +1231,9 @@ data = ["test0", "test1"]
 
 # Route for updating the configurables
 @app.route("/update/config", methods=["POST"])
+@token_required
 def get_prylar():
+
     # Make the key of configs go directly to the value
     for configurable in request.json["Config"]:
         request.json["Config"][configurable] = request.json["Config"][configurable][
@@ -1286,7 +1254,7 @@ def get_prylar():
         pryl.rounding(config)
         pryl_dict.update(pryl.dict_make())
 
-    paketen = request.json["Pryl Paket"]
+    paketen = request.json["Prylpaket"]
     paket_dict = {}
     for paket in paketen:
         lista = []
@@ -1303,7 +1271,7 @@ def get_prylar():
         paket_dict.update(paket.dict_make())
 
     prylar_table = Table(api_key, base_id, "Prylar")
-    paket_table = Table(api_key, base_id, "Pryl Paket")
+    paket_table = Table(api_key, base_id, "Prylpaket")
     for record in prylar_table.all():
         pryl_dict[str(record["fields"]["Pryl Namn"])].update({"id": record["id"]})
     for record in paket_table.all():
@@ -1319,14 +1287,15 @@ def get_prylar():
         json.dump(paket_dict, f, ensure_ascii=False, indent=2)
     with open("frilans.json", "w", encoding="utf-8") as f:
         json.dump(request.json["Frilans"], f, ensure_ascii=False, indent=2)
-    return "Tack"
+    return "OK!", 200
 
 
 @app.route("/update", methods=["POST"])
+@token_required
 def update():
     with open("everything.json", "w", encoding="utf-8") as f:
         json.dump(request.json, f, ensure_ascii=False, indent=2)
-    return "<3"
+    return "OK!", 200
 
 
 def server():
