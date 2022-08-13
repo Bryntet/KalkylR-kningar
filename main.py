@@ -13,9 +13,51 @@ import holidays
 import pandas as pd
 import pytz
 import requests
-from flask import Flask, request
+from flask import Flask, request, abort
 from pyairtable import Table
 
+from functools import wraps
+import jwt
+from flask import current_app
+import models
+
+
+def token_required(f):
+
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if "Authorization" in request.headers:
+            token = request.headers["Authorization"].split(" ")[1]
+        if not token:
+            return {
+                "message": "Authentication Token is missing!",
+                "data": None,
+                "error": "Unauthorized"
+            }, 401
+        try:
+            data = jwt.decode(token,
+                              current_app.config["SECRET_KEY"],
+                              algorithms=["HS256"])
+            current_user = models.User().get_by_id(data["user_id"])
+            if current_user is None:
+                return {
+                    "message": "Invalid Authentication token!",
+                    "data": None,
+                    "error": "Unauthorized"
+                }, 401
+            if not current_user["active"]:
+                abort(403)
+        except Exception as e:
+            return {
+                "message": "Something went wrong",
+                "data": None,
+                "error": str(e)
+            }, 500
+
+        return f(current_user, *args, **kwargs)
+
+    return decorated
 
 class Bcolors:
     """Colours!"""
@@ -40,9 +82,10 @@ output_table = Table(api_key, base_id, "Output table")
 
 beforeTime = time.time()
 output_tables = []
-
+SECRET_KEY = os.environ.get('SECRET_KEY')
 app = Flask(__name__)
 
+app.config['SECRET_KEY'] = SECRET_KEY
 
 class Prylob:
     def __init__(self, **kwargs):
@@ -478,7 +521,7 @@ class Gig:
                     date = start_date.replace(
                         day=int(start_date.day) + i,
                         hour=int(temp[0]),
-                        minute=int(temp[1]),
+                        minute=int(temp[1])
                     )
 
                     if j % 2 == 0 and j != 0 or next_change:
@@ -1170,10 +1213,12 @@ def start():
     # Clean junk from data
     try:
         i_data_name = request.json["key"]
+        i_data = i_data["Input data"]
     except KeyError:
         i_data_name = list(i_data.keys())[-1]
 
     for key in i_data:
+
         pryl_list = []
         paket_list = []
         if i_data[key]["extraPrylar"] is not None:
