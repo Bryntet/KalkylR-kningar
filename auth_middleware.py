@@ -1,11 +1,9 @@
 from functools import wraps
-import jwt
-from flask import request, abort
+from flask import request
 from flask import current_app
 
 
 def token_required(f):
-
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
