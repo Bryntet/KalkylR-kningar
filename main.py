@@ -1110,7 +1110,7 @@ def take_back():
 
     backup["update"] = False
     requests.post(
-        url=
+        url=  # skipcq  FLK-E251 
         "https://hooks.airtable.com/workflows/v1/genericWebhook/appG1QEArAVGABdjm/wflcP4lYCTDwmSs4g"
         "/wtrzRoN98kiDzdU05",
         json=backup,
