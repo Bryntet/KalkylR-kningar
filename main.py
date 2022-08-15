@@ -14,9 +14,9 @@ import pandas as pd
 import pytz
 import requests
 from flask import Flask, request
-from pyairtable import Table
+from pyairtable import Table, Base
 from auth_middleware import token_required
-
+from operator import itemgetter
 
 class Bcolors:
     """Colours!"""
@@ -151,10 +151,9 @@ class Paketob:
 class Gig:
 
     def __init__(self, i_data, config, prylar, paketen, name):
+        self.tid_rapport = []
         self.name = name
-        self.i_data = i_data[self.name]
-        self.producent = self.i_data["producent"]
-        self.projektledare = self.i_data["projektledare"]
+        self.i_data = i_data[self.name]        
         self.adress_update = False
         self.tid_to_adress_car = None
         self.tid_to_adress = None
@@ -193,8 +192,8 @@ class Gig:
         self.gig_timmar = None
         self.tim_peng = None
 
-        if self.i_data["Mer personal"]:
-            self.specifik_personal = self.i_data["Mer personal"]
+        if self.i_data["Mer_personal"]:
+            self.specifik_personal = self.i_data["Mer_personal"]
             self.specifik_personal = {
                 "Empty": False,
                 "actual": self.specifik_personal
@@ -245,16 +244,21 @@ class Gig:
         self.pryl_pris = 0
         self.pris = 0
         self.in_pris = 0
-        self.update = False
+       
         self.config = config
         self.start_time = time.time()
 
-        try:
-            if self.i_data["uppdateraProjekt"]:
-                self.update = True
-        except KeyError:
-            pass
-
+        if self.i_data["uppdateraProjekt"]:
+            self.update = True
+        else:
+            self.update = False
+            
+        if self.update:
+            self.projektledare = self.i_data["Projektledare (from Projekt)"]
+            self.producent = self.i_data["Producent (from Projekt)"]
+        else:    
+            self.producent = self.i_data["producent"]
+            self.projektledare = self.i_data["projektledare"]
         try:
             if i_data["svanis"]:
                 self.svanis = True
@@ -306,6 +310,7 @@ class Gig:
                 },
             )
         self.make_tidrapport()
+        self.output_to_json()
 
     def check_prylar(self, prylar):
         try:
@@ -892,12 +897,14 @@ class Gig:
         except OSError:
             old_output = {}
             log = []
+        self.log = log
         leverans_nummer = 1
         if not self.update:
             for key in old_output:
                 # Strip key of number delimiter
                 if re.findall(r"(.*) #\d", key)[0] == self.name:
                     leverans_nummer += 1
+        self.old_output = old_output
         if self.i_data["post_text"] is None:
             self.i_data["post_text"] = False
 
@@ -964,7 +971,7 @@ class Gig:
             "made_by": [self.i_data["input_id"]],
             "post_deadline": self.i_data["post_deadline"],
             "avkast2": self.avkastning_without_pris_gammal,
-            "Mer folk": self.specifik_personal
+            "Mer folk": list(map(itemgetter("id"), self.specifik_personal))
         }
 
         print(time.time() - self.start_time)
@@ -994,15 +1001,7 @@ class Gig:
                 output, typecast=True
             )
         print(time.time() - self.start_time)
-        output_to_json = {f"{self.name} #{leverans_nummer}": output}
-
         self.airtable_record = output_from_airtable["id"]
-        with open("output.json", "w", encoding="utf-8") as f:
-            old_output.update(output_to_json)
-            json.dump(old_output, f, ensure_ascii=False, indent=2)
-        with open("log.json", "w", encoding="utf-8") as f:
-            log.append(output_to_json)
-            json.dump(log, f, ensure_ascii=False, indent=2)
         # print(output)
         projektkalender_records = []
 
@@ -1047,6 +1046,14 @@ class Gig:
         else:
             self.kalender_table.batch_create(projektkalender_records)
         print(time.time() - self.start_time)
+        self.leverans_nummer = leverans_nummer
+        self.output_variable = output
+        try:
+            self.tid_rapport = old_output["tidrapport"]
+        except KeyError:
+            pass
+        self.old_output[f"{self.name} #{self.leverans_nummer}"
+                        ] = self.output_variable
 
     def url_make(self):
         paket = ""
@@ -1078,6 +1085,7 @@ class Gig:
             "prefill_gigNamn": self.name,
             "prefill_Beställare": self.i_data["Beställare"][0]["id"],
             "prefill_Projekt typ": self.i_data["Projekt typ"]["name"],
+            "prefill_Mer_personal": ",".join(list(map(itemgetter('id'),self.specifik_personal)))
         }
 
         update_params = copy.deepcopy(params)
@@ -1089,7 +1097,7 @@ class Gig:
         })
         copy_params = copy.deepcopy(params)
         copy_params.update({
-            "prefill_nytt_projekt": True,
+            "prefill_nytt_projekt": False,
             "prefill_gigNamn": None
         })
 
@@ -1153,24 +1161,33 @@ class Gig:
             except KeyError:
                 pass
 
-        input_data_table.update(
-            input_data_table.get(input_id)["fields"]["old_input_id"][0],
-            self.i_data,
-            typecast=True,
-            replace=True,
-        )
-        input_data_table.delete(input_id)
+        
 
     def make_tidrapport(self):
         tid_table = Table(api_key, base_id, "Tidrapport")
         all_people = []
+        
         if self.producent != self.projektledare:
-            all_people.append(self.producent[0]["name"])
-            all_people.append(self.projektledare[0]["name"])
+            if not self.update:
+                all_people.append(self.producent[0]["name"])
+                all_people.append(self.projektledare[0]["name"])
+            else:
+                time_ = time.time()
+                test_list = {x["id"]: x["fields"] for x in self.output_table.all()}
+                print(time.time() - time_)
+               
         else:
-            all_people.append(self.producent[0]["name"])
+            if self.update:
+                self.output_table.get()
+            else:
+                all_people.append(self.producent[0]["name"])
+        
         for person in self.specifik_personal:
+
             all_people.append(person["name"])
+        for person in all_people:
+            if person is None:
+                del all_people[all_people.index(person)]
         records = []
         for dag in self.dagar_list:
             for person in all_people:
@@ -1183,8 +1200,70 @@ class Gig:
                     "Datum": dag[0].isoformat(),
                     "Person": person
                 })
-        out = tid_table.batch_create(records, typecast=True)
-        pass
+
+        if self.update:
+            update_records = []
+            delete_list = []
+            create_list = []
+
+            for record in records:
+                if record["Person"] in self.tid_rapport:
+                    for entry in self.tid_rapport:
+                        if record["Person"] == entry["name"]:
+                            update_records.append({
+                                "id": entry["id"],
+                                "fields": record
+                            })
+                else:
+                    create_list.append(record)
+
+            for entry in self.tid_rapport:
+                if entry["name"] not in all_people:
+                    delete_list.append(entry["id"])
+
+            out_list = []
+            if update_records != []:
+                outupdate = tid_table.batch_update(update_records, typecast=True)
+                for record in outupdate:
+                    out_list.append(record)
+            if delete_list != []:
+                tid_table.batch_delete(delete_list, typecast=True)
+            if create_list != []:
+                outcreat = tid_table.batch_create(create_list, typecast=True)
+                for record in outcreat:
+                    out_list.append(record)
+                
+            
+            tid_out = []
+            for record in out_list:
+                tid_out.append({
+                    'id': record["id"],
+                    "name": record["fields"]["Person"]
+                })
+            self.old_output[f"{self.name} #{self.leverans_nummer}"][
+                "tidrapport"] = tid_out
+
+        else:
+            tid_out = []
+            out = tid_table.batch_create(records, typecast=True)
+            for record in out:
+                tid_out.append({
+                    'id': record["id"],
+                    "name": record["fields"]["Person"]
+                })
+            self.old_output[f"{self.name} #{self.leverans_nummer}"][
+                "tidrapport"] = tid_out
+            
+
+    def output_to_json(self):
+
+        with open("output.json", "w", encoding="utf-8") as f:
+            json.dump(self.old_output, f, ensure_ascii=False, indent=2)
+        with open("log.json", "w", encoding="utf-8") as f:
+            self.log.append({
+                f"{self.name} #{self.leverans_nummer}": self.output_variable
+            })
+            json.dump(self.log, f, ensure_ascii=False, indent=2)
 
 
 @app.route("/airtable", methods=["POST"])
