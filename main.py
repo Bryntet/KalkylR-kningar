@@ -46,6 +46,10 @@ app = Flask(__name__)
 
 app.config['SECRET_KEY'] = SECRET_KEY
 
+def extractor(data, key="id"):
+    return [x[key] for x in data]
+
+
 
 class Prylob:
 
@@ -1085,7 +1089,7 @@ class Gig:
             "prefill_gigNamn": self.name,
             "prefill_Beställare": self.i_data["Beställare"][0]["id"],
             "prefill_Projekt typ": self.i_data["Projekt typ"]["name"],
-            "prefill_Mer_personal": ",".join(list(map(itemgetter('id'),self.specifik_personal)))
+            "prefill_Mer_personal": ",".join([x["id"] for x in self.specifik_personal])
         }
 
         update_params = copy.deepcopy(params)
