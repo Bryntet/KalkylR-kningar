@@ -1471,6 +1471,8 @@ def get_prylar():
         json.dump(paket_dict, f, ensure_ascii=False, indent=2)
     with open("frilans.json", "w", encoding="utf-8") as f:
         json.dump(request.json["Frilans"], f, ensure_ascii=False, indent=2)
+    with open('folk.json', 'w', encoding='utf-8') as f:
+        json.dump(request.json["Folk"], f, ensure_ascii=False, indent=2)
     return "OK!", 200
 
 
