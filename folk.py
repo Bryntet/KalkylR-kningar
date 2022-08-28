@@ -4,9 +4,11 @@ import json
 class Folk():
 
     def __init__(self):
+        with open("config.json") as f:
+            lv_timpeng = json.load(f)["levandeVideoLön"]
         with open("folk.json", "r") as f:
             json_data = json.load(f)
-            self.folk_dictionary = {x: Person(json_data[x]) for x in json_data}
+            self.folk_dictionary = {x: Person(json_data[x], lv_timpeng) for x in json_data}
 
     def get_person(self, id: str):
         """Get person object
@@ -59,22 +61,40 @@ class Folk():
 
 class Person():
 
-    def __init__(self, information):
+    def __init__(self, information, lv_timpeng):
+        """Person object
+
+        Args:
+            information (dict): dict with information from airtable
+            lv_timpeng (int): The Levande Video cost per hour for labour
+        """
         self.name = information['Name']
         self.available_tasks = information['Kan göra dessa uppgifter']
         self.id = information['id']
-        if information['hyrkostnad'] is not None:
-            self.hyrkostnad = information['hyrkostnad']
-        else:
+        self.levande_video = information['Levande Video']
+        
+        if self.levande_video:
+            self.frilans = False
             self.hyrkostnad = False
-        if information['timpeng'] is not None:
-            self.timpeng = information['timpeng']
-        else:
-            self.timpeng = False
-        if information['timpeng efter'] is not None:
-            self.timpeng_after_time = information['timpeng efter'] / 60 / 60
-        else:
+            self.timpeng = lv_timpeng
             self.timpeng_after_time = False
+        else:
+            self.frilans = True
+            
+            if information['hyrkostnad'] is not None:
+                self.hyrkostnad = information['hyrkostnad']
+            else:
+                self.hyrkostnad = False
+
+            if information['timpeng'] is not None:
+                self.timpeng = information['timpeng']
+            else:
+                self.timpeng = False
+
+            if information['timpeng efter'] is not None:
+                self.timpeng_after_time = information['timpeng efter'] / 60 / 60
+            else:
+                self.timpeng_after_time = False
 
     def get_cost(self, timmar: int):
         """Returns the money that the person should get for the time spent
