@@ -964,7 +964,7 @@ class Gig:
             "total_tid_ex_frilans": self.tim_budget_personal,
             "frilans": self.frilans_lista,
             "projektledare": self.i_data["projektledare"][0]["id"],
-            "producent": self.i_data["producent"][0]["id"],
+            "producent": [x['id'] for x in self.i_data["producent"]],
             "leverans_nummer": leverans_nummer,
             "Kund": self.i_data["Kund"][0]["id"],
             "Svanis": self.svanis,
@@ -977,7 +977,11 @@ class Gig:
             "avkast2": self.avkastning_without_pris_gammal,
             "Mer folk": list(map(itemgetter("id"), self.specifik_personal))
         }
-
+        
+        for key in list(output.keys()):
+            if output[key] is None:
+                del output[key]
+        
         print(time.time() - self.start_time)
         if self.update:
             output.pop("Gig namn", None)
@@ -1089,7 +1093,7 @@ class Gig:
             "prefill_gigNamn": self.name,
             "prefill_Beställare": self.i_data["Beställare"][0]["id"],
             "prefill_Projekt typ": self.i_data["Projekt typ"]["name"],
-            "prefill_Mer_personal": ",".join([x["id"] for x in self.specifik_personal])
+            "prefill_Mer_personal": ",".join([x["id"] for x in self.specifik_personal if x["id"] is not None])
         }
 
         update_params = copy.deepcopy(params)
@@ -1330,9 +1334,6 @@ def take_back():
     return "OK!", 200
 
 
-@app.route("/", methods=["GET"])
-def the_basics():
-    return "OK!", 200
 
 
 @app.route("/test-auth", methods=["POST"])
@@ -1390,9 +1391,15 @@ def start():
     with open("prylar.json", "r", encoding="utf-8") as f:
         prylar = json.load(f)
     if i_data_name == "Unnamed record":
-        i_data_name = re.split(
-            r" #\d+", i_data["Unnamed record"]["uppdateraProjekt"][0]["name"]
-        )[0]
+        if i_data["Unnamed record"]["uppdateraa"] is not None:
+            # If the record is to be updated, get it from the i_data and remove the numbering from the name
+            i_data_name = re.split(
+                r" #\d+", i_data["Unnamed record"]["uppdateraProjekt"][0]["name"]
+            )[0]
+        else:
+            # If input is not update treat as new leverans to projekt
+            i_data_name = i_data["Unnamed record"]['Projekt'][0]['name']
+            
         i_data[i_data_name] = i_data["Unnamed record"]
     Gig(i_data, config, prylar, paket, i_data_name)
 
@@ -1474,6 +1481,5 @@ def update():
 
 def server():
     app.run(host="0.0.0.0", port=5000)  # skipcq BAN-B104
-
 
 server()
