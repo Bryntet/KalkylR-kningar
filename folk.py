@@ -1,5 +1,6 @@
 import json
 
+
 class Folk():
 
     def __init__(self):
@@ -38,7 +39,7 @@ class Folk():
 
         # Get id of person with lowest cost and then get person object
         return self.folk_dictionary[k[v.index(min(v))]], min(v)
-    
+
     def total_cost(self, personer: list, timmar: int):
         """Make list of people into a total cost
 
@@ -52,9 +53,8 @@ class Folk():
         total = 0
         for person in personer:
             total += self.get_person(person).get_cost(timmar)
-            
-        return total
 
+        return total
 
 
 class Person():
