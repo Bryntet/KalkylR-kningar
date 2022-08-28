@@ -18,6 +18,7 @@ from pyairtable import Table, Base
 from auth_middleware import token_required
 from operator import itemgetter
 
+
 class Bcolors:
     """Colours!"""
 
@@ -46,9 +47,9 @@ app = Flask(__name__)
 
 app.config['SECRET_KEY'] = SECRET_KEY
 
+
 def extractor(data, key="id"):
     return [x[key] for x in data]
-
 
 
 class Prylob:
@@ -157,7 +158,7 @@ class Gig:
     def __init__(self, i_data, config, prylar, paketen, name):
         self.tid_rapport = []
         self.name = name
-        self.i_data = i_data[self.name]        
+        self.i_data = i_data[self.name]
         self.adress_update = False
         self.tid_to_adress_car = None
         self.tid_to_adress = None
@@ -248,7 +249,7 @@ class Gig:
         self.pryl_pris = 0
         self.pris = 0
         self.in_pris = 0
-       
+
         self.config = config
         self.start_time = time.time()
 
@@ -256,11 +257,11 @@ class Gig:
             self.update = True
         else:
             self.update = False
-            
+
         if self.update:
             self.projektledare = self.i_data["Projektledare (from Projekt)"]
             self.producent = self.i_data["Producent (from Projekt)"]
-        else:    
+        else:
             self.producent = self.i_data["producent"]
             self.projektledare = self.i_data["projektledare"]
         try:
@@ -977,11 +978,11 @@ class Gig:
             "avkast2": self.avkastning_without_pris_gammal,
             "Mer folk": list(map(itemgetter("id"), self.specifik_personal))
         }
-        
+
         for key in list(output.keys()):
             if output[key] is None:
                 del output[key]
-        
+
         print(time.time() - self.start_time)
         if self.update:
             output.pop("Gig namn", None)
@@ -1093,7 +1094,9 @@ class Gig:
             "prefill_gigNamn": self.name,
             "prefill_Beställare": self.i_data["Beställare"][0]["id"],
             "prefill_Projekt typ": self.i_data["Projekt typ"]["name"],
-            "prefill_Mer_personal": ",".join([x["id"] for x in self.specifik_personal if x["id"] is not None])
+            "prefill_Mer_personal": ",".join([
+                x["id"] for x in self.specifik_personal if x["id"] is not None
+            ])
         }
 
         update_params = copy.deepcopy(params)
@@ -1169,27 +1172,28 @@ class Gig:
             except KeyError:
                 pass
 
-        
-
     def make_tidrapport(self):
         tid_table = Table(api_key, base_id, "Tidrapport")
         all_people = []
-        
+
         if self.producent != self.projektledare:
             if not self.update:
                 all_people.append(self.producent[0]["name"])
                 all_people.append(self.projektledare[0]["name"])
             else:
                 time_ = time.time()
-                test_list = {x["id"]: x["fields"] for x in self.output_table.all()}
+                test_list = {
+                    x["id"]: x["fields"]
+                    for x in self.output_table.all()
+                }
                 print(time.time() - time_)
-               
+
         else:
             if self.update:
                 self.output_table.get()
             else:
                 all_people.append(self.producent[0]["name"])
-        
+
         for person in self.specifik_personal:
 
             all_people.append(person["name"])
@@ -1231,7 +1235,9 @@ class Gig:
 
             out_list = []
             if update_records != []:
-                outupdate = tid_table.batch_update(update_records, typecast=True)
+                outupdate = tid_table.batch_update(
+                    update_records, typecast=True
+                )
                 for record in outupdate:
                     out_list.append(record)
             if delete_list != []:
@@ -1240,8 +1246,7 @@ class Gig:
                 outcreat = tid_table.batch_create(create_list, typecast=True)
                 for record in outcreat:
                     out_list.append(record)
-                
-            
+
             tid_out = []
             for record in out_list:
                 tid_out.append({
@@ -1261,7 +1266,6 @@ class Gig:
                 })
             self.old_output[f"{self.name} #{self.leverans_nummer}"][
                 "tidrapport"] = tid_out
-            
 
     def output_to_json(self):
 
@@ -1334,8 +1338,6 @@ def take_back():
     return "OK!", 200
 
 
-
-
 @app.route("/test-auth", methods=["POST"])
 @token_required
 def auth_test():
@@ -1394,12 +1396,13 @@ def start():
         if i_data["Unnamed record"]["uppdateraa"] is not None:
             # If the record is to be updated, get it from the i_data and remove the numbering from the name
             i_data_name = re.split(
-                r" #\d+", i_data["Unnamed record"]["uppdateraProjekt"][0]["name"]
+                r" #\d+",
+                i_data["Unnamed record"]["uppdateraProjekt"][0]["name"]
             )[0]
         else:
             # If input is not update treat as new leverans to projekt
             i_data_name = i_data["Unnamed record"]['Projekt'][0]['name']
-            
+
         i_data[i_data_name] = i_data["Unnamed record"]
     Gig(i_data, config, prylar, paket, i_data_name)
 
@@ -1481,5 +1484,6 @@ def update():
 
 def server():
     app.run(host="0.0.0.0", port=5000)  # skipcq BAN-B104
+
 
 server()
