@@ -97,10 +97,3 @@ class Person():
 
     def can_do(self, task):
         return task in self.available_tasks
-
-
-test = Folk()
-pengar = test.get_person('rectoY83gJUuy9D3E').get_cost(3)
-person, minst_pengar = test.lowest_cost('Bildproducent', 5)
-total = test.total_cost(['rectoY83gJUuy9D3E', 'rectoY83gJUuy9D3E'], 5)
-breakpoint()
