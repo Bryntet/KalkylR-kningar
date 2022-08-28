@@ -17,6 +17,9 @@ from flask import Flask, request
 from pyairtable import Table, Base
 from auth_middleware import token_required
 from operator import itemgetter
+from folk import Folk
+
+
 
 
 class Bcolors:
@@ -159,6 +162,23 @@ class Gig:
         self.tid_rapport = []
         self.name = name
         self.i_data = i_data[self.name]
+
+        self.person_field_list = [
+            'Bildproducent', 'Fotograf', 'Ljudtekniker',
+            'Ljustekniker', 'Grafikproducent', 'Animatör',
+            'Körproducent', 'Innehållsproducent', 'Scenmästare',
+            'Tekniskt ansvarig', 'producent'
+        ]
+        # Make a dict of all the types of tasks with lists of people recIDs inside
+        self.person_dict_grouped = {x: [rec['id'] for rec in self.i_data[x]] for x in self.person_field_list if self.i_data[x] is not None}
+        self.person_list = []
+        # Make a de-duped list of all the people involved in the gig
+        [
+            self.person_list.append(item) for sublist in
+            [self.person_dict_grouped[j] for j in self.person_dict_grouped]
+            for item in sublist if item not in self.person_list
+        ]
+
         self.adress_update = False
         self.tid_to_adress_car = None
         self.tid_to_adress = None
@@ -197,20 +217,8 @@ class Gig:
         self.gig_timmar = None
         self.tim_peng = None
 
-        if self.i_data["Mer_personal"]:
-            self.specifik_personal = self.i_data["Mer_personal"]
-            self.specifik_personal = {
-                "Empty": False,
-                "actual": self.specifik_personal
-            }
-        else:
-            self.specifik_personal = {
-                "Empty": True,
-                "actual": [{
-                    "id": None,
-                    "name": None
-                }]
-            }
+
+        self.specifik_personal = self.person_list
 
         try:
             if self.i_data["extraPersonal"] is not None:
@@ -644,26 +652,18 @@ class Gig:
             config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 150
         )
         self.ob_mult /= self.dag_längd * len(hours_list)
-        self.ob_mult *= 1.5
+
 
     def personal_rakna(self, config):
         # Add additional personal from specifik personal to the total personal
-        if not self.specifik_personal["Empty"] and (
-            self.i_data["extraPersonal"] is None
-            or self.i_data["extraPersonal"] == 0
-        ):
-            if self.i_data["producent"] == self.i_data["projektledare"]:
-                minus = 1
-            else:
-                minus = 2
-            if len(self.specifik_personal["actual"]) + minus > self.personal:
-                self.personal = len(self.specifik_personal["actual"]) + minus
-            elif self.personal < minus:
-                self.personal = minus
-        self.specifik_personal = self.specifik_personal["actual"]
+
+
+
+
+
 
         self.tim_peng = math.floor(
-            self.ob_mult * (config["lönJustering"]) / 10
+            self.ob_mult * (config["lönJustering"]) / 10 * 1.5 # 1.5 = sociala avgifter
         ) * 10
 
         self.gig_timmar = round(
@@ -677,6 +677,7 @@ class Gig:
                 self.pryl_pris * config["andelRiggTimmar"]
             )
         if self.projekt_timmar is None:
+            # Slask timmar för tid spenderat på planering
             self.projekt_timmar = math.ceil(
                 (self.gig_timmar + self.rigg_timmar) * config["projektTid"]
             )
@@ -699,32 +700,17 @@ class Gig:
                 self.restid = self.personal * self.i_data["dagar"] * config[
                     "restid"]
         self.restid = math.ceil(self.restid)
-        self.tim_budget = (
+        self.total_tim_budget = (
             self.gig_timmar + self.rigg_timmar + self.projekt_timmar +
             self.restid
         )
-        if self.frilans != 0:
-            self.tim_budget_frilans = (
-                (self.tim_budget - (self.projekt_timmar * self.frilans)) /
-                self.personal * self.frilans
-            )
-        else:
-            self.tim_budget_frilans = 0
-        if self.personal - self.frilans != 0:
-            self.tim_budget_personal = (
-                (self.tim_budget + (self.projekt_timmar * self.frilans)) /
-                self.personal * (self.personal - self.frilans)
-            )
-        else:
-            self.tim_budget_personal = 0
-        # Timmar gånger peng per timme
-        self.personal_pris = self.tim_budget_personal * self.tim_peng
-        self.personal_pris_gammal = self.tim_budget * self.tim_peng
-        self.personal_kostnad = (
-            self.tim_budget_personal * config["levandeVideoLön"] * 1.5
-        )
-        self.personal_kostnad_gammal = self.tim_budget * config[
-            "levandeVideoLön"] * 1.5
+        self.tim_dict = {'gig': self.gig_timmar, 'rigg': self.rigg_timmar, 'proj': self.projekt_timmar, 'res': self.restid}
+
+        folk = Folk()
+        self.frilans_kostnad, self.total_tim_frilans = folk.total_cost(self.person_list, self.tim_dict, False)
+        self.levande_video_kostnad, self.total_tim_lev = folk.total_cost(self.person_list, self.tim_dict, True)
+        self.levande_video_pris = self.total_tim_lev * self.tim_peng
+
 
     def post_text(self):
         try:
@@ -749,32 +735,29 @@ class Gig:
 
         self.hyr_pris = self.i_data["hyrKostnad"] * (1 + config["hyrMulti"])
 
-        self.gammal_kostnad = (
-            self.pryl_kostnad + self.personal_kostnad_gammal +
-            self.i_data["hyrKostnad"] + self.post_text_kostnad +
-            self.frilans_hyrkostnad
+        self.endast_frilans_kostnad = (
+            self.pryl_kostnad +
+            self.i_data["hyrKostnad"] +
+            self.post_text_kostnad +
+            self.frilans_kostnad
         )
-
-        if self.personal_pris_gammal != 0:
-            self.personal_marginal_gammal = (
-                self.personal_pris_gammal - self.personal_kostnad_gammal
-            ) / self.personal_pris_gammal
-        else:
-            self.personal_marginal_gammal = 0
 
         self.kostnad = (
-            self.pryl_kostnad + self.personal_kostnad +
-            self.i_data["hyrKostnad"] + self.post_text_kostnad +
-            self.frilans_hyrkostnad
+            self.pryl_kostnad +
+            self.personal_kostnad +
+            self.i_data["hyrKostnad"] +
+            self.post_text_kostnad +
+            self.frilans_kostnad +
+            self.levande_video_kostnad
         )
 
-        self.pris += self.hyr_pris + self.post_text_pris + self.personal_pris_gammal
+        self.pris += self.hyr_pris + self.post_text_pris + self.levande_video_pris
 
         # Prevent div by 0
-        if self.personal_pris != 0:
+        if self.levande_video_pris != 0:
             self.personal_marginal = (
-                self.personal_pris - self.personal_kostnad
-            ) / self.personal_pris
+                self.levande_video_pris - self.personal_kostnad
+            ) / self.levande_video_pris
         else:
             self.personal_marginal = 0
 
@@ -1416,6 +1399,7 @@ data = ["test0", "test1"]
 @app.route("/update/config", methods=["POST"])
 @token_required
 def get_prylar():
+    global folk
 
     # Make the key of configs go directly to the value
     for configurable in request.json["Config"]:
@@ -1473,6 +1457,7 @@ def get_prylar():
         json.dump(request.json["Frilans"], f, ensure_ascii=False, indent=2)
     with open('folk.json', 'w', encoding='utf-8') as f:
         json.dump(request.json["Folk"], f, ensure_ascii=False, indent=2)
+    folk = Folk()
     return "OK!", 200
 
 

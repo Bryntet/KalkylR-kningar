@@ -17,7 +17,7 @@ class Folk():
             id (str): The record id from airtable
 
         Returns:
-            Object: Person
+            class: Person
         """
         return self.folk_dictionary[id]
 
@@ -29,7 +29,7 @@ class Folk():
             timmar (int): Hours needed to complete the task
 
         Returns:
-            Object: Person
+            class: Person
             int: The cost
         """
         candidates = {}
@@ -42,21 +42,30 @@ class Folk():
         # Get id of person with lowest cost and then get person object
         return self.folk_dictionary[k[v.index(min(v))]], min(v)
 
-    def total_cost(self, personer: list, timmar: int):
+    def total_cost(self, personer: list, timmar: dict, levande_video: bool):
         """Make list of people into a total cost
 
         Args:
             personer (list): record ids for the people
             timmar (int): hours per person
+            levande_video (bool, optional): If false, ignore all levande_video people if true, ignore all frilans
 
         Returns:
             int: Money
+            int: Hours
         """
+        
+        
+            
         total = 0
+        tim_total = 0
         for person in personer:
-            total += self.get_person(person).get_cost(timmar)
-
-        return total
+            if self.get_person(person).levande_video == levande_video:
+                temp_total, temp_tim = self.get_person(person).get_cost(timmar)
+                total += temp_total
+                tim_total += temp_tim
+            
+        return total, tim_total
 
 
 class Person():
@@ -72,7 +81,7 @@ class Person():
         self.available_tasks = information['Kan göra dessa uppgifter']
         self.id = information['id']
         self.levande_video = information['Levande Video']
-        
+
         if self.levande_video:
             self.frilans = False
             self.hyrkostnad = False
@@ -80,7 +89,7 @@ class Person():
             self.timpeng_after_time = False
         else:
             self.frilans = True
-            
+
             if information['hyrkostnad'] is not None:
                 self.hyrkostnad = information['hyrkostnad']
             else:
@@ -96,24 +105,30 @@ class Person():
             else:
                 self.timpeng_after_time = False
 
-    def get_cost(self, timmar: int):
+    def get_cost(self, timmar: dict):
         """Returns the money that the person should get for the time spent
 
         Args:
-            timmar (int): amount of hours spent working
+            timmar (dict): dict with type of hours
 
         Returns:
             int: Money
         """
         total = 0
-        if self.hyrkostnad:
-            total += self.hyrkostnad
-        if self.timpeng_after_time:
-            total += (timmar - self.timpeng_after_time) * self.timpeng
-        elif self.timpeng:
-            total += self.timpeng * timmar
+        if self.levande_video:
+            tim_total = timmar['gig'] + timmar['rigg'] + timmar['proj'] + timmar['res']
+            total = tim_total * self.timpeng
+        else:
+            tim_total = timmar['gig'] + timmar['rigg']
+            
+            if self.hyrkostnad:
+                total += self.hyrkostnad
+            if self.timpeng_after_time:
+                total += (tim_total - self.timpeng_after_time) * self.timpeng
+            elif self.timpeng:
+                total += self.timpeng * tim_total
 
-        return total
+        return total, tim_total
 
     def can_do(self, task):
         return task in self.available_tasks
