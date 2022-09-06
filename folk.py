@@ -1,14 +1,15 @@
 import json
 
 
-class Folk():
-
+class Folk:
     def __init__(self):
         with open("config.json") as f:
             lv_timpeng = json.load(f)["levandeVideoLön"]
         with open("folk.json", "r") as f:
             json_data = json.load(f)
-            self.folk_dictionary = {x: Person(json_data[x], lv_timpeng) for x in json_data}
+            self.folk_dictionary = {
+                x: Person(json_data[x], lv_timpeng) for x in json_data
+            }
 
     def get_person(self, id: str):
         """Get person object
@@ -54,9 +55,7 @@ class Folk():
             int: Money
             int: Hours
         """
-        
-        
-            
+
         total = 0
         tim_total = 0
         for person in personer:
@@ -64,12 +63,11 @@ class Folk():
                 temp_total, temp_tim = self.get_person(person).get_cost(timmar)
                 total += temp_total
                 tim_total += temp_tim
-            
+
         return total, tim_total
 
 
-class Person():
-
+class Person:
     def __init__(self, information, lv_timpeng):
         """Person object
 
@@ -77,10 +75,10 @@ class Person():
             information (dict): dict with information from airtable
             lv_timpeng (int): The Levande Video cost per hour for labour
         """
-        self.name = information['Name']
-        self.available_tasks = information['Kan göra dessa uppgifter']
-        self.id = information['id']
-        self.levande_video = information['Levande Video']
+        self.name = information["Name"]
+        self.available_tasks = information["Kan göra dessa uppgifter"]
+        self.id = information["id"]
+        self.levande_video = information["Levande Video"]
 
         if self.levande_video:
             self.frilans = False
@@ -90,18 +88,18 @@ class Person():
         else:
             self.frilans = True
 
-            if information['hyrkostnad'] is not None:
-                self.hyrkostnad = information['hyrkostnad']
+            if information["hyrkostnad"] is not None:
+                self.hyrkostnad = information["hyrkostnad"]
             else:
                 self.hyrkostnad = False
 
-            if information['timpeng'] is not None:
-                self.timpeng = information['timpeng']
+            if information["timpeng"] is not None:
+                self.timpeng = information["timpeng"]
             else:
                 self.timpeng = False
 
-            if information['timpeng efter'] is not None:
-                self.timpeng_after_time = information['timpeng efter'] / 60 / 60
+            if information["timpeng efter"] is not None:
+                self.timpeng_after_time = information["timpeng efter"] / 60 / 60
             else:
                 self.timpeng_after_time = False
 
@@ -116,11 +114,11 @@ class Person():
         """
         total = 0
         if self.levande_video:
-            tim_total = timmar['gig'] + timmar['rigg'] + timmar['proj'] + timmar['res']
+            tim_total = timmar["gig"] + timmar["rigg"] + timmar["proj"] + timmar["res"]
             total = tim_total * self.timpeng
         else:
-            tim_total = timmar['gig'] + timmar['rigg']
-            
+            tim_total = timmar["gig"] + timmar["rigg"]
+
             if self.hyrkostnad:
                 total += self.hyrkostnad
             if self.timpeng_after_time:
