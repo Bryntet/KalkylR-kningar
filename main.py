@@ -1084,23 +1084,40 @@ class Gig:
             "prefill_gigNamn": self.name,
             "prefill_Beställare": self.i_data["Beställare"][0]["id"],
             "prefill_Projekt typ": self.i_data["Projekt typ"]["name"],
+            "prefill_Bildproducent": self.person_dict_grouped["Bildproducent"],
+            "prefill_Fotograf": self.person_dict_grouped["Fotograf"],
+            "prefill_Ljudtekniker": self.person_dict_grouped["Ljudtekniker"],
+            "prefill_Ljustekniker": self.person_dict_grouped["Ljustekniker"],
+            "prefill_Grafikproducent": self.person_dict_grouped["Grafikproducent"],
+            "prefill_Animatör": self.person_dict_grouped["Animatör"],
+            "prefill_Körproducent": self.person_dict_grouped["Körproducent"],
+            "prefill_Innehållsproducent": self.person_dict_grouped["Innehållsproducent"],
+            "prefill_Scenmästare": self.person_dict_grouped["Scenmästare"],
+            "prefill_Tekniskt ansvarig": self.person_dict_grouped["Tekniskt ansvarig"],
             #"prefill_Mer_personal": ",".join([
             #    x["id"] for x in self.specifik_personal if x["id"] is not None
             #])
         }
+        
 
         update_params = copy.deepcopy(params)
         update_params.update({
-            "prefill_uppdateraa": True,
+            "prefill_uppdateraa": True,            
             "prefill_uppdateraProjekt": self.airtable_record,
             "prefill_Börja datum": self.i_data["Börja datum"],
             "prefill_preSluta datum": self.i_data["preSluta datum"],
         })
+        hidden_update = [
+            "uppdateraa", "uppdateraProjekt"
+        ]
+        for field in hidden_update:
+            update_params.update({f"hidden_{field}": True})
         copy_params = copy.deepcopy(params)
         copy_params.update({
             "prefill_nytt_projekt": False,
-            "prefill_gigNamn": None
+            "prefill_gigNamn": self.name
         })
+        
 
         params_list = [update_params, copy_params]
         # Remove empty dicts
