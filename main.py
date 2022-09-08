@@ -215,7 +215,7 @@ class Gig:
         self.restid = None
         self.rigg_timmar = None
         self.gig_timmar = None
-        self.tim_peng = None
+        self.tim_pris = None
 
 
         self.specifik_personal = self.person_list
@@ -367,7 +367,7 @@ class Gig:
         for paket in self.i_data["prylPaket"]:
             # Check svanis
             try:
-                if self.paketen[paket]["svanis"]:
+                if self.paketen[paket]["Svanis"] == True:
                     self.svanis = True
             except KeyError:
                 pass
@@ -658,24 +658,32 @@ class Gig:
         # Add additional personal from specifik personal to the total personal
 
 
+        self.bas_lön = self.ob_mult
+        self.sociala_avgifter = config["socialaAvgifter"] + 1
+        
+        self.lön_kostnad = self.bas_lön * self.sociala_avgifter
+        
 
 
 
-
-        self.tim_peng = math.floor(
-            self.ob_mult * (config["lönJustering"]) / 10 * 1.5 # 1.5 = sociala avgifter
+        self.timpris = math.floor(
+            self.lön_kostnad * config["lönJustering"] / 10
         ) * 10
+        
 
         self.gig_timmar = round(
             self.dag_längd * self.personal * self.i_data["dagar"]
         )
-
+        
+        
+        #Custom riggtimmar
         if self.i_data["specialRigg"]:
             self.rigg_timmar = self.i_data["riggTimmar"]
         else:
             self.rigg_timmar = math.floor(
                 self.pryl_pris * config["andelRiggTimmar"]
             )
+        
         if self.projekt_timmar is None:
             # Slask timmar för tid spenderat på planering
             self.projekt_timmar = math.ceil(
@@ -700,16 +708,21 @@ class Gig:
                 self.restid = self.personal * self.i_data["dagar"] * config[
                     "restid"]
         self.restid = math.ceil(self.restid)
-        self.total_tim_budget = (
-            self.gig_timmar + self.rigg_timmar + self.projekt_timmar +
-            self.restid
-        )
-        self.tim_dict = {'gig': self.gig_timmar, 'rigg': self.rigg_timmar, 'proj': self.projekt_timmar, 'res': self.restid}
 
-        folk = Folk()
-        self.frilans_kostnad, self.total_tim_frilans = folk.total_cost(self.person_list, self.tim_dict, False)
-        self.levande_video_kostnad, self.total_tim_lev = folk.total_cost(self.person_list, self.tim_dict, True)
-        self.levande_video_pris = self.total_tim_lev * self.tim_peng
+        self.tim_dict = {'gig': self.gig_timmar, 'rigg': self.rigg_timmar, 'proj': self.projekt_timmar, 'res': self.restid}
+        
+        
+        
+        self.folk = Folk(self.lön_kostnad, self.timpris, config['hyrMulti'])
+        self.frilans_kostnad, self.frilans_pris, self.total_tim_frilans = self.folk.total_cost(self.person_list, self.tim_dict, False)
+        self.levandevideo_kostnad, self.levandevideo_pris, self.total_tim_lev = self.folk.total_cost(self.person_list, self.tim_dict, True)
+        
+        self.total_tim_budget = self.total_tim_lev + self.total_tim_frilans
+        
+        #Theoretical cost if only done by lv
+        self.teoretisk_lön_kostnad = self.total_tim_budget * self.lön_kostnad
+        self.teoretisk_lön_pris = self.total_tim_budget * self.timpris
+        
 
 
     def post_text(self):
@@ -735,31 +748,26 @@ class Gig:
 
         self.hyr_pris = self.i_data["hyrKostnad"] * (1 + config["hyrMulti"])
 
-        self.endast_frilans_kostnad = (
-            self.pryl_kostnad +
-            self.i_data["hyrKostnad"] +
-            self.post_text_kostnad +
-            self.frilans_kostnad
-        )
+        
 
         self.kostnad = (
             self.pryl_kostnad +
-            self.personal_kostnad +
             self.i_data["hyrKostnad"] +
             self.post_text_kostnad +
             self.frilans_kostnad +
-            self.levande_video_kostnad
+            self.levandevideo_kostnad 
         )
+        
+        
 
-        self.pris += self.hyr_pris + self.post_text_pris + self.levande_video_pris
-
-        # Prevent div by 0
-        if self.levande_video_pris != 0:
-            self.personal_marginal = (
-                self.levande_video_pris - self.personal_kostnad
-            ) / self.levande_video_pris
-        else:
-            self.personal_marginal = 0
+        self.pris += self.hyr_pris + self.post_text_pris + self.levandevideo_pris
+        
+        #Teoretiska ifall enbart gjort av LV
+        self.teoretisk_kostnad = self.kostnad - self.frilans_kostnad - self.levandevideo_kostnad + self.teoretisk_lön_kostnad
+        self.teoretisk_pris = self.pris - self.frilans_pris - self.levandevideo_pris + self.teoretisk_lön_pris
+        
+        
+        
 
         # Prevent div by 0
         if self.pryl_pris != 0:
@@ -775,22 +783,21 @@ class Gig:
         )
         print(self.pris)
         self.avkastning = round(
-            self.pris - self.slit_kostnad - self.personal_kostnad -
-            self.i_data["hyrKostnad"]
+            self.pris - self.kostnad
         )
 
-        self.avkastning_gammal = round(
-            self.pris - self.slit_kostnad - self.personal_kostnad_gammal -
-            self.i_data["hyrKostnad"]
+        self.teoretisk_avkastning = round(
+            self.teoretisk_pris - self.teoretisk_kostnad
         )
-        self.avkastning_without_pris = (
-            -1 * self.slit_kostnad - self.personal_kostnad -
-            self.i_data["hyrKostnad"]
-        )
-        self.avkastning_without_pris_gammal = (
-            -1 * self.slit_kostnad - self.personal_kostnad_gammal -
-            self.i_data["hyrKostnad"]
-        )
+        #self.avkastning_without_pris = (
+        #    -1 * self.slit_kostnad - self.personal_kostnad -
+        #    self.i_data["hyrKostnad"]
+        #)
+        #self.avkastning_without_pris_gammal = (
+        #    -1 * self.slit_kostnad - self.personal_kostnad_gammal -
+        #    self.i_data["hyrKostnad"]
+        #)
+        
         self.hyr_things = self.i_data["hyrKostnad"] * (
             1 - config["hyrMulti"] * config["hyrMarginal"]
         )
@@ -802,15 +809,15 @@ class Gig:
         except ZeroDivisionError:
             self.marginal = 0
         try:
-            self.marginal_gammal = (
+            self.teoretisk_marginal = (
                 round(
-                    self.avkastning_gammal /
-                    (self.pris - self.hyr_things) * 10000
+                    self.teoretisk_avkastning /
+                    (self.teoretisk_pris - self.hyr_things) * 10000
                 ) / 100
             )
         except ZeroDivisionError:
-            self.marginal_gammal = 0
-        print(self.marginal, self.marginal_gammal)
+            self.teoretisk_marginal = 0
+        print(self.marginal, self.teoretisk_marginal)
 
     def output(self):
         print(f"Post Text: {self.post_text_pris}")
@@ -958,8 +965,8 @@ class Gig:
             "input_id": self.i_data["input_id"],
             "made_by": [self.i_data["input_id"]],
             "post_deadline": self.i_data["post_deadline"],
-            "avkast2": self.avkastning_without_pris_gammal,
-            "Mer folk": list(map(itemgetter("id"), self.specifik_personal))
+            #"avkast2": self.avkastning_without_pris_gammal,
+            #"Mer folk": list(map(itemgetter("id"), self.specifik_personal))
         }
 
         for key in list(output.keys()):
@@ -1077,9 +1084,9 @@ class Gig:
             "prefill_gigNamn": self.name,
             "prefill_Beställare": self.i_data["Beställare"][0]["id"],
             "prefill_Projekt typ": self.i_data["Projekt typ"]["name"],
-            "prefill_Mer_personal": ",".join([
-                x["id"] for x in self.specifik_personal if x["id"] is not None
-            ])
+            #"prefill_Mer_personal": ",".join([
+            #    x["id"] for x in self.specifik_personal if x["id"] is not None
+            #])
         }
 
         update_params = copy.deepcopy(params)
@@ -1159,27 +1166,10 @@ class Gig:
         tid_table = Table(api_key, base_id, "Tidrapport")
         all_people = []
 
-        if self.producent != self.projektledare:
-            if not self.update:
-                all_people.append(self.producent[0]["name"])
-                all_people.append(self.projektledare[0]["name"])
-            else:
-                time_ = time.time()
-                test_list = {
-                    x["id"]: x["fields"]
-                    for x in self.output_table.all()
-                }
-                print(time.time() - time_)
-
-        else:
-            if self.update:
-                self.output_table.get()
-            else:
-                all_people.append(self.producent[0]["name"])
-
-        for person in self.specifik_personal:
-
-            all_people.append(person["name"])
+        for person in self.person_list:
+            person = self.folk.get_person(person)
+            if person.levande_video:
+                all_people.append(person.name)
         for person in all_people:
             if person is None:
                 del all_people[all_people.index(person)]
@@ -1287,7 +1277,7 @@ def delete():
         output = json.load(f)
 
     with open("output_backup.json", "w", encoding="utf-8") as f:
-        json.dump(output[record_name], f, ensure_ascii=False, indent=2)
+            json.dump(output[record_name], f, ensure_ascii=False, indent=2)
 
     output.pop(record_name, None)
 

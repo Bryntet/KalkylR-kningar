@@ -3,12 +3,11 @@ import json
 
 class Folk():
 
-    def __init__(self):
-        with open("config.json") as f:
-            lv_timpeng = json.load(f)["levandeVideoLön"]
+    def __init__(self, lön, timpris, hyr_multi):
+
         with open("folk.json", "r") as f:
             json_data = json.load(f)
-            self.folk_dictionary = {x: Person(json_data[x], lv_timpeng) for x in json_data}
+            self.folk_dictionary = {x: Person(json_data[x], lön, timpris, hyr_multi) for x in json_data}
 
     def get_person(self, id: str):
         """Get person object
@@ -54,23 +53,26 @@ class Folk():
             int: Money
             int: Hours
         """
-        
-        
-            
-        total = 0
+
+
+
+        total_kostnad = 0
         tim_total = 0
+        total_pris = 0
         for person in personer:
             if self.get_person(person).levande_video == levande_video:
-                temp_total, temp_tim = self.get_person(person).get_cost(timmar)
-                total += temp_total
+                temp_total_kostnad, temp_total_pris, temp_tim = self.get_person(person).get_cost(timmar)
+                total_kostnad += temp_total_kostnad
                 tim_total += temp_tim
-            
-        return total, tim_total
+                total_pris += temp_total_pris
+                
+
+        return total_kostnad, total_pris, tim_total
 
 
 class Person():
 
-    def __init__(self, information, lv_timpeng):
+    def __init__(self, information, lv_timpeng, lv_timpris, hyr_multi=0.2):
         """Person object
 
         Args:
@@ -81,12 +83,13 @@ class Person():
         self.available_tasks = information['Kan göra dessa uppgifter']
         self.id = information['id']
         self.levande_video = information['Levande Video']
-
+        self.hyr_multi = hyr_multi
         if self.levande_video:
             self.frilans = False
             self.hyrkostnad = False
-            self.timpeng = lv_timpeng
-            self.timpeng_after_time = False
+            self.tim_kostnad = lv_timpeng
+            self.tim_kostnad_after_time = False
+            self.timpris = lv_timpris
         else:
             self.frilans = True
 
@@ -96,14 +99,15 @@ class Person():
                 self.hyrkostnad = False
 
             if information['timpeng'] is not None:
-                self.timpeng = information['timpeng']
+                self.tim_kostnad = information['timpeng']
+                
             else:
-                self.timpeng = False
+                self.tim_kostnad = False
 
             if information['timpeng efter'] is not None:
-                self.timpeng_after_time = information['timpeng efter'] / 60 / 60
+                self.tim_kostnad_after_time = information['timpeng efter'] / 60 / 60
             else:
-                self.timpeng_after_time = False
+                self.tim_kostnad_after_time = False
 
     def get_cost(self, timmar: dict):
         """Returns the money that the person should get for the time spent
@@ -114,21 +118,24 @@ class Person():
         Returns:
             int: Money
         """
-        total = 0
+        total_kostnad = 0
         if self.levande_video:
             tim_total = timmar['gig'] + timmar['rigg'] + timmar['proj'] + timmar['res']
-            total = tim_total * self.timpeng
+            total_kostnad = tim_total * self.tim_kostnad
+            total_pris = tim_total * self.timpris
         else:
             tim_total = timmar['gig'] + timmar['rigg']
-            
-            if self.hyrkostnad:
-                total += self.hyrkostnad
-            if self.timpeng_after_time:
-                total += (tim_total - self.timpeng_after_time) * self.timpeng
-            elif self.timpeng:
-                total += self.timpeng * tim_total
 
-        return total, tim_total
+            if self.hyrkostnad:
+                total_kostnad += self.hyrkostnad
+            if self.tim_kostnad_after_time:
+                total_kostnad += (tim_total - self.tim_kostnad_after_time) * self.tim_kostnad
+                total_pris = total_kostnad * (1+self.hyr_multi)
+            elif self.tim_kostnad:
+                total_kostnad += self.tim_kostnad * tim_total
+                total_pris = total_kostnad * (1+self.hyr_multi)
+
+        return total_kostnad, total_pris, tim_total
 
     def can_do(self, task):
         return task in self.available_tasks
