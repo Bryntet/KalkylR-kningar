@@ -66,6 +66,7 @@ def box_check():
         leveranser.update(all_checked[0]['id'], {"latest added": False})
         del all_checked[0]
 
+
 class Prylob:
 
     def __init__(self, **kwargs):
@@ -100,6 +101,7 @@ class Prylob:
 
 
 class Paketob:
+
     def __init__(self, prylar, args):
         # Gets all kwargs provided and adds them to self
         # Current kwargs:
@@ -1266,10 +1268,6 @@ class Gig:
                 f"{self.name} #{self.leverans_nummer}": self.output_variable
             })
             json.dump(self.log, f, ensure_ascii=False, indent=2)
-
-
-
-
 
 
 @app.route("/airtable", methods=["POST"])
