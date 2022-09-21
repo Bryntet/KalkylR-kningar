@@ -68,7 +68,6 @@ def box_check():
 
 
 class Prylob:
-
     def __init__(self, **kwargs):
         # Gets all attributes provided and adds them to self
         # Current args: name, in_pris, pris
@@ -101,7 +100,6 @@ class Prylob:
 
 
 class Paketob:
-
     def __init__(self, prylar, args):
         # Gets all kwargs provided and adds them to self
         # Current kwargs:
@@ -169,7 +167,6 @@ class Paketob:
 
 
 class Gig:
-
     def __init__(self, i_data, config, prylar, paketen, name):
         self.tid_rapport = []
         self.name = name
