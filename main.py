@@ -53,6 +53,19 @@ def extractor(data, key="id"):
     return [x[key] for x in data]
 
 
+def box_check():
+    """Make sure only one latest added box is checked"""
+
+    leveranser = Table(api_key, base_id, "Leveranser")
+    all_checked = leveranser.all(view="Icheckat")
+    if len(all_checked) == 0:
+        record = leveranser.first()['id']
+        leveranser.update(record, {"latest added": True})
+        breakpoint()
+    while len(all_checked) > 1:
+        leveranser.update(all_checked[0]['id'], {"latest added": False})
+        del all_checked[0]
+
 class Prylob:
 
     def __init__(self, **kwargs):
@@ -87,7 +100,6 @@ class Prylob:
 
 
 class Paketob:
-
     def __init__(self, prylar, args):
         # Gets all kwargs provided and adds them to self
         # Current kwargs:
@@ -301,6 +313,8 @@ class Gig:
         self.personal_rakna(config)
 
         self.marginal_rakna(config)
+
+        box_check()
 
         self.output()
 
@@ -1252,6 +1266,10 @@ class Gig:
                 f"{self.name} #{self.leverans_nummer}": self.output_variable
             })
             json.dump(self.log, f, ensure_ascii=False, indent=2)
+
+
+
+
 
 
 @app.route("/airtable", methods=["POST"])
