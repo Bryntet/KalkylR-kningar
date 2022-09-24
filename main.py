@@ -187,7 +187,7 @@ class Gig:
         # Make a de-duped list of all the people involved in the gig
         [
             self.person_list.append(item) for sublist in
-            [self.person_dict_grouped[j] for j in self.person_dict_grouped]
+            [self.person_dict_grouped[key] for key in self.person_dict_grouped]
             for item in sublist if item not in self.person_list
         ]
 
@@ -528,7 +528,7 @@ class Gig:
                     self.extra_gig_tid.append(self.i_data["tid för gig"])
             while len(self.extra_gig_tid) < self.i_data["dagar"]:
                 self.extra_gig_tid.append(self.extra_gig_tid[0])
-            i = 1
+            i = 0
             for tid in self.extra_gig_tid:
                 self.dagar_list.append([])
                 j = 0
@@ -950,7 +950,8 @@ class Gig:
             "slitKostnad": self.slit_kostnad,
             "prylFonden": self.pryl_fonden,
             "hyrthings": self.hyr_things,
-            "avkastWithoutPris": self.avkastning_without_pris,
+            "avkastWithoutPris": -1*self.avkastning, # Jag var lite dum i huvet när jag la in avkastning i airtable
+            "avkast2": -1*self.teoretisk_avkastning, # Men basically så plussar jag avkastningen istället för minus, därför så har jag en negativ avkastning......
             "frilanstimmar": self.tim_budget_frilans,
             "total_tid_ex_frilans": self.tim_budget_personal,
             "frilans": self.frilans_lista,
@@ -965,7 +966,6 @@ class Gig:
             "input_id": self.i_data["input_id"],
             "made_by": [self.i_data["input_id"]],
             "post_deadline": self.i_data["post_deadline"],
-            #"avkast2": self.avkastning_without_pris_gammal,
             #"Mer folk": list(map(itemgetter("id"), self.specifik_personal))
         }
 
@@ -1084,19 +1084,19 @@ class Gig:
             "prefill_gigNamn": self.name,
             "prefill_Beställare": self.i_data["Beställare"][0]["id"],
             "prefill_Projekt typ": self.i_data["Projekt typ"]["name"],
-            "prefill_Bildproducent": self.person_dict_grouped["Bildproducent"],
-            "prefill_Fotograf": self.person_dict_grouped["Fotograf"],
-            "prefill_Ljudtekniker": self.person_dict_grouped["Ljudtekniker"],
-            "prefill_Ljustekniker": self.person_dict_grouped["Ljustekniker"],
-            "prefill_Grafikproducent": self.
-            person_dict_grouped["Grafikproducent"],
-            "prefill_Animatör": self.person_dict_grouped["Animatör"],
-            "prefill_Körproducent": self.person_dict_grouped["Körproducent"],
-            "prefill_Innehållsproducent": self.
-            person_dict_grouped["Innehållsproducent"],
-            "prefill_Scenmästare": self.person_dict_grouped["Scenmästare"],
-            "prefill_Tekniskt ansvarig": self.
-            person_dict_grouped["Tekniskt ansvarig"],
+            #"prefill_Bildproducent": self.person_dict_grouped["Bildproducent"],
+            #"prefill_Fotograf": self.person_dict_grouped["Fotograf"],
+            #"prefill_Ljudtekniker": self.person_dict_grouped["Ljudtekniker"],
+            #"prefill_Ljustekniker": self.person_dict_grouped["Ljustekniker"],
+            #"prefill_Grafikproducent": self.
+            #person_dict_grouped["Grafikproducent"],
+            #"prefill_Animatör": self.person_dict_grouped["Animatör"],
+            #"prefill_Körproducent": self.person_dict_grouped["Körproducent"],
+            #"prefill_Innehållsproducent": self.
+            #person_dict_grouped["Innehållsproducent"],
+            #"prefill_Scenmästare": self.person_dict_grouped["Scenmästare"],
+            #"prefill_Tekniskt ansvarig": self.
+            #person_dict_grouped["Tekniskt ansvarig"],
             #"prefill_Mer_personal": ",".join([
             #    x["id"] for x in self.specifik_personal if x["id"] is not None
             #])
@@ -1257,7 +1257,6 @@ class Gig:
                 "tidrapport"] = tid_out
 
     def output_to_json(self):
-
         with open("output.json", "w", encoding="utf-8") as f:
             json.dump(self.old_output, f, ensure_ascii=False, indent=2)
         with open("log.json", "w", encoding="utf-8") as f:
