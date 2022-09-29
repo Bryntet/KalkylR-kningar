@@ -22,3 +22,6 @@ __pycache__/
 __pycache__/*
 folk.json
 KalkylR-kningar.code-workspace
+credentials.json
+token.json
+quickstart.py

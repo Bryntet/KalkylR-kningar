@@ -61,11 +61,9 @@ def box_check():
     if len(all_checked) == 0:
         record = leveranser.first()['id']
         leveranser.update(record, {"latest added": True})
-        breakpoint()
     while len(all_checked) > 1:
         leveranser.update(all_checked[0]['id'], {"latest added": False})
         del all_checked[0]
-
 
 class Prylob:
     def __init__(self, **kwargs):
@@ -950,8 +948,8 @@ class Gig:
             "slitKostnad": self.slit_kostnad,
             "prylFonden": self.pryl_fonden,
             "hyrthings": self.hyr_things,
-            "avkastWithoutPris": -1*self.avkastning, # Jag var lite dum i huvet när jag la in avkastning i airtable
-            "avkast2": -1*self.teoretisk_avkastning, # Men basically så plussar jag avkastningen istället för minus, därför så har jag en negativ avkastning......
+            "avkastWithoutPris": self.avkastning, 
+            "avkast2": self.teoretisk_avkastning, 
             "frilanstimmar": self.tim_budget_frilans,
             "total_tid_ex_frilans": self.tim_budget_personal,
             "frilans": self.frilans_lista,
@@ -1462,7 +1460,6 @@ def get_prylar():
         json.dump(request.json["Frilans"], f, ensure_ascii=False, indent=2)
     with open('folk.json', 'w', encoding='utf-8') as f:
         json.dump(request.json["Folk"], f, ensure_ascii=False, indent=2)
-    folk = Folk()
     return "OK!", 200
 
 
