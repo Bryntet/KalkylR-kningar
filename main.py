@@ -317,6 +317,8 @@ class Gig:
 
         self.url_make()
 
+        box_check()
+        
         if self.update:
             self.updating()
         if self.adress_update:
@@ -343,6 +345,8 @@ class Gig:
                     int(self.i_data["antalPrylar"])
                     self.i_data["antalPrylar"] = [self.i_data["antalPrylar"]]
                 except ValueError:
+                    if self.i_data["antalPrylar"][0] == "[": # Compat fix for old bug in update
+                        self.i_data["antalPrylar"] = self.i_data["antalPrylar"].replace("[", "").replace("]", "").replace("'", "")
                     self.i_data["antalPrylar"] = self.i_data["antalPrylar"
                                                              ].split(",")
             antal = self.i_data["antalPrylar"] is not None
@@ -369,6 +373,8 @@ class Gig:
                     int(self.i_data["antalPaket"])
                     self.i_data["antalPaket"] = [self.i_data["antalPaket"]]
                 except ValueError:
+                    if self.i_data["antalPaket"][0] == "[":
+                        self.i_data["antalPaket"] = self.i_data["antalPaket"].replace("[", "").replace("]", "").replace("'", "")
                     self.i_data["antalPaket"] = self.i_data["antalPaket"
                                                             ].split(",")
             antal = self.i_data["antalPaket"] is not None
@@ -1063,14 +1069,24 @@ class Gig:
                 prylar += ID["id"] + ","
         paket = paket[0:-1]
         prylar = prylar[0:-1]
-
+        
+        # Correction for some old stupidity
+        if type(self.i_data["antalPaket"]) is not list:
+            self.i_data["antalPaket"] = [self.i_data["antalPaket"]]
+            if self.i_data["antalPaket"][0] is None:
+                self.i_data["antalPaket"][0] = ""
+        if type(self.i_data["antalPrylar"]) is not list:
+            self.i_data["antalPrylar"] = [self.i_data["antalPrylar"]]
+            if self.i_data["antalPrylar"][0] is None:
+                self.i_data["antalPrylar"][0] = ""
+        
         params = {
             "prefill_projektledare": self.i_data["projektledare"][0]["id"],
             "prefill_producent": self.i_data["producent"][0]["id"],
             "prefill_prylPaket": paket,
             "prefill_extraPrylar": prylar,
-            "prefill_antalPaket": self.i_data["antalPaket"],
-            "prefill_antalPrylar": self.i_data["antalPrylar"],
+            "prefill_antalPaket": ",".join(self.i_data["antalPaket"]),
+            "prefill_antalPrylar": ",".join(self.i_data["antalPrylar"]),
             "prefill_extraPersonal": self.i_data["extraPersonal"],
             "prefill_hyrKostnad": self.i_data["hyrKostnad"],
             "prefill_tid för gig": self.i_data["tid för gig"],

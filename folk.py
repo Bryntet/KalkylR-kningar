@@ -122,21 +122,26 @@ class Person():
             int: Money
         """
         total_kostnad = 0
+        
         if self.levande_video:
             tim_total = timmar['gig'] + timmar['rigg'] + timmar[
                 'proj'] + timmar['res']
             total_kostnad = tim_total * self.tim_kostnad
             total_pris = tim_total * self.timpris
+            
         else:
             tim_total = timmar['gig'] + timmar['rigg']
 
             if self.hyrkostnad:
                 total_kostnad += self.hyrkostnad
+               
+                
             if self.tim_kostnad_after_time:
                 total_kostnad += (
                     tim_total - self.tim_kostnad_after_time
                 ) * self.tim_kostnad
                 total_pris = total_kostnad * (1 + self.hyr_multi)
+                
             elif self.tim_kostnad:
                 total_kostnad += self.tim_kostnad * tim_total
                 total_pris = total_kostnad * (1 + self.hyr_multi)
