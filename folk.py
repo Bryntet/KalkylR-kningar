@@ -23,7 +23,7 @@ class Folk():
         """
         return self.folk_dictionary[id]
 
-    def lowest_cost(self, task: str, timmar: int):
+    def lowest_cost(self, task: str, timmar: dict[str, int]):
         """Returns person with lowest cost
 
         Args:
@@ -112,7 +112,7 @@ class Person():
             else:
                 self.tim_kostnad_after_time = False
 
-    def get_cost(self, timmar: dict):
+    def get_cost(self, timmar: dict[str, int]):
         """Returns the money that the person should get for the time spent
 
         Args:
@@ -122,8 +122,8 @@ class Person():
             int: Money
         """
         total_kostnad = 0
-        
-        if self.levande_video:
+        total_pris = 0
+        if self.levande_video: # TODO kan finnas stora problem här
             tim_total = timmar['gig'] + timmar['rigg'] + timmar[
                 'proj'] + timmar['res']
             total_kostnad = tim_total * self.tim_kostnad

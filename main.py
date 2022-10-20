@@ -173,8 +173,7 @@ class Gig:
         self.person_field_list = [
             'Bildproducent', 'Fotograf', 'Ljudtekniker', 'Ljustekniker',
             'Grafikproducent', 'Animatör', 'Körproducent',
-            'Innehållsproducent', 'Scenmästare', 'Tekniskt ansvarig',
-            'producent'
+            'Innehållsproducent', 'Scenmästare', 'Tekniskt ansvarig'
         ]
         # Make a dict of all the types of tasks with lists of people recIDs inside
         self.person_dict_grouped = {
@@ -244,9 +243,11 @@ class Gig:
         self.pre_gig_prylar = []
 
         if self.i_data["projekt_timmar"] is not None:
-            self.projekt_timmar = self.i_data["projekt_timmar"]
+            self.projekt_timmar_add = self.i_data["projekt_timmar"]
         else:
-            self.projekt_timmar = None
+            self.projekt_timmar_add = 0
+
+        self.projekt_timmar = None
         self.frilans_hyrkostnad = 0
         self.frilans_lista = []
         if self.i_data["Frilans"] is not None:
@@ -276,8 +277,8 @@ class Gig:
             self.update = False
 
         if self.update:
-            self.projektledare = self.i_data["Projektledare (from Projekt)"]
             self.producent = self.i_data["Producent (from Projekt)"]
+            self.projektledare = self.i_data["Projektledare (from Projekt)"]
         else:
             self.producent = self.i_data["producent"]
             self.projektledare = self.i_data["projektledare"]
@@ -318,7 +319,7 @@ class Gig:
         self.url_make()
 
         box_check()
-        
+
         if self.update:
             self.updating()
         if self.adress_update:
@@ -355,7 +356,6 @@ class Gig:
         i = 0
         for pryl in self.i_data["extraPrylar"]:
             if antal:
-
                 try:
                     for _ in range(int(self.i_data["antalPrylar"][i])):
                         self.pre_gig_prylar.append({pryl: prylar[pryl]})
@@ -671,6 +671,7 @@ class Gig:
         self.ob_mult /= self.dag_längd * len(hours_list)
 
     def personal_rakna(self, config):
+        total_personal = (self.personal + len(self.person_list))
         # Add additional personal from specifik personal to the total personal
 
         self.bas_lön = self.ob_mult
@@ -681,10 +682,12 @@ class Gig:
         self.timpris = math.floor(
             self.lön_kostnad * config["lönJustering"] / 10
         ) * 10
-
-        self.gig_timmar = round(
-            self.dag_längd * self.personal * self.i_data["dagar"]
-        )
+        if self.dag_längd is not None:
+            self.gig_timmar = round(
+                self.dag_längd * total_personal * self.i_data["dagar"]
+            )
+        else:
+            raise TypeError("Daglängd is None")
 
         #Custom riggtimmar
         if self.i_data["specialRigg"]:
@@ -698,7 +701,7 @@ class Gig:
             # Slask timmar för tid spenderat på planering
             self.projekt_timmar = math.ceil(
                 (self.gig_timmar + self.rigg_timmar) * config["projektTid"]
-            )
+            ) + self.projekt_timmar_add
 
         if self.svanis:
             self.restid = 0
@@ -706,26 +709,27 @@ class Gig:
             if self.tid_to_adress:
                 if self.tid_to_adress_car:
                     self.restid = (
-                        self.personal * self.i_data["dagar"] *
+                        total_personal * self.i_data["dagar"] *
                         self.tid_to_adress_car / 60 / 60
                     )
                 else:
                     self.restid = (
-                        self.personal * self.i_data["dagar"] *
+                        total_personal * self.i_data["dagar"] *
                         self.tid_to_adress / 60 / 60
                     )
             else:
-                self.restid = self.personal * self.i_data["dagar"] * config[
+                self.restid = total_personal * self.i_data["dagar"] * config[
                     "restid"]
         self.restid = math.ceil(self.restid)
 
-        self.tim_dict = {
-            'gig': self.gig_timmar,
-            'rigg': self.rigg_timmar,
-            'proj': self.projekt_timmar,
-            'res': self.restid
-        }
-
+        if total_personal != 0:
+            self.tim_dict = {
+                'gig': int(self.gig_timmar / total_personal),
+                'rigg': int(self.rigg_timmar / total_personal),
+                'proj': int(self.projekt_timmar / total_personal),
+                'res': int(self.restid / total_personal),
+            }
+        total_tid = self.gig_timmar + self.rigg_timmar + self.projekt_timmar + self.restid
         self.folk = Folk(self.lön_kostnad, self.timpris, config['hyrMulti'])
         self.frilans_kostnad, self.frilans_pris, self.total_tim_frilans = self.folk.total_cost(
             self.person_list, self.tim_dict, False
@@ -734,7 +738,16 @@ class Gig:
             self.person_list, self.tim_dict, True
         )
 
-        self.total_tim_budget = self.total_tim_lev + self.total_tim_frilans
+        # Calculations for undefined people:
+        self.odefinerad_personal_kostnad = self.personal * self.lön_kostnad * total_tid / total_personal
+        self.odefinerad_personal_pris = self.personal * self.timpris * total_tid / total_personal
+
+        
+        self.personal_kostnad = self.frilans_kostnad + self.odefinerad_personal_kostnad + self.levandevideo_kostnad
+        self.personal_pris = self.frilans_pris + self.odefinerad_personal_pris + self.levandevideo_pris
+        
+        #TODO FIX THIS
+        self.total_tim_budget = total_tid
 
         #Theoretical cost if only done by lv
         self.teoretisk_lön_kostnad = self.total_tim_budget * self.lön_kostnad
@@ -765,11 +778,10 @@ class Gig:
 
         self.kostnad = (
             self.pryl_kostnad + self.i_data["hyrKostnad"] +
-            self.post_text_kostnad + self.frilans_kostnad +
-            self.levandevideo_kostnad
+            self.post_text_kostnad + self.personal_kostnad
         )
 
-        self.pris += self.hyr_pris + self.post_text_pris + self.levandevideo_pris
+        self.pris += self.hyr_pris + self.post_text_pris + self.personal_pris
 
         #Teoretiska ifall enbart gjort av LV
         self.teoretisk_kostnad = self.kostnad - self.frilans_kostnad - self.levandevideo_kostnad + self.teoretisk_lön_kostnad
@@ -777,9 +789,12 @@ class Gig:
 
         # Prevent div by 0
         if self.pryl_pris != 0:
-            self.pryl_marginal = (
-                self.pryl_pris - self.pryl_kostnad
-            ) / self.pryl_pris
+            if self.pryl_kostnad is not None:
+                self.pryl_marginal = (
+                    self.pryl_pris - int(self.pryl_kostnad)
+                ) / self.pryl_pris
+            else:
+                raise ValueError("Pryl kostnad is None")
         else:
             self.pryl_marginal = 0
 
@@ -954,8 +969,8 @@ class Gig:
             "slitKostnad": self.slit_kostnad,
             "prylFonden": self.pryl_fonden,
             "hyrthings": self.hyr_things,
-            "avkastWithoutPris": self.avkastning, 
-            "avkast2": self.teoretisk_avkastning, 
+            "avkastWithoutPris": self.avkastning,
+            "avkast2": self.teoretisk_avkastning,
             "frilanstimmar": self.tim_budget_frilans,
             "total_tid_ex_frilans": self.tim_budget_personal,
             "frilans": self.frilans_lista,
@@ -1021,25 +1036,28 @@ class Gig:
             for item in output_from_airtable["fields"]["Projekt kalender"]:
                 # Get all record ids of the already existing linked records in the projektkalender table
                 record_ids.append(item)
+        if self.dagar_list is not None:
+            for getin, getout in self.dagar_list:
 
-        for getin, getout in self.dagar_list:
+                kalender_dict = {
+                    "Name": self.name,
+                    "Getin-hidden": getin.isoformat(),
+                    "Getout-hidden": getout.isoformat(),
+                    "Projekt": output_from_airtable["fields"]["Projekt"],
+                    "Leverans": [output_from_airtable["id"]],
+                    "Frilans": frilans_personer,
+                }
+                if self.update and len(self.dagar_list) == len(record_ids):
+                    projektkalender_records.append({
+                        "id": record_ids[i],
+                        "fields": kalender_dict
+                    })
+                else:
+                    projektkalender_records.append(kalender_dict)
+                i += 1
+        else:
+            raise ValueError("dagar_list empty")
 
-            kalender_dict = {
-                "Name": self.name,
-                "Getin-hidden": getin.isoformat(),
-                "Getout-hidden": getout.isoformat(),
-                "Projekt": output_from_airtable["fields"]["Projekt"],
-                "Leverans": [output_from_airtable["id"]],
-                "Frilans": frilans_personer,
-            }
-            if self.update and len(self.dagar_list) == len(record_ids):
-                projektkalender_records.append({
-                    "id": record_ids[i],
-                    "fields": kalender_dict
-                })
-            else:
-                projektkalender_records.append(kalender_dict)
-            i += 1
         if self.update:
             if len(projektkalender_records) != len(record_ids):
                 self.kalender_table.batch_delete(record_ids)
@@ -1069,7 +1087,7 @@ class Gig:
                 prylar += ID["id"] + ","
         paket = paket[0:-1]
         prylar = prylar[0:-1]
-        
+
         # Correction for some old stupidity
         if type(self.i_data["antalPaket"]) is not list:
             self.i_data["antalPaket"] = [self.i_data["antalPaket"]]
@@ -1079,7 +1097,7 @@ class Gig:
             self.i_data["antalPrylar"] = [self.i_data["antalPrylar"]]
             if self.i_data["antalPrylar"][0] is None:
                 self.i_data["antalPrylar"][0] = ""
-        
+
         params = {
             "prefill_projektledare": self.i_data["projektledare"][0]["id"],
             "prefill_producent": self.i_data["producent"][0]["id"],
