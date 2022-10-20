@@ -25,3 +25,4 @@ KalkylR-kningar.code-workspace
 credentials.json
 token.json
 quickstart.py
+.vscode/settings.json
