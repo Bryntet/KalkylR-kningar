@@ -278,12 +278,13 @@ class Gig:
         else:
             self.update = False
 
-        if self.update:
+        '''if self.update:
             self.producent = self.i_data["Producent (from Projekt)"]
             self.projektledare = self.i_data["Projektledare (from Projekt)"]
         else:
             self.producent = self.i_data["producent"]
             self.projektledare = self.i_data["projektledare"]
+        ''' # TODO: This is a temporary fix 
         try:
             if i_data["svanis"]:
                 self.svanis = True
@@ -927,6 +928,8 @@ class Gig:
             old_output = {}
             log = []
         self.log = log
+        
+        
         leverans_nummer = 1
         if not self.update:
             for key in old_output:
@@ -942,10 +945,6 @@ class Gig:
             self.i_data["Projekt typ"]["name"] = None
         if self.i_data["Beställare"] is None:
             self.i_data["Beställare"] = [{"id": None}]
-        if self.i_data["projektledare"] is None:
-            self.i_data["projektledare"] = [{"id": None}]
-        if self.i_data["producent"] is None:
-            self.i_data["producent"] = [{"id": None}]
         if self.i_data["Kund"] is None:
             self.i_data["Kund"] = [{"id": None}]
         if self.i_data["Beställare"] is None:
@@ -989,8 +988,8 @@ class Gig:
             "frilanstimmar": self.tim_budget_frilans,
             "total_tid_ex_frilans": self.tim_budget_personal,
             "frilans": self.frilans_lista,
-            "projektledare": self.i_data["projektledare"][0]["id"],
-            "producent": [x['id'] for x in self.i_data["producent"]],
+            "ny proj ledare från uppdatera": [x['id'] for x in self.i_data["projektledare"]] if self.i_data["projektledare"] is not None else None, # Så jag kan göra lite logik
+            "producent": [x['id'] for x in self.i_data["producent"]] if self.i_data["producent"] is not None else None,
             "leverans_nummer": leverans_nummer,
             "Kund": self.i_data["Kund"][0]["id"],
             "Svanis": self.svanis,
@@ -1000,6 +999,7 @@ class Gig:
             "input_id": self.i_data["input_id"],
             "made_by": [self.i_data["input_id"]],
             "post_deadline": self.i_data["post_deadline"],
+            "All personal": self.person_list,
             #"Mer folk": list(map(itemgetter("id"), self.specifik_personal))
         }
 
@@ -1010,8 +1010,6 @@ class Gig:
         print(time.time() - self.start_time)
         if self.update:
             output.pop("Gig namn", None)
-            output.pop("producent", None)
-            output.pop("projektledare", None)
             body = {
                 "records": [{
                     "id": self.i_data["uppdateraProjekt"][0]["id"],
@@ -1113,7 +1111,7 @@ class Gig:
                 self.i_data["antalPrylar"][0] = ""
 
         params = {
-            "prefill_projektledare": self.i_data["projektledare"][0]["id"],
+            "prefill_projektledare": self.i_data["projektledare"][0]["id"] if self.i_data["projektledare"] is not None else None,
             "prefill_producent": self.i_data["producent"][0]["id"],
             "prefill_prylPaket": paket,
             "prefill_extraPrylar": prylar,
