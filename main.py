@@ -226,7 +226,7 @@ class Gig:
         self.rigg_timmar = None
         self.gig_timmar = None
         self.tim_pris = None
-
+        self.projekt = self.i_data["Projekt"]
         self.specifik_personal = self.person_list
 
         try:
@@ -736,6 +736,9 @@ class Gig:
             self.odefinerad_personal_kostnad = self.personal * self.lön_kostnad * total_tid / total_personal
             self.odefinerad_personal_pris = self.personal * self.timpris * total_tid / total_personal
         else:
+            self.odefinerad_personal_kostnad = 0
+            self.odefinerad_personal_pris = 0
+            total_tid = 0
             self.tim_dict = {
                 'gig': 0,
                 'rigg': 0,
@@ -970,7 +973,7 @@ class Gig:
             "antalPrylar": antal_string,
             "antalPaket": antal_paket_string,
             "Projekt kanban": self.name,
-            "Projekt": self.name,
+            "Projekt": [x["id"] for x in self.projekt] if self.projekt is not None else self.name,
             "börjaDatum": self.i_data["Börja datum"],
             "slutaDatum": self.i_data["Sluta datum"],
             "dagar": self.i_data["dagar"],
@@ -1050,7 +1053,6 @@ class Gig:
                 record_ids.append(item)
         if self.dagar_list is not None:
             for getin, getout in self.dagar_list:
-
                 kalender_dict = {
                     "Name": self.name,
                     "Getin-hidden": getin.isoformat(),
