@@ -191,7 +191,8 @@ class Gig:
         self.adress_update = False
         self.tid_to_adress_car = None
         self.tid_to_adress = None
-        self.gmaps = googlemaps.Client(key=os.environ["maps_api"])
+        #TODO Update billing information so that it doesn't error us
+        #self.gmaps = googlemaps.Client(key=os.environ["maps_api"])
         self.url = None
         self.dagar_list = None
         self.extra_gig_tid = None
@@ -256,12 +257,13 @@ class Gig:
                 frilans_list = json.load(f)
             for frilans in self.i_data["Frilans"]:
                 self.frilans_lista.append(frilans["id"])
-                self.frilans_hyrkostnad += (
+                '''self.frilans_hyrkostnad += (
                     self.i_data["dagar"] *
                     frilans_list[frilans["name"]]["hyrkostnad"]
-                )
+                )'''
         else:
             self.frilans = 0
+        
         self.post_text_kostnad = 0
         self.post_text_pris = 0
         self.pryl_pris = 0
@@ -302,7 +304,8 @@ class Gig:
         # Get the total modPris and in_pris from all the prylar
         self.get_pris()
 
-        self.adress_check()
+        #TODO Here too
+        #self.adress_check()
 
         self.tid(config)
 
@@ -729,7 +732,17 @@ class Gig:
                 'proj': int(self.projekt_timmar / total_personal),
                 'res': int(self.restid / total_personal),
             }
-        total_tid = self.gig_timmar + self.rigg_timmar + self.projekt_timmar + self.restid
+            total_tid = self.gig_timmar + self.rigg_timmar + self.projekt_timmar + self.restid
+            self.odefinerad_personal_kostnad = self.personal * self.lön_kostnad * total_tid / total_personal
+            self.odefinerad_personal_pris = self.personal * self.timpris * total_tid / total_personal
+        else:
+            self.tim_dict = {
+                'gig': 0,
+                'rigg': 0,
+                'proj': 0,
+                'res': 0
+            }
+        
         self.folk = Folk(self.lön_kostnad, self.timpris, config['hyrMulti'])
         self.frilans_kostnad, self.frilans_pris, self.total_tim_frilans = self.folk.total_cost(
             self.person_list, self.tim_dict, False
@@ -739,8 +752,7 @@ class Gig:
         )
 
         # Calculations for undefined people:
-        self.odefinerad_personal_kostnad = self.personal * self.lön_kostnad * total_tid / total_personal
-        self.odefinerad_personal_pris = self.personal * self.timpris * total_tid / total_personal
+
 
         
         self.personal_kostnad = self.frilans_kostnad + self.odefinerad_personal_kostnad + self.levandevideo_kostnad
