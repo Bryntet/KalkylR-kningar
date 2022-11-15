@@ -181,6 +181,7 @@ class Gig:
             for x in self.person_field_list if self.i_data[x] is not None
         }
         self.person_list = []
+        
         # Make a de-duped list of all the people involved in the gig
         [
             self.person_list.append(item) for sublist in
@@ -191,8 +192,7 @@ class Gig:
         self.adress_update = False
         self.tid_to_adress_car = None
         self.tid_to_adress = None
-        #TODO Update billing information so that it doesn't error us
-        #self.gmaps = googlemaps.Client(key=os.environ["maps_api"])
+        self.gmaps = googlemaps.Client(key=os.environ["maps_api"])
         self.url = None
         self.dagar_list = None
         self.extra_gig_tid = None
@@ -229,6 +229,8 @@ class Gig:
         self.projekt = self.i_data["Projekt"]
         self.specifik_personal = self.person_list
 
+
+        
         try:
             if self.i_data["extraPersonal"] is not None:
                 self.personal = self.i_data["extraPersonal"]
@@ -686,6 +688,8 @@ class Gig:
         self.timpris = math.floor(
             self.lön_kostnad * config["lönJustering"] / 10
         ) * 10
+        
+        
         if self.dag_längd is not None:
             self.gig_timmar = round(
                 self.dag_längd * total_personal * self.i_data["dagar"]
@@ -768,7 +772,7 @@ class Gig:
         #Theoretical cost if only done by lv
         self.teoretisk_lön_kostnad = self.total_tim_budget * self.lön_kostnad
         self.teoretisk_lön_pris = self.total_tim_budget * self.timpris
-
+        self.personal_total = total_personal
     def post_text(self):
         try:
             if self.i_data["post_text"]:
@@ -957,12 +961,14 @@ class Gig:
         else:
             self.i_data["existerande_adress"] = self.i_data[
                 "existerande_adress"][0]["name"]
-        print(self.i_data["Kund"], self.i_data["Beställare"])
 
+        print(self.i_data["Kund"], self.i_data["Beställare"])
+        riggdag = self.i_data["Projekt typ"]["name"] == "Rigg"
         output = {
             "Gig namn": f"{self.name} #{leverans_nummer}",
-            "Pris": self.pris,
+            "Pris": self.pris if not riggdag else 0,
             "Personal": self.personal,
+            "extraPersonal": self.i_data['extraPersonal'],
             "Projekt timmar": self.gig_timmar,
             "Rigg timmar": self.rigg_timmar,
             "Totalt timmar": self.tim_budget,
@@ -1000,9 +1006,21 @@ class Gig:
             "made_by": [self.i_data["input_id"]],
             "post_deadline": self.i_data["post_deadline"],
             "All personal": self.person_list,
+            #"typ person lista": [x for x in self.person_list]
             #"Mer folk": list(map(itemgetter("id"), self.specifik_personal))
         }
-
+        if riggdag:
+            output['Eget pris'] = 0
+        output.update(self.person_dict_grouped)
+        output['Resten'] = []
+        
+        for key in self.person_dict_grouped.keys():
+            if key not in ["Bildproducent", "Ljudtekniker"]:
+                for person in self.person_dict_grouped[key]:
+                    output['Resten'].append(person)
+        if self.i_data["Projekt typ"]["name"] == "Rigg":
+            (output.pop(x) for x in ["Pris", "prylPaket", "extraPrylar"])
+        
         for key in list(output.keys()):
             if output[key] is None:
                 del output[key]
@@ -1059,6 +1077,10 @@ class Gig:
                     "Leverans": [output_from_airtable["id"]],
                     "Frilans": frilans_personer,
                 }
+                #Fix getin getout for rigg dagar
+                if self.i_data['Projekt typ']['name'] == "Rigg":
+                    kalender_dict['M-Getin'] = getin.isoformat()
+                    kalender_dict['M-Getout'] = getout.isoformat()
                 if self.update and len(self.dagar_list) == len(record_ids):
                     projektkalender_records.append({
                         "id": record_ids[i],
@@ -1085,8 +1107,7 @@ class Gig:
             self.tid_rapport = old_output["tidrapport"]
         except KeyError:
             pass
-        self.old_output[f"{self.name} #{self.leverans_nummer}"
-                        ] = self.output_variable
+        self.old_output[f"{self.name} #{self.leverans_nummer}"] = self.output_variable
 
     def url_make(self):
         paket = ""
@@ -1099,7 +1120,7 @@ class Gig:
                 prylar += ID["id"] + ","
         paket = paket[0:-1]
         prylar = prylar[0:-1]
-
+    
         # Correction for some old stupidity
         if type(self.i_data["antalPaket"]) is not list:
             self.i_data["antalPaket"] = [self.i_data["antalPaket"]]
@@ -1128,23 +1149,11 @@ class Gig:
             "prefill_gigNamn": self.name,
             "prefill_Beställare": self.i_data["Beställare"][0]["id"],
             "prefill_Projekt typ": self.i_data["Projekt typ"]["name"],
-            #"prefill_Bildproducent": self.person_dict_grouped["Bildproducent"],
-            #"prefill_Fotograf": self.person_dict_grouped["Fotograf"],
-            #"prefill_Ljudtekniker": self.person_dict_grouped["Ljudtekniker"],
-            #"prefill_Ljustekniker": self.person_dict_grouped["Ljustekniker"],
-            #"prefill_Grafikproducent": self.
-            #person_dict_grouped["Grafikproducent"],
-            #"prefill_Animatör": self.person_dict_grouped["Animatör"],
-            #"prefill_Körproducent": self.person_dict_grouped["Körproducent"],
-            #"prefill_Innehållsproducent": self.
-            #person_dict_grouped["Innehållsproducent"],
-            #"prefill_Scenmästare": self.person_dict_grouped["Scenmästare"],
-            #"prefill_Tekniskt ansvarig": self.
-            #person_dict_grouped["Tekniskt ansvarig"],
-            #"prefill_Mer_personal": ",".join([
-            #    x["id"] for x in self.specifik_personal if x["id"] is not None
-            #])
         }
+        
+        for work_area in self.person_field_list:
+            if work_area in self.person_dict_grouped.keys():
+                params.update({f"prefill_{work_area}": ",".join(self.person_dict_grouped[work_area])})
 
         update_params = copy.deepcopy(params)
         update_params.update({
@@ -1366,7 +1375,8 @@ def take_back():
 
     with open("output.json", "w", encoding="utf-8") as f:
         output[backup["Gig namn"]] = backup
-        json.dump(output, f, ensure_ascii=False, indent=2)
+        #TODO fix here, can wipe entire db
+        #json.dump(output, f, ensure_ascii=False, indent=2) 
     return "OK!", 200
 
 
