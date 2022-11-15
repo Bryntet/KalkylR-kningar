@@ -181,7 +181,7 @@ class Gig:
             for x in self.person_field_list if self.i_data[x] is not None
         }
         self.person_list = []
-        
+
         # Make a de-duped list of all the people involved in the gig
         [
             self.person_list.append(item) for sublist in
@@ -229,8 +229,11 @@ class Gig:
         self.projekt = self.i_data["Projekt"]
         self.specifik_personal = self.person_list
 
+        if 'Anteckning' in self.i_data.keys():
+            self.comment = self.i_data["Anteckning"]
+        else:
+            self.comment = None
 
-        
         try:
             if self.i_data["extraPersonal"] is not None:
                 self.personal = self.i_data["extraPersonal"]
@@ -265,7 +268,7 @@ class Gig:
                 )'''
         else:
             self.frilans = 0
-        
+
         self.post_text_kostnad = 0
         self.post_text_pris = 0
         self.pryl_pris = 0
@@ -286,7 +289,7 @@ class Gig:
         else:
             self.producent = self.i_data["producent"]
             self.projektledare = self.i_data["projektledare"]
-        ''' # TODO: This is a temporary fix 
+        ''' # TODO: This is a temporary fix
         try:
             if i_data["svanis"]:
                 self.svanis = True
@@ -677,7 +680,9 @@ class Gig:
         self.ob_mult /= self.dag_längd * len(hours_list)
 
     def personal_rakna(self, config):
-        total_personal = (self.personal + len(self.person_list))
+        total_personal = self.personal
+        if len(self.person_list) > total_personal:
+            total_personal = len(self.person_list)
         # Add additional personal from specifik personal to the total personal
 
         self.bas_lön = self.ob_mult
@@ -689,7 +694,7 @@ class Gig:
             self.lön_kostnad * config["lönJustering"] / 10
         ) * 10
         
-        
+
         if self.dag_längd is not None:
             self.gig_timmar = round(
                 self.dag_längd * total_personal * self.i_data["dagar"]
@@ -738,8 +743,8 @@ class Gig:
                 'res': int(self.restid / total_personal),
             }
             total_tid = self.gig_timmar + self.rigg_timmar + self.projekt_timmar + self.restid
-            self.odefinerad_personal_kostnad = self.personal * self.lön_kostnad * total_tid / total_personal
-            self.odefinerad_personal_pris = self.personal * self.timpris * total_tid / total_personal
+            self.odefinerad_personal_kostnad = (total_personal - len(self.person_list)) * self.lön_kostnad * total_tid
+            self.odefinerad_personal_pris = (total_personal - len(self.person_list)) * self.timpris * total_tid
         else:
             self.odefinerad_personal_kostnad = 0
             self.odefinerad_personal_pris = 0
@@ -750,7 +755,7 @@ class Gig:
                 'proj': 0,
                 'res': 0
             }
-        
+
         self.folk = Folk(self.lön_kostnad, self.timpris, config['hyrMulti'])
         self.frilans_kostnad, self.frilans_pris, self.total_tim_frilans = self.folk.total_cost(
             self.person_list, self.tim_dict, False
@@ -762,9 +767,10 @@ class Gig:
         # Calculations for undefined people:
 
 
+
+        self.personal_kostnad = self.frilans_kostnad + self.odefinerad_personal_kostnad
+        self.personal_pris = self.frilans_pris + self.odefinerad_personal_pris
         
-        self.personal_kostnad = self.frilans_kostnad + self.odefinerad_personal_kostnad + self.levandevideo_kostnad
-        self.personal_pris = self.frilans_pris + self.odefinerad_personal_pris + self.levandevideo_pris
         
         #TODO FIX THIS
         self.total_tim_budget = total_tid
@@ -932,8 +938,8 @@ class Gig:
             old_output = {}
             log = []
         self.log = log
-        
-        
+
+
         leverans_nummer = 1
         if not self.update:
             for key in old_output:
@@ -1013,14 +1019,14 @@ class Gig:
             output['Eget pris'] = 0
         output.update(self.person_dict_grouped)
         output['Resten'] = []
-        
+
         for key in self.person_dict_grouped.keys():
             if key not in ["Bildproducent", "Ljudtekniker"]:
                 for person in self.person_dict_grouped[key]:
                     output['Resten'].append(person)
         if self.i_data["Projekt typ"]["name"] == "Rigg":
             (output.pop(x) for x in ["Pris", "prylPaket", "extraPrylar"])
-        
+
         for key in list(output.keys()):
             if output[key] is None:
                 del output[key]
@@ -1077,6 +1083,7 @@ class Gig:
                     "Leverans": [output_from_airtable["id"]],
                     "Frilans": frilans_personer,
                 }
+
                 #Fix getin getout for rigg dagar
                 if self.i_data['Projekt typ']['name'] == "Rigg":
                     kalender_dict['M-Getin'] = getin.isoformat()
@@ -1089,6 +1096,7 @@ class Gig:
                 else:
                     projektkalender_records.append(kalender_dict)
                 i += 1
+            projektkalender_records[0]['Egna anteckningar'] = self.comment
         else:
             raise ValueError("dagar_list empty")
 
@@ -1120,7 +1128,7 @@ class Gig:
                 prylar += ID["id"] + ","
         paket = paket[0:-1]
         prylar = prylar[0:-1]
-    
+
         # Correction for some old stupidity
         if type(self.i_data["antalPaket"]) is not list:
             self.i_data["antalPaket"] = [self.i_data["antalPaket"]]
@@ -1150,7 +1158,7 @@ class Gig:
             "prefill_Beställare": self.i_data["Beställare"][0]["id"],
             "prefill_Projekt typ": self.i_data["Projekt typ"]["name"],
         }
-        
+
         for work_area in self.person_field_list:
             if work_area in self.person_dict_grouped.keys():
                 params.update({f"prefill_{work_area}": ",".join(self.person_dict_grouped[work_area])})
@@ -1376,7 +1384,7 @@ def take_back():
     with open("output.json", "w", encoding="utf-8") as f:
         output[backup["Gig namn"]] = backup
         #TODO fix here, can wipe entire db
-        #json.dump(output, f, ensure_ascii=False, indent=2) 
+        #json.dump(output, f, ensure_ascii=False, indent=2)
     return "OK!", 200
 
 
