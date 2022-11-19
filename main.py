@@ -552,10 +552,11 @@ class Gig:
                     else:
                         temp = [temp, 0]
                     date = start_date.replace(
-                        day=int(start_date.day) + i,
+                        day=int(start_date.day),
                         hour=int(temp[0]),
                         minute=int(temp[1])
-                    )
+                    ) + datetime.timedelta(days=i)
+
 
                     if j % 2 == 0 and j != 0 or next_change:
                         if date + datetime.timedelta(
@@ -1017,6 +1018,7 @@ class Gig:
         }
         if riggdag:
             output['Eget pris'] = 0
+        output.update({x: '' for x in self.person_field_list})
         output.update(self.person_dict_grouped)
         output['Resten'] = []
 
@@ -1085,9 +1087,10 @@ class Gig:
                 }
 
                 #Fix getin getout for rigg dagar
-                if self.i_data['Projekt typ']['name'] == "Rigg":
-                    kalender_dict['M-Getin'] = getin.isoformat()
-                    kalender_dict['M-Getout'] = getout.isoformat()
+                #if self.i_data['Projekt typ']['name'] == "Rigg":
+                #    kalender_dict['M-Getin'] = getin.isoformat()
+                #
+                # kalender_dict['M-Getout'] = getout.isoformat()
                 if self.update and len(self.dagar_list) == len(record_ids):
                     projektkalender_records.append({
                         "id": record_ids[i],
