@@ -68,17 +68,26 @@ for event in projektkalender.all():
     datum = datetime.datetime.fromisoformat(fields['Datum'])
     if datum < datetime.datetime.now():
         continue
+    #print(fields['Getin'])
+    if type(fields['Getin']) == dict:
+        continue
     getin = datum + datetime.timedelta(seconds=fields['Getin'])
     getout = datum + datetime.timedelta(seconds=fields['Getout'])
-    program_start = datum + datetime.timedelta(seconds=fields['Program start'])
-    program_slut = datum + datetime.timedelta(seconds=fields['Program slut'])
+    if 'Program start' in fields.keys():
+        program_start = datum + datetime.timedelta(seconds=fields['Program start'])
+        program_slut = datum + datetime.timedelta(seconds=fields['Program slut'])
+    else:
+        program_start, program_slut = None, None
     if 'Status' in fields.keys():
         if fields['Status'] == 'Obekräftat projekt':
             status = 'tentative'
         elif fields['Status'] == 'Avbokat': # remove or skip cancelled events
             status = 'cancelled'
             if event['id'] in kalender.keys():
-                gc.delete_event(event['id'])
+                try:
+                    gc.delete_event(kalender[event['id']]['post'])
+                except Exception as e:
+                    print("Error", e)
                 kalender.pop(event['id'])
             continue
 
@@ -114,14 +123,15 @@ for event in projektkalender.all():
         if 'Phone' in bestallare_record.keys():
             description += ' - {}'.format(phone_number(bestallare_record['Phone']))
         description += '\n'
-    description += 'Körtider: {}-{}\n'.format(program_start.strftime("%H:%M"), program_slut.strftime("%H:%M"))
+    if program_start is not None:
+        description += 'Körtider: {}-{}\n'.format(program_start.strftime("%H:%M"), program_slut.strftime("%H:%M"))
     if 'köris' in leverans_thing['fields']:
         description += 'Körschema: {}\n\n'.format(fields['köris'])
     if 'Kommentar till frilans' in leverans_thing['fields']:
         description += leverans_thing['fields']['Kommentar till frilans']
     description += """\n\n\nFör mer information gällande framtida bokningar så kan du kolla här: https://airtable.com/invite/l?inviteId=invJnNIcV8mTqcKR9&inviteToken=92b5c354ee319e7b9b30a85c2d89dd32ec269cb38a4631f51c83befb0b290c87&utm_medium=email&utm_source=product_team&utm_content=transactional-alerts"""
     temp_thing = [
-        fields['Name2'],
+        fields['Name2'] + (' [OBEKRÄFTAT]' if fields['Status'] == 'Obekräftat projekt' else ""),
         getin.isoformat(),
         getout.isoformat(),
         adresser_dict[fields['Adress'][0]] if 'Adress' in fields.keys() else '',
@@ -131,7 +141,7 @@ for event in projektkalender.all():
     ]
 
     my_event = Event(
-        fields['Name2'],
+        fields['Name2'] + (' [OBEKRÄFTAT]' if fields['Status'] == 'Obekräftat projekt' else ""),
         getin,
         getout,
         location=adresser_dict[fields['Adress'][0]] if 'Adress' in fields.keys() else '',

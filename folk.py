@@ -53,13 +53,16 @@ class Folk():
             levande_video (bool, optional): If false, ignore all levande_video people if true, ignore all frilans
 
         Returns:
-            int: Money
+            int: Cost
+            int: Price
             int: Hours
+            int: amount of people
         """
 
         total_kostnad = 0
         tim_total = 0
         total_pris = 0
+        antal_frilans = 0
         for person in personer:
             if self.get_person(person).levande_video == levande_video:
                 temp_total_kostnad, temp_total_pris, temp_tim = self.get_person(
@@ -68,8 +71,9 @@ class Folk():
                 total_kostnad += temp_total_kostnad
                 tim_total += temp_tim
                 total_pris += temp_total_pris
+                antal_frilans += 1
 
-        return total_kostnad, total_pris, tim_total
+        return total_kostnad, tim_total, antal_frilans 
 
 
 class Person():
