@@ -130,8 +130,10 @@ for event in projektkalender.all():
     if 'Kommentar till frilans' in leverans_thing['fields']:
         description += leverans_thing['fields']['Kommentar till frilans']
     description += """\n\n\nFör mer information gällande framtida bokningar så kan du kolla här: https://airtable.com/invite/l?inviteId=invJnNIcV8mTqcKR9&inviteToken=92b5c354ee319e7b9b30a85c2d89dd32ec269cb38a4631f51c83befb0b290c87&utm_medium=email&utm_source=product_team&utm_content=transactional-alerts"""
+    if 'Status' not in fields:
+        continue
     temp_thing = [
-        fields['Name2'] + (' [OBEKRÄFTAT]' if fields['Status'] == 'Obekräftat projekt' else ""),
+        fields['Name2'][0] + (' [OBEKRÄFTAT]' if fields['Status'] == 'Obekräftat projekt' else "") + (" [RIGG]" if fields['Projekt typ'][0] == "Rigg" else ""),
         getin.isoformat(),
         getout.isoformat(),
         adresser_dict[fields['Adress'][0]] if 'Adress' in fields.keys() else '',
@@ -141,7 +143,7 @@ for event in projektkalender.all():
     ]
 
     my_event = Event(
-        fields['Name2'] + (' [OBEKRÄFTAT]' if fields['Status'] == 'Obekräftat projekt' else ""),
+        fields['Name2'][0] + (' [OBEKRÄFTAT]' if fields['Status'] == 'Obekräftat projekt' else "") + (" [RIGG]" if fields['Projekt typ'][0] == "Rigg" else ""),
         getin,
         getout,
         location=adresser_dict[fields['Adress'][0]] if 'Adress' in fields.keys() else '',
@@ -159,7 +161,6 @@ for event in projektkalender.all():
             kalender[event['id']] = {'pre': temp_thing, 'post': gc.update_event(my_event).id}
     else:
         kalender[event['id']] = {'pre': temp_thing, 'post': gc.add_event(my_event).id}
-
     print(my_event)
 
 with open("projektkalender.json", "w", encoding="utf-8") as f:

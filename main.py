@@ -18,7 +18,7 @@ from pyairtable import Table, Base
 from auth_middleware import token_required
 from operator import itemgetter
 from folk import Folk
-
+# import google_drive_handler
 
 class Bcolors:
     """Colours!"""
@@ -386,6 +386,7 @@ class Gig:
             )
         self.make_tidrapport()
         self.output_to_json()
+        #google_drive_handler.do_one(self.projekt)
 
     def g_data(self, key, out=None):
         if key in self.i_data.keys():
@@ -1186,12 +1187,15 @@ class Gig:
             "prefill_tid för gig": self.i_data["tid för gig"],
             "prefill_post_text": self.post_text,
             "prefill_Textning minuter": self.i_data.get("Textning minuter"),
-            "prefill_Kund": ",".join(self.kund),
+            "prefill_Kund": ",".join(self.kund)
+            if type(self.kund) is list else None,
             "prefill_Frilans": self.i_data.get("Frilans"),
             "prefill_Adress": self.adress,
             "prefill_gigNamn": self.name,
-            "prefill_Beställare": ",".join(self.bestallare),
-            "prefill_Slutkund": ",".join(self.slutkund),
+            "prefill_Beställare": ",".join(self.bestallare)
+            if type(self.bestallare) is list else None,
+            "prefill_Slutkund": ",".join(self.slutkund) 
+            if self.slutkund is not None else None,
             "prefill_Projekt typ": self.projekt_typ,
         }
 

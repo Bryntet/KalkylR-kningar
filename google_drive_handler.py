@@ -110,6 +110,7 @@ projekt_table = airtable_base.get_table('Projekt')
 our_clients = airtable_base.get_table('Kund')
 end_clients = airtable_base.get_table('Slutkund')
 
+
 # DRID = Drive ID
 # RID = Record ID
 
@@ -200,57 +201,74 @@ def main():
 
     all_projekt = projekt_table.all()
     for projekt in all_projekt:
-
         the_len = len(all_projekt)
         print(f"{all_projekt.index(projekt)+1}/{the_len} {all_projekt.index(projekt)/the_len*100}%")
-
-        p_fields = projekt['fields']
-        p_keys = p_fields.keys()
-        if all([x in p_keys for x in ['Kund', 'År']]):
-            year = p_fields['År']
-            if type(year) is not dict:
-                kund = our_clients.get(p_fields['Kund'][0])
-                kund_name = kund['fields']['Kund'].lower()
-                kund_rid = kund['id']
-                kund_drid = None
-                sublist = None
-                slutkund_drid = None
-                projekt_drid = None
-                if kund_rid in big_dict_with_all.keys():
-                    kund_drid = big_dict_with_all[kund_rid]['drid']
-                    sublist = copy.deepcopy(big_dict_with_all)[kund_rid]
-                    sublist.pop('drid', None)
-                next_thing = True
-                if 'Slutkund' in p_keys:
-                    if our_clients.get(p_fields['Kund'][0])['fields']['Kund'].lower() != end_clients.get(p_fields['Slutkund'][0])['fields']['Name'].lower():
-                        next_thing = False
-                        slutkund = end_clients.get(p_fields['Slutkund'][0])
-                        slutkund_name = slutkund['fields']['Name'].lower()
-                        slutkund_rid = slutkund['id']
-
-
-                        if kund_rid in big_dict_with_all.keys():
-                            if year in big_dict_with_all[kund_rid].keys():
-                                if slutkund_rid in big_dict_with_all[kund_rid][year].keys():
-                                    slutkund_drid = big_dict_with_all[kund_rid][year][slutkund_rid]['drid']
-                                    if projekt['id'] in big_dict_with_all[kund_rid][year][slutkund_rid].keys():
-                                        projekt_drid = big_dict_with_all[kund_rid][year][slutkund_rid][projekt['id']]
-                                        continue
-                        x = Slutkund(service, top_parent, kund_name, kund_rid, year, slutkund_name, slutkund_rid, p_fields['Name'].lower(), projekt['id'], slutkund_drid, projekt_drid, kund_drid, sublist)
-                        make_proj_rid = False
-                if next_thing:
-                    x = Kund(service, top_parent, kund_name, kund_rid, year, kund_drid, sublist)
-                    make_proj_rid = True
-                url = x.get_link()
-                projekt_table.update(projekt['id'], {'Kopplad drive': url})
-                big_dict_with_all.update(x.get_dict())
-                if make_proj_rid:
-                    made = x.make_folder(p_fields['Name'].lower(), big_dict_with_all[kund_rid][year]['drid'])
-                    big_dict_with_all[kund_rid][year].update({projekt['id']: made})
-
-
+        big_dict_with_all = all_the_processes(big_dict_with_all, projekt)
+    
     with open('drive_struct.json', 'w', encoding='utf-8') as f:
         json.dump(big_dict_with_all, f, indent=4, ensure_ascii=False)
 
+def all_the_processes(big_dict_with_all, projekt) -> dict:
+    p_fields = projekt['fields']
+    p_keys = p_fields.keys()
+    if all([x in p_keys for x in ['Kund', 'År']]):
+        year = p_fields['År']
+        if type(year) is not dict:
+            kund = our_clients.get(p_fields['Kund'][0])
+            kund_name = kund['fields']['Kund'].lower()
+            kund_rid = kund['id']
+            kund_drid = None
+            sublist = None
+            slutkund_drid = None
+            projekt_drid = None
+            if kund_rid in big_dict_with_all.keys():
+                kund_drid = big_dict_with_all[kund_rid]['drid']
+                sublist = copy.deepcopy(big_dict_with_all)[kund_rid]
+                sublist.pop('drid', None)
+            next_thing = True
+            if 'Slutkund' in p_keys:
+                if our_clients.get(p_fields['Kund'][0])['fields']['Kund'].lower() != end_clients.get(p_fields['Slutkund'][0])['fields']['Name'].lower():
+                    next_thing = False
+                    slutkund = end_clients.get(p_fields['Slutkund'][0])
+                    slutkund_name = slutkund['fields']['Name'].lower()
+                    slutkund_rid = slutkund['id']
+
+
+                    if kund_rid in big_dict_with_all.keys():
+                        if year in big_dict_with_all[kund_rid].keys():
+                            if slutkund_rid in big_dict_with_all[kund_rid][year].keys():
+                                slutkund_drid = big_dict_with_all[kund_rid][year][slutkund_rid]['drid']
+                                if projekt['id'] in big_dict_with_all[kund_rid][year][slutkund_rid].keys():
+                                    projekt_drid = big_dict_with_all[kund_rid][year][slutkund_rid][projekt['id']]
+                                    return big_dict_with_all
+                    x = Slutkund(service, top_parent, kund_name, kund_rid, year, slutkund_name, slutkund_rid, p_fields['Name'].lower(), projekt['id'], slutkund_drid, projekt_drid, kund_drid, sublist)
+                    make_proj_rid = False
+            if next_thing:
+                x = Kund(service, top_parent, kund_name, kund_rid, year, kund_drid, sublist)
+                make_proj_rid = True
+            url = x.get_link()
+            projekt_table.update(projekt['id'], {'Kopplad drive': url})
+            big_dict_with_all.update(x.get_dict())
+            if make_proj_rid:
+                made = x.make_folder(p_fields['Name'].lower(), big_dict_with_all[kund_rid][year]['drid'])
+                big_dict_with_all[kund_rid][year].update({projekt['id']: made})
+    return big_dict_with_all
+
+
+def save(the_dict):
+    with open('drive_struct.json', 'w', encoding='utf-8') as f:
+        json.dump(the_dict, f, indent=4, ensure_ascii=False)
+
+def load():
+    with open('drive_struct.json', 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def do_one(record_id):
+    the_dict = load()
+    save(all_the_processes(the_dict, projekt_table.get(record_id)[0]))
+
+    
+    
 if __name__ == '__main__':
     main()
