@@ -1,5 +1,5 @@
 import os
-
+import json
 
 from gcsa.google_calendar import GoogleCalendar
 
@@ -11,3 +11,5 @@ gc = GoogleCalendar(gcal_id, credentials_path='credentials.json')
 
 for event in gc:
     gc.delete_event(event.id)
+with open("projektkalender.json", "w", encoding="utf-8") as f:
+    json.dump({}, f)

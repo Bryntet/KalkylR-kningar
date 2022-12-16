@@ -105,8 +105,6 @@ class Prylob:
 
 class Paketob:
     def __init__(self, prylar, saker, config):
-        # Gets all kwargs provided and adds them to self
-        # Current kwargs:
         self.paket_prylar = self.get_value('paket_prylar', saker)
         self.antal_av_pryl = self.get_value('antal_av_pryl', saker)
         self.paket_dict = self.get_value('paket_dict', saker)
@@ -117,7 +115,7 @@ class Paketob:
         self.prylar = {}
         self.id = self.get_value('id', saker)
 
-
+        self.personal = saker.get('Personal', 0)
 
 
         if self.paket_i_pryl_paket is not None:
@@ -161,7 +159,7 @@ class Paketob:
             self.antal_av_pryl = str(self.antal_av_pryl).split(",")
             for ind, pryl in enumerate(self.paket_prylar):
                 self.prylar.update({pryl: copy.deepcopy(prylar[pryl])})
-                if self.antal_av_pryl is not None:
+                if self.antal_av_pryl is not None and len(self.antal_av_pryl) > ind:
                     self.prylar[pryl]["amount"] = int(self.antal_av_pryl[ind])
                 else:
                     self.prylar[pryl]["amount"] = 1
@@ -177,6 +175,7 @@ class Paketob:
         out_dict[temp_dict["id"]].pop("paket_prylar", None)
         bok = {}
         if out_dict[temp_dict["id"]]["paket_i_pryl_paket"] is not None:
+            
             for dubbelPaket in out_dict[temp_dict["id"]
                                         ]["paket_i_pryl_paket"][0]:
                 bok.update({
@@ -220,7 +219,8 @@ class Gig:
         
         self.kund = self.i_data.get("Kund", self.i_data.get("Ny Kund"))
 
-
+        self.extra_name = self.i_data.get("extra_name", None)
+        
         self.start_date = datetime.datetime.fromisoformat(
             self.i_data["Börja datum"].split(".")[0]
         )
@@ -248,7 +248,7 @@ class Gig:
             [self.person_dict_grouped[key] for key in self.person_dict_grouped]
             for item in sublist if item not in self.person_list
         ]
-
+        
         self.adress_update = False
         self.tid_to_adress_car = None
         self.tid_to_adress = None
@@ -331,7 +331,7 @@ class Gig:
         #if self.update:
         #    self.name = prev_out[self.g_data("uppdateraProjekt")[0]].get('Gig namn', self.make_name())
 
-        self.svanis = True if self.g_data('svanis') is not None else False
+        self.svanis = self.i_data.get('svanis', False)
 
         self.extra_prylar = self.i_data.get('extraPrylar', [])
         self.prylpaket = self.i_data.get('prylPaket', [])
@@ -394,7 +394,7 @@ class Gig:
         else:
             return out
 
-    def make_name(self, extra=None):
+    def make_name(self):
         if self.start_date != self.end_date:
             name = self.start_date.strftime("%d/%m") + " ➜ " + self.end_date.strftime("%d/%m")
         else:
@@ -405,16 +405,16 @@ class Gig:
             if self.kund is not None:
                 name += " ➜ "
             name += slutkund_table.get(self.slutkund if type(self.slutkund) is not list else self.slutkund[0])['fields']['Name']
-        if extra is not None:
-            name += " | " + extra
+        if self.extra_name is not None:
+            name += " | " + self.extra_name
         return name
 
     def make_format_for_roles(self):
         with open("folk.json", "r", encoding="utf-8") as f:
             folk = json.load(f)
-        out = "# Arbetsroller\n"
+        out = "## Arbetsroller\n"
         for key, value in self.person_dict_grouped.items():
-            out += f"## {key}\n"            
+            out += f"### {key}\n"            
             for person in value:
                 out += f"### - {folk[person]['Name']}\n"
             out += "\n"
@@ -471,11 +471,8 @@ class Gig:
             except KeyError:
                 pass
             # Get personal
-            try:
-                if self.paketen[paket]["Personal"]:
-                    self.personal += self.paketen[paket]["Personal"]
-            except (KeyError, TypeError):
-                pass
+            
+            self.personal += self.paketen[paket].get("personal", 0)
             i = 0
 
             for pryl in self.paketen[paket]["prylar"]:
@@ -945,7 +942,7 @@ class Gig:
                 key=lambda item: -1 * item[1]["amount"]
             )
         )
-        packlista = "# Packlista:\n\n"
+        packlista = "## Packlista:\n\n"
         for pryl in self.gig_prylar:
             packlista += f"### {self.gig_prylar[pryl]['amount']}st {self.gig_prylar[pryl]['name']}\n\n"
             print(
@@ -1057,6 +1054,7 @@ class Gig:
             "All personal": self.person_list,
             'slutkund_temp': self.slutkund,
             'role_format': self.make_format_for_roles(),
+            'extra namn': self.extra_name,
             #"typ person lista": [x for x in self.person_list]
             #"Mer folk": list(map(itemgetter("id"), self.specifik_personal))
         }
