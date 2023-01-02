@@ -233,7 +233,7 @@ class Gig:
         self.person_field_list = [
             'Bildproducent', 'Fotograf', 'Ljudtekniker', 'Ljustekniker',
             'Grafikproducent', 'Animatör', 'Körproducent',
-            'Innehållsproducent', 'Scenmästare', 'Tekniskt ansvarig'
+            'Innehållsproducent', 'Scenmästare', 'Tekniskt ansvarig', "Klippare"
         ]
         # Make a dict of all the types of tasks with lists of people recIDs inside
         self.person_dict_grouped = {
@@ -1139,10 +1139,11 @@ class Gig:
                         "id": record_ids[i],
                         "fields": kalender_dict
                     })
+                    projektkalender_records[0]['fields']["Egna anteckningar"] = self.comment
                 else:
                     projektkalender_records.append(kalender_dict)
+                    projektkalender_records[0]['Egna anteckningar'] = self.comment
                 i += 1
-            projektkalender_records[0]['Egna anteckningar'] = self.comment
         else:
             raise ValueError("dagar_list empty")
 
@@ -1164,8 +1165,6 @@ class Gig:
         self.old_output[output_from_airtable['id']] = self.output_variable
 
     def url_make(self):
-
-        self.extra_prylar
 
         self.projektledare = self.i_data.get("projektledare", [None])[0]
         self.producent = self.i_data.get("producent", [None])[0]
@@ -1195,6 +1194,8 @@ class Gig:
             "prefill_Slutkund": ",".join(self.slutkund) 
             if self.slutkund is not None else None,
             "prefill_Projekt typ": self.projekt_typ,
+            "prefill_Anteckning": self.comment,
+            "prefill_projekt_timmar": self.projekt_timmar_add
         }
 
         for work_area in self.person_field_list:
