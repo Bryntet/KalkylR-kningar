@@ -175,7 +175,7 @@ class Paketob:
         out_dict[temp_dict["id"]].pop("paket_prylar", None)
         bok = {}
         if out_dict[temp_dict["id"]]["paket_i_pryl_paket"] is not None:
-            
+
             for dubbelPaket in out_dict[temp_dict["id"]
                                         ]["paket_i_pryl_paket"][0]:
                 bok.update({
@@ -210,17 +210,17 @@ class Gig:
 
         with open("prylar.json", "r", encoding="utf-8") as f:
             prylar = json.load(f)
-        
+
         with open("output.json", "r", encoding="utf-8") as f:
             prev_out = json.load(f)
 
         self.i_data = input_data_table.get(input_RID)['fields']
         self.slutkund = self.i_data.get("Slutkund", self.i_data.get("Ny Slutkund"))
-        
+
         self.kund = self.i_data.get("Kund", self.i_data.get("Ny Kund"))
 
         self.extra_name = self.i_data.get("extra_name", None)
-        
+
         self.start_date = datetime.datetime.fromisoformat(
             self.i_data["Börja datum"].split(".")[0]
         )
@@ -248,10 +248,10 @@ class Gig:
             [self.person_dict_grouped[key] for key in self.person_dict_grouped]
             for item in sublist if item not in self.person_list
         ]
-        
+        self.adress = self.i_data.get("existerande_adress", self.i_data.get("Adress", None))
         self.adress_update = False
         self.tid_to_adress_car = None
-        self.tid_to_adress = None
+        self.tid_to_adress = self.i_data.get("tid_to_adress", None)
         self.gmaps = googlemaps.Client(key=os.environ["maps_api"])
         self.url = None
         self.dagar_list = None
@@ -287,7 +287,7 @@ class Gig:
         self.gig_timmar = None
         self.tim_pris = None
         self.projekt = self.g_data("projekt_id", projekt_table.create(fields={})['id'])
-        
+
         self.specifik_personal = self.person_list
         self.comment = self.g_data("Anteckning")
 
@@ -350,7 +350,7 @@ class Gig:
         self.get_pris()
 
         #TODO Here too
-        #self.adress_check()
+        self.adress_check()
 
         self.tid(config)
 
@@ -373,15 +373,15 @@ class Gig:
         if self.adress_update:
             adress_table = Table(api_key, base_id, "Adressbok")
             for record in adress_table.all():
-                if record["fields"]["Adress"] == self.i_data[
-                    "existerande_adress"]:
+                if record["fields"]["Adress"] == self.adress:
                     record_id = record["id"]
                     break
             adress_table.update(
                 record_id,
                 {
                     "tid_cykel": self.tid_to_adress,
-                    "tid_bil": self.tid_to_adress_car
+                    "tid_bil": self.tid_to_adress_car,
+                    "distans": self.distance_to_adress
                 },
             )
         self.make_tidrapport()
@@ -414,12 +414,12 @@ class Gig:
             folk = json.load(f)
         out = "## Arbetsroller\n"
         for key, value in self.person_dict_grouped.items():
-            out += f"### {key}\n"            
+            out += f"### {key}\n"
             for person in value:
                 out += f"### - {folk[person]['Name']}\n"
             out += "\n"
         return out
-                
+
 
     def check_prylar(self):
         try:
@@ -471,7 +471,7 @@ class Gig:
             except KeyError:
                 pass
             # Get personal
-            
+
             self.personal += self.paketen[paket].get("personal", 0)
             i = 0
 
@@ -556,33 +556,30 @@ class Gig:
         return temp_pris
 
     def adress_check(self):
-        if (self.i_data["existerande_adress"]
-            is not None) or (self.i_data["Adress"] is not None):
-            if self.i_data["tid_to_adress"] is not None:
-                self.tid_to_adress = self.i_data["tid_to_adress"][0]
-            else:
-                print("using maps api")
-                if self.i_data["existerande_adress"] is not None:
-                    adress = self.i_data["existerande_adress"][0]["name"]
-                else:
-                    adress = self.i_data["Adress"]
-                self.adress_update = True
-                self.car = False
-                self.tid_to_adress = self.gmaps.distance_matrix(
+        if self.adress is not None and self.tid_to_adress is None:
+            print("using maps api")
+
+            self.adress_update = True
+            self.car = False
+
+            gmaps_bike = self.gmaps.distance_matrix(
+                origins="Levande video",
+                destinations=self.adress,
+                mode="bicycling",
+                units="metric",
+            )
+            self.tid_to_adress = gmaps_bike['rows'][0]['elements'][0]['duration']['value']
+            if self.tid_to_adress / 60 > 60:
+                self.car = True
+                gmaps_car = self.gmaps.distance_matrix(
                     origins="Levande video",
-                    destinations=adress,
-                    mode="bicycling",
+                    destinations=self.adress,
+                    mode="driving",
                     units="metric",
                 )
-                if self.tid_to_adress / 60 > 60:
-                    self.car = True
-                    self.tid_to_adress_car = self.gmaps.distance_matrix(
-                        origins="Levande video",
-                        destinations=adress,
-                        mode="driving",
-                        units="metric",
-                    )["rows"][0]["elements"][0]["duration"]["value"]
-                print(self.tid_to_adress, "here")
+                self.tid_to_adress = gmaps_car["rows"][0]["elements"][0]["duration"]["value"]
+            self.distance_to_adress = gmaps_car["rows"][0]["elements"][0]["distance"]["text"] if self.car else gmaps_bike["rows"][0]["elements"][0]["distance"]["text"]
+            print(self.tid_to_adress, "here")
 
     def tid(self, config):
 
@@ -750,11 +747,11 @@ class Gig:
 
     def personal_rakna(self, config):
         total_personal = self.personal
-        
+
         if len(self.person_list) > total_personal:
             total_personal = len(self.person_list)
         # Add additional personal from specifik personal to the total personal
-       
+
         self.bas_lön = self.ob_mult
         self.sociala_avgifter = config["socialaAvgifter"] + 1
 
@@ -800,13 +797,16 @@ class Gig:
             else:
                 self.restid = total_personal * self.i_data["dagar"] * config[
                     "restid"]
-        self.restid = math.ceil(self.restid)
 
         if self.svanis:
             self.restid = 0
 
-        
-        
+        if self.restid is None:
+            self.restid = 0
+        else:
+            self.restid = math.ceil(self.restid)
+
+
         self.tim_dict = {
             'gig': int(self.gig_timmar / total_personal) if total_personal > 0 else 0,
             'rigg': int(self.rigg_timmar / total_personal) if total_personal > 0 else 0,
@@ -822,7 +822,7 @@ class Gig:
         )
 
         self.levande_video_kostnad = self.lön_kostnad * total_tid * ((total_personal - self.antal_frilans) / total_personal) if total_personal > 0 else 0
-        
+
 
         self.personal_kostnad = self.frilans_kostnad + self.levande_video_kostnad
         self.personal_pris =  self.timpris * total_tid # Frilans is not used for pris
@@ -835,7 +835,7 @@ class Gig:
         self.teoretisk_lön_kostnad = self.total_tim_budget * self.lön_kostnad
         self.teoretisk_lön_pris = self.total_tim_budget * self.timpris
         self.personal_total = total_personal
-        
+
     def post_text(self):
         try:
             if self.i_data["post_text"]:
@@ -868,7 +868,7 @@ class Gig:
 
         #Teoretiska ifall enbart gjort av LV
         self.teoretisk_kostnad = self.kostnad - self.frilans_kostnad - self.levande_video_kostnad + self.teoretisk_lön_kostnad
-        
+
         # Prevent div by 0
         if self.pryl_pris != 0:
             if self.pryl_kostnad is not None:
@@ -1055,6 +1055,7 @@ class Gig:
             'slutkund_temp': self.slutkund,
             'role_format': self.make_format_for_roles(),
             'extra namn': self.extra_name,
+
             #"typ person lista": [x for x in self.person_list]
             #"Mer folk": list(map(itemgetter("id"), self.specifik_personal))
         }
@@ -1191,7 +1192,7 @@ class Gig:
             "prefill_gigNamn": self.name,
             "prefill_Beställare": ",".join(self.bestallare)
             if type(self.bestallare) is list else None,
-            "prefill_Slutkund": ",".join(self.slutkund) 
+            "prefill_Slutkund": ",".join(self.slutkund)
             if self.slutkund is not None else None,
             "prefill_Projekt typ": self.projekt_typ,
             "prefill_Anteckning": self.comment,
