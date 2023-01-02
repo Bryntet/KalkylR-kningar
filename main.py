@@ -785,9 +785,6 @@ class Gig:
             self.projekt_timmar = math.ceil(
                 (self.gig_timmar + self.rigg_timmar) * config["projektTid"]
             ) + self.projekt_timmar_add
-
-        if self.svanis:
-            self.restid = 0
         else:
             if self.tid_to_adress:
                 if self.tid_to_adress_car:
@@ -804,6 +801,9 @@ class Gig:
                 self.restid = total_personal * self.i_data["dagar"] * config[
                     "restid"]
         self.restid = math.ceil(self.restid)
+
+        if self.svanis:
+            self.restid = 0
 
         
         
