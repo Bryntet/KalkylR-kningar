@@ -627,9 +627,6 @@ class Gig:
                 self.extra_gig_tid.append(self.extra_gig_tid[0])
             i = 0
             for tid in self.extra_gig_tid:
-                self.dagar_list.append([])
-                j = 0
-                next_change = False
                 tup: tuple[str, str] = tuple(tid.split("-"))
                 start: tuple[int, int]
                 end: tuple[int, int] 
@@ -643,20 +640,8 @@ class Gig:
                 for i in range(self.i_data["dagar"] - 1):
                     hours_list.append(hours_list[0])
 
-        # new_timezone = pytz.timezone("UTC")
-        # old_timezone = pytz.timezone("Europe/Stockholm")
-        # temp_dagar_list = []
-        # print(self.dagar_list)
-        
-        # for getin, getout in self.dagar_list:
-        #     localized_timestamp = old_timezone.localize(getin)
-        #     getin = localized_timestamp.astimezone(new_timezone)
-        #     localized_timestamp = old_timezone.localize(getout)
-        #     getout = localized_timestamp.astimezone(new_timezone)
-        #     temp_dagar_list.append([getin, getout])
-
-        # self.dagar_list = temp_dagar_list
         self.ob_dict = {"0": [], "1": [], "2": [], "3": [], "4": []}
+
         skärtorsdagen = None
         for date, holiday in holidays.SWE(False, years=self.end_date.year).items():
             if holiday == "Långfredagen":
@@ -667,10 +652,7 @@ class Gig:
                 # Räkna ut ob och lägg i en dict
                 for i in range(hour):
                     temp_date = begin + datetime.timedelta(hours=i)
-                    # old_timezone = pytz.timezone("UTC")
-                    # new_timezone = pytz.timezone("Europe/Stockholm")
-                    # localized_timestamp = old_timezone.localize(pre_tz_temp_date)
-                    # temp_date = localized_timestamp.astimezone(new_timezone)
+                    
                     if temp_date in holidays.SWE(False, years=temp_date.year):
                         if (
                             holidays.SWE(False, years=temp_date.year)[temp_date]
