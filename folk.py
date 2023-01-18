@@ -2,8 +2,8 @@ import json
 
 import copy
 
-class Person():
 
+class Person:
     def __init__(self, information, lv_timpeng, lv_timpris, hyr_multi=0.2):
         """Person object
 
@@ -11,10 +11,10 @@ class Person():
             information (dict): dict with information from airtable
             lv_timpeng (int): The Levande Video cost per hour for labour
         """
-        self.name = information['Name']
-        self.available_tasks = information['Kan göra dessa uppgifter']
-        self.id = information['id']
-        self.levande_video = information['Levande Video']
+        self.name = information["Name"]
+        self.available_tasks = information["Kan göra dessa uppgifter"]
+        self.id = information["id"]
+        self.levande_video = information["Levande Video"]
         self.hyr_multi = hyr_multi
         if self.levande_video:
             self.frilans = False
@@ -25,24 +25,22 @@ class Person():
         else:
             self.frilans = True
 
-
-            if information['hyrkostnad'] is not None:
-                self.hyrkostnad = information['hyrkostnad']
+            if information["hyrkostnad"] is not None:
+                self.hyrkostnad = information["hyrkostnad"]
             else:
                 self.hyrkostnad = False
 
-            if information['timpeng'] is not None:
-                self.tim_kostnad = information['timpeng']
+            if information["timpeng"] is not None:
+                self.tim_kostnad = information["timpeng"]
 
             else:
                 self.tim_kostnad = False
 
-            if information['timpeng efter'] is not None:
-                self.tim_kostnad_after_time = information['timpeng efter'
-                                                          ] / 60 / 60
+            if information["timpeng efter"] is not None:
+                self.tim_kostnad_after_time = information["timpeng efter"] / 60 / 60
             else:
                 self.tim_kostnad_after_time = False
-            self.input_string = information.get('input_string')
+            self.input_string = information.get("input_string")
 
     def get_cost(self, timmar: dict[str, int]):
         """Returns the money that the person should get for the time spent
@@ -56,19 +54,18 @@ class Person():
         total_kostnad = 0
         total_pris = 0
         tim_total = 0
-        if self.levande_video: # TODO kan finnas stora problem här
-            tim_total = timmar['gig'] + timmar['rigg'] + timmar[
-                'proj'] + timmar['res']
+        if self.levande_video:  # TODO kan finnas stora problem här
+            tim_total = timmar["gig"] + timmar["rigg"] + timmar["proj"] + timmar["res"]
             total_kostnad = tim_total * self.tim_kostnad
             total_pris = tim_total * self.timpris
 
         elif self.input_string is not None:
-            
-            tim_total = timmar['gig'] + timmar['rigg']
+
+            tim_total = timmar["gig"] + timmar["rigg"]
             input_string = self.input_string.split("--")
 
             total_kostnad += int(input_string[0])
-            tuples: list[tuple[int, int, int]] = [] # fixed, timpris, hourly_point
+            tuples: list[tuple[int, int, int]] = []  # fixed, timpris, hourly_point
             for s in input_string[1].split("-"):
                 tuples.append(tuple(map(int, s.split(","))))
 
@@ -109,14 +106,13 @@ class Person():
         return task in self.available_tasks
 
 
-class Folk():
+class Folk:
     def __init__(self, lön, timpris, hyr_multi):
 
         with open("folk.json", "r") as f:
             json_data = json.load(f)
             self.folk_dictionary = {
-                x: Person(json_data[x], lön, timpris, hyr_multi)
-                for x in json_data
+                x: Person(json_data[x], lön, timpris, hyr_multi) for x in json_data
             }
 
     def get_person(self, id: str) -> Person:

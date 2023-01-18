@@ -1,5 +1,7 @@
 import copy
+
 input_string = "10--1000,500,0-5000,100,5"
+
 
 def get_cost(input_string, hours):
     output = 0
@@ -15,21 +17,21 @@ def get_cost(input_string, hours):
         fixed, timpris, hourly_point = t
         if hours >= hourly_point:
             output += fixed
-            if idx+1 < len(tuples):
-                if hours >= tuples[idx+1][2]:
+            if idx + 1 < len(tuples):
+                if hours >= tuples[idx + 1][2]:
                     old_hrs = copy.deepcopy(hours)
-                    hours = tuples[idx + 1][2]-1
-            output += timpris * (hours-((hourly_point-1) if hourly_point > 0 else 0))
-            
+                    hours = tuples[idx + 1][2] - 1
+            output += timpris * (
+                hours - ((hourly_point - 1) if hourly_point > 0 else 0)
+            )
+
             hours = old_hrs
         else:
             break
 
     print(input_string)
 
-
-
-
-
     return input_string
+
+
 get_cost(input_string, 5)
