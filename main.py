@@ -613,7 +613,7 @@ class Gig:
             self.i_data["Sluta datum"].split(".")[0]
         )
 
-        hours_list = []
+        hours_total = 0
         
 
         if self.i_data["tid för gig"] is not None:
@@ -625,7 +625,6 @@ class Gig:
                     self.extra_gig_tid.append(self.i_data["tid för gig"])
             while len(self.extra_gig_tid) < self.i_data["dagar"]:
                 self.extra_gig_tid.append(self.extra_gig_tid[0])
-            i = 0
             for tid in self.extra_gig_tid:
                 tup: tuple[str, str] = tuple(tid.split("-"))
                 start: tuple[int, int]
@@ -633,12 +632,9 @@ class Gig:
                 start, end = map(lambda x: tuple(map(int, x.split(":"))) if ":" in x else tuple(map(int, [x, "0"])), tup)
                 
                 self.dagar_list.append((self.start_date.replace(hour=start[0], minute=start[1]), self.start_date.replace(hour=end[0], minute=end[1])))
-                
-            print(hours_list)
-        else:
-            if self.i_data["dagar"] != 1:
-                for i in range(self.i_data["dagar"] - 1):
-                    hours_list.append(hours_list[0])
+                hours_total += self.dagar_list[-1][1].hour - self.dagar_list[-1][0].hour
+            
+        
 
         self.ob_dict = {"0": [], "1": [], "2": [], "3": [], "4": []}
 
@@ -650,58 +646,58 @@ class Gig:
         for begin, stop in self.dagar_list:
             for hour in range(stop.hour - begin.hour):
                 # Räkna ut ob och lägg i en dict
-                for i in range(hour):
-                    temp_date = begin + datetime.timedelta(hours=i)
-                    
-                    if temp_date in holidays.SWE(False, years=temp_date.year):
-                        if (
-                            holidays.SWE(False, years=temp_date.year)[temp_date]
-                            in [
-                                "Trettondedag jul",
-                                "Kristi himmelsfärdsdag",
-                                "Alla helgons dag",
-                            ] and temp_date.hour >= 7
-                        ):
-                            self.ob_dict["3"].append(temp_date.timestamp())
-                        elif (
-                            holidays.SWE(False, years=temp_date.year)[temp_date]
-                            in ["Nyårsafton"] and temp_date.hour >= 18
-                            or holidays.SWE(False,
-                                            years=temp_date.year)[temp_date] in [
-                                                "Pingstdagen",
-                                                "Sveriges nationaldag",
-                                                "Midsommarafton",
-                                                "Julafton",
-                                            ] and temp_date.hour >= 7
-                        ):
-                            self.ob_dict["4"].append(temp_date.timestamp())
-                        else:
-                            self.ob_dict["0"].append(temp_date.timestamp())
+            
+                temp_date = begin + datetime.timedelta(hours=hour)
+                
+                if temp_date in holidays.SWE(False, years=temp_date.year):
+                    if (
+                        holidays.SWE(False, years=temp_date.year)[temp_date]
+                        in [
+                            "Trettondedag jul",
+                            "Kristi himmelsfärdsdag",
+                            "Alla helgons dag",
+                        ] and temp_date.hour >= 7
+                    ):
+                        self.ob_dict["3"].append(temp_date.timestamp())
                     elif (
-                        str(temp_date).split(" ")[0] == str(skärtorsdagen)
-                        and temp_date.hour >= 18
+                        holidays.SWE(False, years=temp_date.year)[temp_date]
+                        in ["Nyårsafton"] and temp_date.hour >= 18
+                        or holidays.SWE(False,
+                                        years=temp_date.year)[temp_date] in [
+                                            "Pingstdagen",
+                                            "Sveriges nationaldag",
+                                            "Midsommarafton",
+                                            "Julafton",
+                                        ] and temp_date.hour >= 7
                     ):
                         self.ob_dict["4"].append(temp_date.timestamp())
-                    elif temp_date.isoweekday() < 6:
-                        if temp_date.hour > 18:
-                            self.ob_dict["1"].append(temp_date.timestamp())
-                        elif temp_date.hour <= 7:
-                            self.ob_dict["2"].append(temp_date.timestamp())
-                        else:
-                            self.ob_dict["0"].append(temp_date.timestamp())
-                    elif temp_date.isoweekday() == 6 or temp_date.isoweekday() == 7:
-                        self.ob_dict["3"].append(temp_date.timestamp())
                     else:
                         self.ob_dict["0"].append(temp_date.timestamp())
-                self.start_date += datetime.timedelta(days=1)
+                elif (
+                    str(temp_date).split(" ")[0] == str(skärtorsdagen)
+                    and temp_date.hour >= 18
+                ):
+                    self.ob_dict["4"].append(temp_date)
+                elif temp_date.isoweekday() < 6:
+                    if temp_date.hour > 18:
+                        self.ob_dict["1"].append(temp_date)
+                    elif temp_date.hour < 7:
+                        self.ob_dict["2"].append(temp_date)
+                    else:
+                        self.ob_dict["0"].append(temp_date)
+                elif temp_date.isoweekday() == 6 or temp_date.isoweekday() == 7:
+                    self.ob_dict["3"].append(temp_date)
+                else:
+                    self.ob_dict["0"].append(temp_date)
+            self.start_date += datetime.timedelta(days=1)
 
         self.ob_text = ""
+        
         for key, value in self.ob_dict.items():
             if len(value) > 0 and key != "0":
-                self.ob_text += f"OB {key}: {datetime.date.fromtimestamp(value[0]).isoformat()} - {datetime.date.fromtimestamp(value[-1]).isoformat()} ({len(value)}h)\n"
-        avg = sum(hours_list) / len(hours_list)
+                self.ob_text += f"OB {key}: {value[0].isoformat()} - {(value[-1] + datetime.timedelta(hours=1)).isoformat()} ({len(value)}h)\n"
+        avg = hours_total / len(self.dagar_list)
 
-        print(sum(hours_list), avg)
         self.dag_längd = avg
 
         self.ob_mult = 0
@@ -718,7 +714,7 @@ class Gig:
         self.ob_mult += len(self.ob_dict["4"]) * (
             config["levandeVideoLön"] + (config["levandeVideoLön"] * 168 / 150)
         )
-        self.ob_mult /= self.dag_längd * len(hours_list)
+        self.ob_mult /= self.dag_längd * len(self.dagar_list)
 
     def personal_rakna(self, config):
         total_personal = self.personal
