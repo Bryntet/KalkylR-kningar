@@ -4,7 +4,7 @@ import json
 import datetime
 import time
 import smtplib
-
+import re
 from gcsa.google_calendar import GoogleCalendar
 from gcsa.event import Event
 from email.message import EmailMessage
@@ -26,21 +26,25 @@ def main():
     #mail.add_header('reply-to', 'info@levandevideo.se')
     #s = smtplib.SMTP('mail.levandevideo.se', port=26)
     #s.login('bokning@levandevideo.se', mail_passwd)
-    
+
     #s.send_message(mail)
     #s.quit()
-    
+
     base = Base(api_key, base_id)
     projektkalender = base.get_table("Projektkalender")
     people = base.get_table("Frilans")
     adresser = base.get_table("Adressbok")
     leveranser = base.get_table("Leveranser")
     bestallare = base.get_table("Beställare")
+
+
+
+    prylartable = base.get_table('Prylar')
     #mail.add_header('Content-Type', 'text/html')
     #ending_of_mail = "<sub>Jag är en robot och lär mig nya saker varje dag, ifall det blev fel så kan du antingen skicka iväg ett mejl till din kontakt på Levande Video eller till <a href='mailto: epost@edvinbryntesson.se'>mig</a> :)</sub>"
     #mail.set_payload('Body of <b>email{}</b>'.format(ending_of_mail))
-    
-   
+
+
     emails = {}
     namn = {}
     phone_numbers = {}
@@ -75,6 +79,8 @@ def main():
 
     for event in projektkalender.all():
         fields = event['fields']
+        if fields.get("Projekt typ") == "Utrustning" or fields.get("Projekt typ") == "Redigerat":
+            break
         if 'Alla personal' not in fields.keys():
             fields['Alla personal'] = []
         if 'Producent' in fields.keys():
@@ -105,9 +111,9 @@ def main():
                     # mail['Subject'] = 'Gigget den {} har blivit inställt'.format(datum.isoformat())
                     # mail['From'] = 'bokning@levandevideo.se'
                     # mail['To'] = ", ".join(lv_emails)
-                    
+
                     # s.send_message(mail)
-                    
+
                     try:
                         gc.delete_event(kalender[event['id']]['post'])
                     except Exception as e:
@@ -140,6 +146,55 @@ def main():
                 description += '\n'
 
         description += "\n"
+        paketen = fields.get('Paket', [])
+        antal_paket = fields.get("antal paket", [""])[0].split(",")
+        prylar = fields.get('Prylar', [])
+        antal_prylar = fields.get('antal prylar', [""])[0].split(",")
+        paketen_string = "Beställning: \n"
+        with open("paket.json", "r") as f:
+            paket_dict = json.load(f)
+            #if len(paketen) > 0:
+            #    paketen_string += ""
+            for idx, paket in enumerate(paketen):
+                if idx < len(antal_paket): #and not paket_dict[paket].get('hide from calendar', False):
+                    org_paket = paket_dict[paket]['namn3']
+                    regex_thing = re.search(r"([^[]*),? ?( [.*]?)*", org_paket)
+                    if regex_thing:
+                        paket_namn = regex_thing.group(1)
+                        new_reg = re.search(r"((.*), ?|.*)", paket_namn)
+                        if new_reg:
+                            if new_reg.group(2) is not None:
+                                paket_namn = new_reg.group(2)
+
+                    else:
+                        paket_namn = org_paket
+                    if antal_paket[idx] == "":
+                        paketen_string += "1st - " + paket_namn + "\n"
+                    else:
+                        paketen_string += antal_paket[idx] + "st - " + paket_namn + "\n"
+        with open("prylar.json", "r") as f:
+            prylar_dict = json.load(f)
+            #if len(prylar) > 0:
+            #    paketen_string += "Prylar: \n"
+            for idx, pryl in enumerate(prylar):
+                if idx < len(antal_prylar): #and not prylar_dict[pryl].get('hide from calendar', False):
+                    org_pryl = prylar_dict[pryl]['name']
+                    regex_thing = re.search(r"([^[]*),? ?( [.*]?)*", org_pryl)
+                    if regex_thing:
+                        pryl_namn = regex_thing.group(1)
+                        new_reg = re.search(r"((.*), ?|.*)", pryl_namn)
+                        if new_reg:
+                            if new_reg.group(2) is not None:
+                                pryl_namn = new_reg.group(2)
+                    else:
+                        pryl_namn = org_pryl
+                    if antal_prylar[idx] == "":
+                        paketen_string += "1st - " + pryl_namn + "\n"
+                    else:
+                        paketen_string += antal_prylar[idx] + "st - " + pryl_namn + "\n"
+
+
+
 
         if 'Beställare' in leverans_thing['fields']:
             bestallare_record = bestallare.get(leverans_thing['fields']['Beställare'][0])['fields']
@@ -149,11 +204,17 @@ def main():
             description += '\n'
         if program_start is not None:
             description += 'Körtider: {}-{}\n'.format(program_start.strftime("%H:%M"), program_slut.strftime("%H:%M"))
+
         if 'köris' in leverans_thing['fields']:
             description += 'Körschema: {}\n\n'.format(fields['köris'])
         if 'Kommentar till frilans' in leverans_thing['fields']:
             description += leverans_thing['fields']['Kommentar till frilans']
-        description += """\n\n\nFör mer information gällande framtida bokningar så kan du kolla här: https://airtable.com/invite/l?inviteId=invJnNIcV8mTqcKR9&inviteToken=92b5c354ee319e7b9b30a85c2d89dd32ec269cb38a4631f51c83befb0b290c87&utm_medium=email&utm_source=product_team&utm_content=transactional-alerts"""
+        if paketen_string != "":
+            description += "\n" + paketen_string
+
+        description += """\n\nFör mer information gällande framtida bokningar så kan du kolla här: https://airtable.com/invite/l?inviteId=invJnNIcV8mTqcKR9&inviteToken=92b5c354ee319e7b9b30a85c2d89dd32ec269cb38a4631f51c83befb0b290c87&utm_medium=email&utm_source=product_team&utm_content=transactional-alerts"""
+
+
         if 'Status' not in fields:
             continue
         temp_thing = [
