@@ -80,8 +80,8 @@ class Prylob:
             self.__dict__.update({argName: value})
 
         self.amount = 1
-        self.mult = 145
-        self.mult -= self.livs_längd * 15
+        self.mult = 205 # 100 + 35 * 3
+        self.mult -= self.livs_längd * 35
         self.mult /= 100
 
     def rounding(self, config):
@@ -109,7 +109,8 @@ class Paketob:
         self.antal_av_pryl = self.get_value('antal_av_pryl', saker)
         self.paket_dict = self.get_value('paket_dict', saker)
         self.paket_i_pryl_paket = self.get_value('paket_i_pryl_paket', saker)
-
+        self.namn3 = saker.get("Paket Namn", "")
+        self.svanis = saker.get("Svanis", False)
 
         self.pris = 0
         self.prylar = {}
@@ -131,20 +132,27 @@ class Paketob:
                 else:
                     paket_from_air = Table(api_key, base_id, "Prylpaket").get(paket['id'])
                     temp_prylar = {}
+                    if paket_from_air['fields'].get('paket_prylar') is not None:
+                        
+                        for pryl_id in paket_from_air['fields']['paket_prylar']:
+                            obj = Prylob(
+                                in_pris=prylar[pryl_id]["pris"],
+                                id=pryl_id,
+                                livs_längd=int(prylar[pryl_id]["livs_längd"]),
+                            )
+                            obj.rounding(config)
+                            temp_prylar[pryl_id] = obj.dict_make()[pryl_id]
 
-                    for pryl_id in paket_from_air['fields']['paket_prylar']:
-                        obj = Prylob(
-                            in_pris=prylar[pryl_id]["pris"],
-                            id=pryl_id,
-                            livs_längd=int(prylar[pryl_id]["livs_längd"]),
-                        )
-                        obj.rounding(config)
-                        temp_prylar[pryl_id] = obj.dict_make()[pryl_id]
+                    list_thingy = paket_from_air['fields'].get('antal_av_pryl', "").split(',')
+                    
                     for ind, pryl in enumerate(temp_prylar):
 
 
                         if 'antal_av_pryl' in paket_from_air['fields']:
-                            amount = paket_from_air['fields']['antal_av_pryl'].split(',')[ind]
+                            if ind >= len(list_thingy):
+                                amount = 1
+                            else:
+                                amount = list_thingy[ind]
                         else:
                             amount = 1
                         if pryl not in self.prylar:
@@ -163,11 +171,15 @@ class Paketob:
                     self.prylar[pryl]["amount"] = int(self.antal_av_pryl[ind])
                 else:
                     self.prylar[pryl]["amount"] = 1
-
+        else:
+            if self.paket_prylar is not None:
+                for pryl in self.paket_prylar:
+                    self.prylar.update({pryl: copy.deepcopy(prylar[pryl])})
+                    self.prylar[pryl]["amount"] = 1
 
         # Set total price of prylar in paket
         for pryl in self.prylar:
-            self.pris += self.prylar[pryl]["pris"] * self.prylar[pryl]["amount"]
+            self.pris += self.prylar[pryl]["pris"] * int(self.prylar[pryl]["amount"])
 
     def dict_make(self):
         temp_dict = vars(self)
@@ -175,7 +187,7 @@ class Paketob:
         out_dict[temp_dict["id"]].pop("paket_prylar", None)
         bok = {}
         if out_dict[temp_dict["id"]]["paket_i_pryl_paket"] is not None:
-
+            
             for dubbelPaket in out_dict[temp_dict["id"]
                                         ]["paket_i_pryl_paket"][0]:
                 bok.update({
@@ -254,7 +266,7 @@ class Gig:
         self.tid_to_adress = self.i_data.get("tid_to_adress", None)
         self.gmaps = googlemaps.Client(key=os.environ["maps_api"])
         self.url = None
-        self.dagar_list = None
+        self.dagar_list: list[tuple[datetime.datetime, datetime.datetime]] = []
         self.extra_gig_tid = None
         self.ob_mult = None
         self.personal_kostnad_gammal = None
@@ -330,11 +342,15 @@ class Gig:
 
         #if self.update:
         #    self.name = prev_out[self.g_data("uppdateraProjekt")[0]].get('Gig namn', self.make_name())
-
-        self.svanis = self.i_data.get('svanis', False)
-
         self.extra_prylar = self.i_data.get('extraPrylar', [])
         self.prylpaket = self.i_data.get('prylPaket', [])
+
+        self.svanis = self.i_data.get('svanis', False)
+        for paket in self.prylpaket:
+            if paketen[paket]['svanis']:
+                self.svanis = True
+                break
+
         # Take all prylar and put them inside a list
         if self.extra_prylar != []:
             self.check_prylar()
@@ -363,6 +379,8 @@ class Gig:
         box_check()
 
         self.output()
+
+        self.frilans_to_airtable()
 
         self.url_make()
 
@@ -396,9 +414,9 @@ class Gig:
 
     def make_name(self):
         if self.start_date != self.end_date:
-            name = self.start_date.strftime("%d/%m") + " ➜ " + self.end_date.strftime("%d/%m")
+            name = self.start_date.strftime("%-y%d%m") + " ➜ " + self.end_date.strftime("%d%m")
         else:
-            name = self.start_date.strftime("%d/%m")
+            name = self.start_date.strftime("%-y%d%m")
         if self.kund is not None:
             name += " | " + kund_table.get(self.kund[0])["fields"]["Kund"]
         if self.slutkund is not None:
@@ -523,7 +541,8 @@ class Gig:
 
             # If svanis, mult by svanis multi
             if self.svanis:
-                mod_pryl *= config["svanisMulti"]
+                mod_pryl = int(float(mod_pryl) * config["svanisMulti"])
+                
 
             self.gig_prylar[pryl]["dagarMod"] = self.dagar(config, mod_pryl)
 
@@ -595,7 +614,7 @@ class Gig:
         )
 
         hours_list = []
-        self.dagar_list = []
+        
 
         if self.i_data["tid för gig"] is not None:
             try:
@@ -611,119 +630,93 @@ class Gig:
                 self.dagar_list.append([])
                 j = 0
                 next_change = False
-                for temp in tid.split("-"):
-                    if ":" in temp:
-                        temp = temp.split(":")
-                    else:
-                        temp = [temp, 0]
-                    date = self.start_date.replace(
-                        day=int(self.start_date.day),
-                        hour=int(temp[0]),
-                        minute=int(temp[1])
-                    ) + datetime.timedelta(days=i)
-
-
-                    if j % 2 == 0 and j != 0 or next_change:
-                        if date + datetime.timedelta(
-                            hours=1
-                        ) <= self.dagar_list[-1][-1] or next_change:
-                            if next_change:
-                                self.dagar_list[-1].append(date)
-                            else:
-                                del self.dagar_list[-1][-1]
-                                next_change = True
-                        else:
-                            if not next_change:
-                                self.dagar_list.append([])
-                    if not next_change:
-                        self.dagar_list[-1].append(date)
-                        if (j+1) % 2 == 0:
-                            hours_list.append(
-                                math.ceil((
-                                    self.dagar_list[-1][1] -
-                                    self.dagar_list[-1][0]
-                                ).seconds / 60 / 60)
-                            )
-                    else:
-                        next_change = False
-                    j += 1
-                i += 1
+                tup: tuple[str, str] = tuple(tid.split("-"))
+                start: tuple[int, int]
+                end: tuple[int, int] 
+                start, end = map(lambda x: tuple(map(int, x.split(":"))) if ":" in x else tuple(map(int, [x, "0"])), tup)
+                
+                self.dagar_list.append((self.start_date.replace(hour=start[0], minute=start[1]), self.start_date.replace(hour=end[0], minute=end[1])))
+                
             print(hours_list)
         else:
             if self.i_data["dagar"] != 1:
                 for i in range(self.i_data["dagar"] - 1):
                     hours_list.append(hours_list[0])
 
-        new_timezone = pytz.timezone("UTC")
-        old_timezone = pytz.timezone("Europe/Stockholm")
-        temp_dagar_list = []
-        print(self.dagar_list)
+        # new_timezone = pytz.timezone("UTC")
+        # old_timezone = pytz.timezone("Europe/Stockholm")
+        # temp_dagar_list = []
+        # print(self.dagar_list)
+        
+        # for getin, getout in self.dagar_list:
+        #     localized_timestamp = old_timezone.localize(getin)
+        #     getin = localized_timestamp.astimezone(new_timezone)
+        #     localized_timestamp = old_timezone.localize(getout)
+        #     getout = localized_timestamp.astimezone(new_timezone)
+        #     temp_dagar_list.append([getin, getout])
 
-        for getin, getout in self.dagar_list:
-            localized_timestamp = old_timezone.localize(getin)
-            getin = localized_timestamp.astimezone(new_timezone)
-            localized_timestamp = old_timezone.localize(getout)
-            getout = localized_timestamp.astimezone(new_timezone)
-            temp_dagar_list.append([getin, getout])
-
-        self.dagar_list = temp_dagar_list
+        # self.dagar_list = temp_dagar_list
         self.ob_dict = {"0": [], "1": [], "2": [], "3": [], "4": []}
         skärtorsdagen = None
         for date, holiday in holidays.SWE(False, years=self.end_date.year).items():
             if holiday == "Långfredagen":
                 skärtorsdagen = date - datetime.timedelta(days=1)
                 break
-        for hour in hours_list:
-            # Räkna ut ob och lägg i en dict
-            for i in range(hour):
-                pre_tz_temp_date = self.start_date + datetime.timedelta(hours=i)
-                old_timezone = pytz.timezone("UTC")
-                new_timezone = pytz.timezone("Europe/Stockholm")
-                localized_timestamp = old_timezone.localize(pre_tz_temp_date)
-                temp_date = localized_timestamp.astimezone(new_timezone)
-                if temp_date in holidays.SWE(False, years=temp_date.year):
-                    if (
-                        holidays.SWE(False, years=temp_date.year)[temp_date]
-                        in [
-                            "Trettondedag jul",
-                            "Kristi himmelsfärdsdag",
-                            "Alla helgons dag",
-                        ] and temp_date.hour >= 7
-                    ):
-                        self.ob_dict["3"].append(temp_date.timestamp())
+        for begin, stop in self.dagar_list:
+            for hour in range(stop.hour - begin.hour):
+                # Räkna ut ob och lägg i en dict
+                for i in range(hour):
+                    temp_date = begin + datetime.timedelta(hours=i)
+                    # old_timezone = pytz.timezone("UTC")
+                    # new_timezone = pytz.timezone("Europe/Stockholm")
+                    # localized_timestamp = old_timezone.localize(pre_tz_temp_date)
+                    # temp_date = localized_timestamp.astimezone(new_timezone)
+                    if temp_date in holidays.SWE(False, years=temp_date.year):
+                        if (
+                            holidays.SWE(False, years=temp_date.year)[temp_date]
+                            in [
+                                "Trettondedag jul",
+                                "Kristi himmelsfärdsdag",
+                                "Alla helgons dag",
+                            ] and temp_date.hour >= 7
+                        ):
+                            self.ob_dict["3"].append(temp_date.timestamp())
+                        elif (
+                            holidays.SWE(False, years=temp_date.year)[temp_date]
+                            in ["Nyårsafton"] and temp_date.hour >= 18
+                            or holidays.SWE(False,
+                                            years=temp_date.year)[temp_date] in [
+                                                "Pingstdagen",
+                                                "Sveriges nationaldag",
+                                                "Midsommarafton",
+                                                "Julafton",
+                                            ] and temp_date.hour >= 7
+                        ):
+                            self.ob_dict["4"].append(temp_date.timestamp())
+                        else:
+                            self.ob_dict["0"].append(temp_date.timestamp())
                     elif (
-                        holidays.SWE(False, years=temp_date.year)[temp_date]
-                        in ["Nyårsafton"] and temp_date.hour >= 18
-                        or holidays.SWE(False,
-                                        years=temp_date.year)[temp_date] in [
-                                            "Pingstdagen",
-                                            "Sveriges nationaldag",
-                                            "Midsommarafton",
-                                            "Julafton",
-                                        ] and temp_date.hour >= 7
+                        str(temp_date).split(" ")[0] == str(skärtorsdagen)
+                        and temp_date.hour >= 18
                     ):
                         self.ob_dict["4"].append(temp_date.timestamp())
+                    elif temp_date.isoweekday() < 6:
+                        if temp_date.hour > 18:
+                            self.ob_dict["1"].append(temp_date.timestamp())
+                        elif temp_date.hour <= 7:
+                            self.ob_dict["2"].append(temp_date.timestamp())
+                        else:
+                            self.ob_dict["0"].append(temp_date.timestamp())
+                    elif temp_date.isoweekday() == 6 or temp_date.isoweekday() == 7:
+                        self.ob_dict["3"].append(temp_date.timestamp())
                     else:
                         self.ob_dict["0"].append(temp_date.timestamp())
-                elif (
-                    str(temp_date).split(" ")[0] == str(skärtorsdagen)
-                    and temp_date.hour >= 18
-                ):
-                    self.ob_dict["4"].append(temp_date.timestamp())
-                elif 1 > temp_date.isoweekday() > 5:
-                    if temp_date.hour >= 18:
-                        self.ob_dict["1"].append(temp_date.timestamp())
-                    elif temp_date.hour <= 7:
-                        self.ob_dict["2"].append(temp_date.timestamp())
-                    else:
-                        self.ob_dict["0"].append(temp_date.timestamp())
-                elif temp_date.isoweekday() == 6 or temp_date.isoweekday(
-                ) == 7:
-                    self.ob_dict["3"].append(temp_date.timestamp())
-                else:
-                    self.ob_dict["0"].append(temp_date.timestamp())
-            self.start_date += datetime.timedelta(days=1)
+                self.start_date += datetime.timedelta(days=1)
 
+        self.ob_text = ""
+        for key, value in self.ob_dict.items():
+            if len(value) > 0 and key != "0":
+                self.ob_text += f"OB {key}: {datetime.date.fromtimestamp(value[0]).isoformat()} - {datetime.date.fromtimestamp(value[-1]).isoformat()} ({len(value)}h)\n"
         avg = sum(hours_list) / len(hours_list)
 
         print(sum(hours_list), avg)
@@ -732,16 +725,16 @@ class Gig:
         self.ob_mult = 0
         self.ob_mult += len(self.ob_dict["0"]) * config["levandeVideoLön"]
         self.ob_mult += len(self.ob_dict["1"]) * (
-            config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 600
+            config["levandeVideoLön"] + (config["levandeVideoLön"] * 168 / 600)
         )
         self.ob_mult += len(self.ob_dict["2"]) * (
-            config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 400
+            config["levandeVideoLön"] + (config["levandeVideoLön"] * 168 / 400)
         )
         self.ob_mult += len(self.ob_dict["3"]) * (
-            config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 300
+            config["levandeVideoLön"] + (config["levandeVideoLön"] * 168 / 300)
         )
         self.ob_mult += len(self.ob_dict["4"]) * (
-            config["levandeVideoLön"] + config["levandeVideoLön"] * 168 / 150
+            config["levandeVideoLön"] + (config["levandeVideoLön"] * 168 / 150)
         )
         self.ob_mult /= self.dag_längd * len(hours_list)
 
@@ -817,9 +810,12 @@ class Gig:
         total_tid = (self.gig_timmar + self.rigg_timmar + self.projekt_timmar + self.restid) if total_personal > 0 else 0
 
         self.folk = Folk(self.lön_kostnad, self.timpris, config['hyrMulti'])
-        self.frilans_kostnad, self.total_tim_frilans, self.antal_frilans = self.folk.total_cost(
+        self.frilans_kostnad, self.total_tim_frilans, self.antal_frilans, self.frilans_personal_dict = self.folk.total_cost(
             self.person_list, self.tim_dict, False
         )
+
+
+
 
         self.levande_video_kostnad = self.lön_kostnad * total_tid * ((total_personal - self.antal_frilans) / total_personal) if total_personal > 0 else 0
 
@@ -1055,6 +1051,7 @@ class Gig:
             'slutkund_temp': self.slutkund,
             'role_format': self.make_format_for_roles(),
             'extra namn': self.extra_name,
+            "OB": self.ob_text,
 
             #"typ person lista": [x for x in self.person_list]
             #"Mer folk": list(map(itemgetter("id"), self.specifik_personal))
@@ -1355,6 +1352,22 @@ class Gig:
             self.old_output[self.air_out['id']][
                 "tidrapport"] = tid_out
 
+    def frilans_to_airtable(self):
+        frilans_calcs = Table(api_key, base_id, "Frilansuträkningar")
+        for record in frilans_calcs.all():
+            if record["fields"].get("Leveransen") == [self.airtable_record]:
+                if record['fields'].get('Riktig kostnad') is not None:
+                    continue
+                elif record['fields'].get('frilans') in self.frilans_personal_dict.keys():
+                    frilans_calcs.update(record['id'], fields={'Gissad kostnad': self.frilans_personal_dict[record['fields'].get('frilans')]})
+                    self.frilans_personal_dict.pop(record['fields'].get('frilans'), None)
+                else:
+                    frilans_calcs.delete(record['id'])
+        for frilans_id, cost in self.frilans_personal_dict.items():
+            frilans_calcs.create({'frilans': [frilans_id], 'Gissad kostnad': cost, 'Leveransen': [self.airtable_record]})
+
+
+
     def output_to_json(self):
         with open("output.json", "w", encoding="utf-8") as f:
             json.dump(self.old_output, f, ensure_ascii=False, indent=2)
@@ -1463,7 +1476,7 @@ def get_prylar():
     pryl_dict = {}
     for prylNamn in prylarna:
         pryl = Prylob(
-            in_pris=prylarna[prylNamn]["pris"],
+            in_pris=prylarna[prylNamn].get("pris", 0),
             id=prylNamn,
             livs_längd=int(prylarna[prylNamn]["livsLängd"]["name"]),
         )
@@ -1507,11 +1520,15 @@ def get_prylar():
 
     prylar_table = Table(api_key, base_id, "Prylar")
     paket_table = Table(api_key, base_id, "Prylpaket")
+
+
     for record in prylar_table.all():
         pryl_dict[record["id"]].update({"id": record["id"]})
     for record in paket_table.all():
         if record['id'] in paket_dict.keys():
+            paket_table.update(record['id'], {'Uträknat pris': paket_dict[record["id"]]['pris']})
             paket_dict[record["id"]].update({"id": record["id"]})
+
         else:
             paket_dict[record["id"]] = {"id": record["id"]}
 
