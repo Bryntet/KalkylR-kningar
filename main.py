@@ -18,6 +18,7 @@ from pyairtable import Table, Base
 from auth_middleware import token_required
 from operator import itemgetter
 from folk import Folk
+from calendar_update import delete_event as cal_del
 # import google_drive_handler
 
 class Bcolors:
@@ -80,8 +81,8 @@ class Prylob:
             self.__dict__.update({argName: value})
 
         self.amount = 1
-        self.mult = 205 # 100 + 35 * 3
-        self.mult -= self.livs_längd * 35
+        self.mult = 100 + (self.ll_steg * 3)
+        self.mult -= self.livs_längd * self.ll_steg
         self.mult /= 100
 
     def rounding(self, config):
@@ -94,7 +95,7 @@ class Prylob:
     def dict_make(self):
         temp_dict = vars(self)
         # TODO make this call for all once to dict and then get dict instead of this bullshit.
-        temp_dict.update({'name': pryl_table.get(self.id)['fields']['Pryl Namn']})
+        temp_dict.update({'name': self.id})
         out_dict = {temp_dict["id"]: temp_dict}
         #out_dict[temp_dict["id"]].pop("name", None)
         return out_dict
@@ -133,18 +134,19 @@ class Paketob:
                     paket_from_air = Table(api_key, base_id, "Prylpaket").get(paket['id'])
                     temp_prylar = {}
                     if paket_from_air['fields'].get('paket_prylar') is not None:
-                        
+
                         for pryl_id in paket_from_air['fields']['paket_prylar']:
                             obj = Prylob(
                                 in_pris=prylar[pryl_id]["pris"],
                                 id=pryl_id,
                                 livs_längd=int(prylar[pryl_id]["livs_längd"]),
+                                ll_steg=config['livsLängdSteg']
                             )
                             obj.rounding(config)
                             temp_prylar[pryl_id] = obj.dict_make()[pryl_id]
 
                     list_thingy = paket_from_air['fields'].get('antal_av_pryl', "").split(',')
-                    
+
                     for ind, pryl in enumerate(temp_prylar):
 
 
@@ -187,7 +189,7 @@ class Paketob:
         out_dict[temp_dict["id"]].pop("paket_prylar", None)
         bok = {}
         if out_dict[temp_dict["id"]]["paket_i_pryl_paket"] is not None:
-            
+
             for dubbelPaket in out_dict[temp_dict["id"]
                                         ]["paket_i_pryl_paket"][0]:
                 bok.update({
@@ -264,6 +266,8 @@ class Gig:
         self.adress_update = False
         self.tid_to_adress_car = None
         self.tid_to_adress = self.i_data.get("tid_to_adress", None)
+        if self.tid_to_adress is not None:
+            self.tid_to_adress = self.tid_to_adress[0]
         self.gmaps = googlemaps.Client(key=os.environ["maps_api"])
         self.url = None
         self.dagar_list: list[tuple[datetime.datetime, datetime.datetime]] = []
@@ -380,7 +384,7 @@ class Gig:
 
         self.output()
 
-        self.frilans_to_airtable()
+        #self.frilans_to_airtable()
 
         self.url_make()
 
@@ -414,9 +418,9 @@ class Gig:
 
     def make_name(self):
         if self.start_date != self.end_date:
-            name = self.start_date.strftime("%-y%d%m") + " ➜ " + self.end_date.strftime("%d%m")
+            name = self.start_date.strftime("%-y%m%d") + " ➜ " + self.end_date.strftime("%d%m")
         else:
-            name = self.start_date.strftime("%-y%d%m")
+            name = self.start_date.strftime("%-y%m%d")
         if self.kund is not None:
             name += " | " + kund_table.get(self.kund[0])["fields"]["Kund"]
         if self.slutkund is not None:
@@ -542,7 +546,7 @@ class Gig:
             # If svanis, mult by svanis multi
             if self.svanis:
                 mod_pryl = int(float(mod_pryl) * config["svanisMulti"])
-                
+
 
             self.gig_prylar[pryl]["dagarMod"] = self.dagar(config, mod_pryl)
 
@@ -614,7 +618,7 @@ class Gig:
         )
 
         hours_total = 0
-        
+
 
         if self.i_data["tid för gig"] is not None:
             try:
@@ -625,16 +629,26 @@ class Gig:
                     self.extra_gig_tid.append(self.i_data["tid för gig"])
             while len(self.extra_gig_tid) < self.i_data["dagar"]:
                 self.extra_gig_tid.append(self.extra_gig_tid[0])
-            for tid in self.extra_gig_tid:
+            for idx, tid in enumerate(self.extra_gig_tid):
                 tup: tuple[str, str] = tuple(tid.split("-"))
                 start: tuple[int, int]
-                end: tuple[int, int] 
+                end: tuple[int, int]
                 start, end = map(lambda x: tuple(map(int, x.split(":"))) if ":" in x else tuple(map(int, [x, "0"])), tup)
-                
-                self.dagar_list.append((self.start_date.replace(hour=start[0], minute=start[1]), self.start_date.replace(hour=end[0], minute=end[1])))
+                cest = pytz.timezone("Europe/Stockholm")
+                self.dagar_list.append((
+                    cest.localize(
+                        self.start_date.
+                        replace(hour=start[0], minute=start[1]) +
+                        datetime.timedelta(days=idx)
+                    ),
+                    cest.localize(
+                        self.start_date.replace(hour=end[0], minute=end[1]) +
+                        datetime.timedelta(days=idx)
+                    )
+                ))
                 hours_total += self.dagar_list[-1][1].hour - self.dagar_list[-1][0].hour
-            
-        
+
+
 
         self.ob_dict = {"0": [], "1": [], "2": [], "3": [], "4": []}
 
@@ -646,9 +660,9 @@ class Gig:
         for begin, stop in self.dagar_list:
             for hour in range(stop.hour - begin.hour):
                 # Räkna ut ob och lägg i en dict
-            
+
                 temp_date = begin + datetime.timedelta(hours=hour)
-                
+
                 if temp_date in holidays.SWE(False, years=temp_date.year):
                     if (
                         holidays.SWE(False, years=temp_date.year)[temp_date]
@@ -692,7 +706,7 @@ class Gig:
             self.start_date += datetime.timedelta(days=1)
 
         self.ob_text = ""
-        
+
         for key, value in self.ob_dict.items():
             if len(value) > 0 and key != "0":
                 self.ob_text += f"OB {key}: {value[0].isoformat()} - {(value[-1] + datetime.timedelta(hours=1)).isoformat()} ({len(value)}h)\n"
@@ -753,21 +767,21 @@ class Gig:
             self.projekt_timmar = math.ceil(
                 (self.gig_timmar + self.rigg_timmar) * config["projektTid"]
             ) + self.projekt_timmar_add
-        else:
-            if self.tid_to_adress:
-                if self.tid_to_adress_car:
-                    self.restid = (
-                        total_personal * self.i_data["dagar"] *
-                        self.tid_to_adress_car / 60 / 60
-                    )
-                else:
-                    self.restid = (
-                        total_personal * self.i_data["dagar"] *
-                        self.tid_to_adress / 60 / 60
-                    )
+
+        if self.tid_to_adress:
+            if self.tid_to_adress_car is not None:
+                self.restid = (
+                    total_personal * self.i_data["dagar"] *
+                    self.tid_to_adress_car / 60 / 60
+                )
             else:
-                self.restid = total_personal * self.i_data["dagar"] * config[
-                    "restid"]
+                self.restid = (
+                    total_personal * self.i_data["dagar"] *
+                    self.tid_to_adress / 60 / 60
+                )
+        else:
+            self.restid = total_personal * self.i_data["dagar"] * config[
+                "restid"]
 
         if self.svanis:
             self.restid = 0
@@ -975,11 +989,11 @@ class Gig:
         self.proj_typ = self.g_data('proj_typ', {'name': None})
         self.bestallare = self.g_data('Beställare')
 
-        self.existerande_adress: bool = self.g_data('existerande_adress', False)
+        self.existerande_adress: bool = self.i_data.get('existerande_adress', False)
         if not self.existerande_adress:
-            self.adress = self.g_data('Adress')
+            self.adress: str  = self.i_data.get('Adress')
         else:
-            self.adress = self.g_data('existerande_adress')
+            self.adress: str  = self.i_data.get('existerande_adress')
 
         print(self.kund, self.bestallare)
         self.projekt_typ = self.i_data.get("Projekt typ", 'live')
@@ -1014,13 +1028,16 @@ class Gig:
             "frilanstimmar": self.tim_budget_frilans,
             "total_tid_ex_frilans": self.tim_budget_personal,
             "frilans": self.frilans_lista,
-            "ny proj ledare från uppdatera": [x for x in self.i_data.get("projektledare")], # Så jag kan göra lite logik
+            "ny proj ledare från uppdatera": [
+                x for x in self.i_data.get("projektledare")
+            ],  # Så jag kan göra lite logik
             "producent": [x for x in self.i_data.get("producent")],
             "leverans_nummer": leverans_nummer,
             "Kund": self.kund,
             "Svanis": self.svanis,
             "Typ": self.projekt_typ,
-            "Adress": self.adress if self.adress is not None else self.existerande_adress,
+            "Adress": self.adress
+            if self.adress is not None else self.existerande_adress,
             "Beställare": self.bestallare,
             "input_id": self.i_data.get("input_id"),
             "made_by": [self.i_data.get("input_id")],
@@ -1030,6 +1047,7 @@ class Gig:
             'role_format': self.make_format_for_roles(),
             'extra namn': self.extra_name,
             "OB": self.ob_text,
+            "Kommentar från formulär": self.comment,
 
             #"typ person lista": [x for x in self.person_list]
             #"Mer folk": list(map(itemgetter("id"), self.specifik_personal))
@@ -1115,10 +1133,10 @@ class Gig:
                         "id": record_ids[i],
                         "fields": kalender_dict
                     })
-                    projektkalender_records[0]['fields']["Egna anteckningar"] = self.comment
+                    #projektkalender_records[0]['fields']["Egna anteckningar"] = self.comment
                 else:
                     projektkalender_records.append(kalender_dict)
-                    projektkalender_records[0]['Egna anteckningar'] = self.comment
+                    #projektkalender_records[0]['Egna anteckningar'] = self.comment
                 i += 1
         else:
             raise ValueError("dagar_list empty")
@@ -1126,6 +1144,8 @@ class Gig:
         if self.update:
             if len(projektkalender_records) != len(record_ids):
                 self.kalender_table.batch_delete(record_ids)
+                for record_id in record_ids:
+                    cal_del(record_id)
                 self.kalender_table.batch_create(projektkalender_records)
             else:
                 self.kalender_table.batch_update(projektkalender_records)
@@ -1163,7 +1183,7 @@ class Gig:
             "prefill_Kund": ",".join(self.kund)
             if type(self.kund) is list else None,
             "prefill_Frilans": self.i_data.get("Frilans"),
-            "prefill_Adress": self.adress,
+            "prefill_existerande_adress": self.adress,
             "prefill_gigNamn": self.name,
             "prefill_Beställare": ",".join(self.bestallare)
             if type(self.bestallare) is list else None,
@@ -1173,9 +1193,11 @@ class Gig:
             "prefill_Anteckning": self.comment,
             "prefill_projekt_timmar": self.projekt_timmar_add
         }
-
+        if len(self.person_field_list) > 0:
+            params.update({"prefill_boka personal": True})
         for work_area in self.person_field_list:
             if work_area in self.person_dict_grouped.keys():
+                
                 params.update({f"prefill_{work_area}": ",".join(self.person_dict_grouped[work_area])})
 
         update_params = copy.deepcopy(params)
@@ -1457,10 +1479,12 @@ def get_prylar():
             in_pris=prylarna[prylNamn].get("pris", 0),
             id=prylNamn,
             livs_längd=int(prylarna[prylNamn]["livsLängd"]["name"]),
+            ll_steg=config['livsLängdSteg'],
         )
         pryl.rounding(config)
         pryl_dict.update(pryl.dict_make())
-
+    for pryl_namn, pryl in pryl_dict.items():
+        pryl_table.update(pryl_namn, {"Uträknat Pris": pryl["pris"]})
     paketen = request.json["Prylpaket"]
     paket_dict = {}
     last_list = []

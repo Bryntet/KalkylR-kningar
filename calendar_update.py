@@ -15,6 +15,14 @@ def phone_number(nrs: str) -> str:
     return f'{nrs[:3]} {nrs[3:6]} {nrs[6:8]} {nrs[8:10]}'
 
 
+def delete_event(record_id):
+    if os.path.exists('projektkalender.json'):
+        with open("projektkalender.json", "r", encoding="utf-8") as f:
+            kalender = json.load(f)
+        gc = GoogleCalendar(gcal_id, credentials_path='credentials.json')
+        gc.delete_event(kalender[record_id]['post'])
+        
+
 def main():
     api_key = os.environ["api_key"]
     base_id = os.environ["base_id"]
@@ -252,7 +260,7 @@ def main():
         json.dump(kalender, f, ensure_ascii=False, indent=2)
 
 
-while True:
+while __name__ == "__main__":
     main()
     print("Sleeping for 5 minutes")
     time.sleep(300)
