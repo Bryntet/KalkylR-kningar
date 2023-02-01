@@ -94,8 +94,11 @@ class Prylob:
 
     def dict_make(self):
         temp_dict = vars(self)
+        
         # TODO make this call for all once to dict and then get dict instead of this bullshit.
+        temp_dict.update({'name_packlista': pryl_table.get(self.id)["fields"]['Pryl Namn']})
         temp_dict.update({'name': self.id})
+        
         out_dict = {temp_dict["id"]: temp_dict}
         #out_dict[temp_dict["id"]].pop("name", None)
         return out_dict
@@ -930,9 +933,9 @@ class Gig:
                 key=lambda item: -1 * item[1]["amount"]
             )
         )
-        packlista = "## Packlista:\n\n"
+        packlista = "## Prylar:\n\n"
         for pryl in self.gig_prylar:
-            packlista += f"### {self.gig_prylar[pryl]['amount']}st {self.gig_prylar[pryl]['name']}\n\n"
+            packlista += f"### {self.gig_prylar[pryl]['amount']}st {self.gig_prylar[pryl]['name_packlista']}\n\n"
             print(
                 f"\t{self.gig_prylar[pryl]['amount']}st {pryl} - {self.gig_prylar[pryl]['mod']} kr ",
                 f"- {self.gig_prylar[pryl]['dagarMod']} kr pga {self.i_data['dagar']} dagar",
