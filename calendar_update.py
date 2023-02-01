@@ -255,7 +255,18 @@ def main():
         else:
             kalender[event['id']] = {'pre': temp_thing, 'post': gc.add_event(my_event).id}
         print(my_event)
-
+    keys_to_del = []
+    all_ids = [record["id"] for record in projektkalender.all()]
+    for key in kalender.keys():
+        if key not in all_ids:
+            try:            
+                gc.delete_event(kalender[key]['post'])
+            except:
+                pass
+            keys_to_del.append(key)
+            print("deleted:", key)
+    for key in keys_to_del:
+        del kalender[key]
     with open("projektkalender.json", "w", encoding="utf-8") as f:
         json.dump(kalender, f, ensure_ascii=False, indent=2)
 
