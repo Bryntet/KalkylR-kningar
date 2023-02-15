@@ -115,8 +115,8 @@ class Folk():
         with open("folk.json", "r") as f:
             json_data = json.load(f)
             self.folk_dictionary = {
-                x: Person(json_data[x], lön, timpris, hyr_multi)
-                for x in json_data
+                key: Person(val, lön, timpris, hyr_multi)
+                for key, val in json_data.items()
             }
 
     def get_person(self, id: str) -> Person:

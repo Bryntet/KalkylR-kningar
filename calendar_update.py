@@ -6,10 +6,12 @@ import time
 import smtplib
 import re
 from gcsa.google_calendar import GoogleCalendar
+import gcsa
 from gcsa.event import Event
 from email.message import EmailMessage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
 
 def phone_number(nrs: str) -> str:
     return f'{nrs[:3]} {nrs[3:6]} {nrs[6:8]} {nrs[8:10]}'
@@ -21,7 +23,7 @@ def delete_event(record_id):
             kalender = json.load(f)
         gc = GoogleCalendar(gcal_id, credentials_path='credentials.json')
         gc.delete_event(kalender[record_id]['post'])
-        
+
 
 def main():
     api_key = os.environ["api_key"]
@@ -76,7 +78,7 @@ def main():
         if 'telefon nr' in person_record['fields'].keys():
             nrs = person_record['fields']['telefon nr']
             phone_numbers[person_record['id']] = phone_number(nrs)
-    lv_emails = [epost for epost in emails.values() if '@levandevideo.se' in epost]
+    lv_emails = [epost[0] for epost in emails.values() if '@levandevideo.se' in epost[0] or epost[0] == "grammatokivotio.agios.vasilis@gmail.com"]
 
 
     for adress in adresser.all():
@@ -93,7 +95,7 @@ def main():
             fields['Alla personal'] = []
         if 'Producent' in fields.keys():
             fields['Alla personal'].extend(fields['Producent'])
-        invite_list = [email for person in fields['Alla personal'] if person in emails.keys() for email in emails[person]]
+        invite_list = [email for person in fields['Alla personal'] if person in emails.keys() for email in emails[person] if email in lv_emails]
         if 'Datum' not in fields.keys():
             continue
         datum = datetime.datetime.fromisoformat(fields['Datum'])
@@ -144,16 +146,16 @@ def main():
             if field in leverans_thing['fields'].keys():
                 if field == 'producent':
                     description += "Producent: \n{}".format(
-                        "\n".join([((namn[x] + " - " + phone_numbers[x]) if x in phone_numbers.keys() else namn[x]) + '\n' for x in leverans_thing['fields'][field]])
+                        "\n".join([((namn[x] + " - " + phone_numbers[x]) if x in phone_numbers.keys() else namn[x]) for x in leverans_thing['fields'][field]])
                     )
                 else:
                     description += "{}: \n{}".format(
                         field,
-                        "\n".join([((namn[x] + " - " + phone_numbers[x]) if x in phone_numbers.keys() else namn[x]) + '\n' for x in leverans_thing['fields'][field]])
+                        "\n".join([((namn[x] + " - " + phone_numbers[x]) if x in phone_numbers.keys() else namn[x]) for x in leverans_thing['fields'][field]])
                     )
-                description += '\n'
+                description += '\n\n'
 
-        description += "\n"
+        #description += "\n"
         paketen = fields.get('Paket', [])
         antal_paket = fields.get("antal paket", [""])[0].split(",")
         prylar = fields.get('Prylar', [])
@@ -186,7 +188,7 @@ def main():
             #    paketen_string += "Prylar: \n"
             for idx, pryl in enumerate(prylar):
                 if idx < len(antal_prylar): #and not prylar_dict[pryl].get('hide from calendar', False):
-                    org_pryl = prylar_dict[pryl]['name']
+                    org_pryl = prylar_dict[pryl]['name_packlista']
                     regex_thing = re.search(r"([^[]*),? ?( [.*]?)*", org_pryl)
                     if regex_thing:
                         pryl_namn = regex_thing.group(1)
@@ -204,12 +206,12 @@ def main():
 
 
 
-        if 'Beställare' in leverans_thing['fields']:
-            bestallare_record = bestallare.get(leverans_thing['fields']['Beställare'][0])['fields']
+        if 'Beställare from projekt' in leverans_thing['fields']:
+            bestallare_record = bestallare.get(leverans_thing['fields']['Beställare from projekt'][0])['fields']
             description += 'Beställare: {}'.format(bestallare_record['Namn'])
             if 'Phone' in bestallare_record.keys():
                 description += ' - {}'.format(phone_number(bestallare_record['Phone']))
-            description += '\n'
+            description += '\n\n'
         if program_start is not None:
             description += 'Körtider: {}-{}\n'.format(program_start.strftime("%H:%M"), program_slut.strftime("%H:%M"))
 
@@ -217,11 +219,14 @@ def main():
             description += 'Körschema: {}\n\n'.format(fields['köris'])
         if 'Kommentar till frilans' in leverans_thing['fields']:
             description += leverans_thing['fields']['Kommentar till frilans']
+
+
         if paketen_string != "":
             description += "\n" + paketen_string
 
-        description += """\n\nFör mer information gällande framtida bokningar så kan du kolla här: https://airtable.com/invite/l?inviteId=invJnNIcV8mTqcKR9&inviteToken=92b5c354ee319e7b9b30a85c2d89dd32ec269cb38a4631f51c83befb0b290c87&utm_medium=email&utm_source=product_team&utm_content=transactional-alerts"""
+        description += """\nFör mer information gällande framtida bokningar så kan du kolla här: https://airtable.com/invite/l?inviteId=invJnNIcV8mTqcKR9&inviteToken=92b5c354ee319e7b9b30a85c2d89dd32ec269cb38a4631f51c83befb0b290c87&utm_medium=email&utm_source=product_team&utm_content=transactional-alerts"""
 
+        projektkalender.update(event['id'], {"Calendar description": description})
 
         if 'Status' not in fields:
             continue
@@ -242,8 +247,10 @@ def main():
             location=adresser_dict[fields['Adress'][0]] if 'Adress' in fields.keys() else '',
             attendees=invite_list,
             status=status,
-            description=description
+            description=description,
+            #send_updates="all"
         )
+        
         if event['id'] in kalender.keys():
             temp = kalender[event['id']]['pre']
             temp_event = Event(temp[0], datetime.datetime.fromisoformat(temp[1]), datetime.datetime.fromisoformat(temp[2]), location=temp[3],attendees=temp[4],status=temp[5], description=temp[6] if len(temp) > 6 else '')
@@ -259,7 +266,7 @@ def main():
     all_ids = [record["id"] for record in projektkalender.all()]
     for key in kalender.keys():
         if key not in all_ids:
-            try:            
+            try:
                 gc.delete_event(kalender[key]['post'])
             except:
                 pass
@@ -273,5 +280,5 @@ def main():
 
 while __name__ == "__main__":
     main()
-    print("Sleeping for 5 minutes")
-    time.sleep(300)
+    print("Sleeping for 10 minutes")
+    time.sleep(600)
