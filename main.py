@@ -46,6 +46,8 @@ kund_table = Table(api_key, base_id, "Kund")
 pryl_table = Table(api_key, base_id, "Prylar")
 projekt_table = Table(api_key, base_id, "Projekt")
 slutkund_table = Table(api_key, base_id, "Slutkund")
+bestallare_table = Table(api_key, base_id, "Beställare")
+
 beforeTime = time.time()
 output_tables = []
 SECRET_KEY = os.environ.get('my_secret')
@@ -250,9 +252,9 @@ class Gig:
             self.slutkund = slutkund_table.create({"Name": self.i_data.get("Ny slutkund")})['id']
         elif not self.slutkund:
             self.slutkund = None
-        self.kund = self.i_data.get("Kund", self.i_data.get("Ny Kund"))
+        self.kund = self.i_data.get("Kund", self.i_data.get("ny_kund", self.i_data.get("Koppla till kund")))
 
-        self.extra_name = self.i_data.get("extra_name", None)
+        self.extra_name = self.i_data.get("extra_name")
 
         self.start_date = datetime.datetime.fromisoformat(
             self.i_data["Börja datum"].split(".")[0]
@@ -261,6 +263,13 @@ class Gig:
             self.i_data["Sluta datum"].split(".")[0]
         )
 
+        self.bestallare = self.i_data.get('Beställare')
+        
+        if self.bestallare is None:
+            self.bestallare = self.i_data.get("ny_beställare")
+            if self.bestallare is not None:
+                tmp_out = bestallare_table.create({"Jobbar åt": self.kund, "Namn": self.bestallare}, typecast=True)
+                self.kund, self.bestallare = tmp_out['fields']['Jobbar åt'], tmp_out['id']
         self.name = self.make_name()
 
         self.person_field_list = [
@@ -1034,7 +1043,6 @@ class Gig:
         # Move this to top
         self.post_text: bool = self.g_data('post_text', False)
         self.proj_typ = self.g_data('proj_typ', {'name': None})
-        self.bestallare = self.i_data.get('Beställare')
         
 
         print(self.kund, self.bestallare)
@@ -1235,7 +1243,8 @@ class Gig:
             "prefill_Slutkund": ",".join(self.slutkund) if self.slutkund is not None else None,
             "prefill_Projekt typ": self.projekt_typ,
             "prefill_Anteckning": self.comment,
-            "prefill_projekt_timmar": self.projekt_timmar_add
+            "prefill_projekt_timmar": self.projekt_timmar_add,
+            "prefill_extra_name": self.extra_name
         }
         if len(self.person_field_list) > 0:
             params.update({"prefill_boka personal": True})
