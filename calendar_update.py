@@ -11,7 +11,7 @@ from gcsa.event import Event
 from email.message import EmailMessage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
+from gcsa.serializers.event_serializer import EventSerializer
 
 def phone_number(nrs: str) -> str:
     return f'{nrs[:3]} {nrs[3:6]} {nrs[6:8]} {nrs[8:10]}'
@@ -46,7 +46,7 @@ def main():
     adresser = base.get_table("Adressbok")
     leveranser = base.get_table("Leveranser")
     bestallare = base.get_table("Beställare")
-
+    new_thing = {}
 
 
     prylartable = base.get_table('Prylar')
@@ -250,7 +250,7 @@ def main():
             description=description,
             #send_updates="all"
         )
-        
+        new_thing[event['id']] = EventSerializer.to_json(my_event)
         if event['id'] in kalender.keys():
             temp = kalender[event['id']]['pre']
             temp_event = Event(temp[0], datetime.datetime.fromisoformat(temp[1]), datetime.datetime.fromisoformat(temp[2]), location=temp[3],attendees=temp[4],status=temp[5], description=temp[6] if len(temp) > 6 else '')
@@ -276,6 +276,9 @@ def main():
         del kalender[key]
     with open("projektkalender.json", "w", encoding="utf-8") as f:
         json.dump(kalender, f, ensure_ascii=False, indent=2)
+    with open("new_calendar.json", "w", encoding="utf-8") as f:
+        json.dump(new_thing, f, ensure_ascii=False, indent=2)
+        
 
 
 while __name__ == "__main__":
