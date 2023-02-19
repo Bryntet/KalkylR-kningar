@@ -92,6 +92,7 @@ class Prylob:
         self.in_pris = None
         self.livs_längd = 3
         self.pris = None
+
         for argName, value in kwargs.items():
             self.__dict__.update({argName: value})
 
@@ -130,7 +131,7 @@ class Paketob:
         self.paket_i_pryl_paket = self.get_value('paket_i_pryl_paket', saker)
         self.namn3 = saker.get("Paket Namn", "")
         self.svanis = saker.get("Svanis", False)
-
+        self.hyra = saker.get("Hyreskostnad", 0)
         self.pris = 0
         self.prylar = {}
         self.id = self.get_value('id', saker)
@@ -200,7 +201,7 @@ class Paketob:
         # Set total price of prylar in paket
         for pryl in self.prylar:
             self.pris += self.prylar[pryl]["pris"] * int(self.prylar[pryl]["amount"])
-
+        self.pris += self.hyra
     def dict_make(self):
         temp_dict = vars(self)
         out_dict = {temp_dict["id"]: temp_dict}
@@ -264,7 +265,7 @@ class Gig:
         )
 
         self.bestallare = self.i_data.get('Beställare')
-        
+
         if self.bestallare is None:
             self.bestallare = self.i_data.get("ny_beställare")
             if self.bestallare is not None:
@@ -293,9 +294,9 @@ class Gig:
         self.adress: str|None|list[str] = self.i_data.get("existerande_adress", self.i_data.get("Adress"))
         if type(self.adress) is list:
             self.adress = self.adress[0]
-        
+
         self.use_inventarie = self.i_data.get("inventarie test", False)
-        
+
         self.adress_update = False
         self.tid_to_adress_car = None
         self.tid_to_adress = self.i_data.get("tid_to_adress", None)
@@ -417,10 +418,10 @@ class Gig:
         box_check()
 
         self.output()
-        
+
         #if self.use_inventarie:
         self.inventarie()
-            
+
         self.frilans_to_airtable()
 
         self.url_make()
@@ -665,12 +666,21 @@ class Gig:
 
     def tid(self, config):
 
+        ins = [
+            datetime.time.fromisoformat(time_thing)
+            for combined in self.i_data.get("getin-getout", "00:00,00:00-00:00,00:00").split(",")
+            for time_thing in combined.split("-")
+        ]
+
+        self.mgetins, self.mgetouts = ins[0::2], ins[1::2]
+
+        self.mgets_outs_true = (self.mgetins[0].hour!=0 or self.mgetins[0].minute!=0)
+
         self.bad_day_dict = dict(zip(calendar.day_name, range(7)))
         i = 1
         for day in self.bad_day_dict:
             self.day_dict[i] = day
             i += 1
-
 
         self.end_date = datetime.datetime.fromisoformat(
             self.i_data["Sluta datum"].split(".")[0]
@@ -682,29 +692,60 @@ class Gig:
         if self.i_data["tid för gig"] is not None:
             try:
                 self.extra_gig_tid = self.i_data["tid för gig"].split(",")
+
             except AttributeError:
                 self.extra_gig_tid = []
                 for _ in range(int(self.i_data["dagar"])):
                     self.extra_gig_tid.append(self.i_data["tid för gig"])
+
             while len(self.extra_gig_tid) < self.i_data["dagar"]:
                 self.extra_gig_tid.append(self.extra_gig_tid[0])
+
+            self.program_tider: tuple[list[datetime.time], list[datetime.time]] = ([
+                    datetime.time.fromisoformat(
+                        split_tid.split("-")[0] if ":" in split_tid.split("-")[0] else "00:00"
+                    ) for split_tid in self.extra_gig_tid
+                ], [
+                    datetime.time.fromisoformat(
+                        split_tid.split("-")[1] if ":" in split_tid.split("-")[1] else "00:00"
+                    ) for split_tid in self.extra_gig_tid
+                ])  # new thing, redoing stuff
+            
+            for starts, ends in zip(self.program_tider[0], self.program_tider[1]):
+                self.gig_timmar += (ends.hour + ends.minute/60) - (starts.hour + starts.minute/60)
+                
+            self.gig_timmar /= len(self.program_tider[0])
+            
+            if self.mgets_outs_true:
+                self.riggtimmar = 0
+                for starts, ends in zip(self.mgetins, self.mgetouts):
+                    self.riggtimmar += (ends.hour + ends.minute/60) - (starts.hour + starts.minute/60) - self.gig_timmar
+                self.riggtimmar /= len(self.mgetins)
+            
             for idx, tid in enumerate(self.extra_gig_tid):
                 tup: tuple[str, str] = tuple(tid.split("-"))
                 start: tuple[int, int]
                 end: tuple[int, int]
 
                 start, end = map(lambda x: tuple(map(int, x.split(":"))) if ":" in x else tuple(map(int, [x, "0"])), tup)
+
                 cest = pytz.timezone("Europe/Stockholm")
-                if self.rigg_timmar > 1: # Om mer än 1 timme gå till följande logik
-                    if self.rigg_timmar > 2: # Rigg efter gig max på 1, resten går till innan
-                        rigg_after = 1
-                        rigg_before = self.rigg_timmar - 1
-                    else: # Om tiden är mer är mer än 1 timme men mindre än 2, splitta jämt mellan
-                        rigg_after = self.rigg_timmar/2
-                        rigg_before = self.rigg_timmar/2
-                else: # Minimum extra tid innan & efter är en halvtimme
-                    rigg_after = 0.5
-                    rigg_before = 0.5
+                
+                
+                if self.mgets_outs_true:
+                    rigg_after = 0
+                    rigg_before = 0
+                else:
+                    if self.rigg_timmar > 1: # Om mer än 1 timme gå till följande logik
+                        if self.rigg_timmar > 2: # Rigg efter gig max på 1, resten går till innan
+                            rigg_after = 1
+                            rigg_before = self.rigg_timmar - 1
+                        else: # Om tiden är mer är mer än 1 timme men mindre än 2, splitta jämt mellan
+                            rigg_after = self.rigg_timmar/2
+                            rigg_before = self.rigg_timmar/2
+                    else: # Minimum extra tid innan & efter är en halvtimme
+                        rigg_after = 0.5
+                        rigg_before = 0.5
 
                 rigg_res_start = (
                     datetime.timedelta(
@@ -714,23 +755,46 @@ class Gig:
                 rigg_res_end = (datetime.timedelta(hours=rigg_after+self.restid))
 
                 self.dagar_changes = (rigg_res_start, rigg_res_end)
-                self.dagar_list.append((
+                
+                if len(self.mgetins) <= idx+1 and self.mgets_outs_true:
+                    self.dagar_list.append((
                         cest.localize(
-                            self.start_date.replace(hour=start[0], minute=start[1])
-                            + datetime.timedelta(days=idx)
+                            datetime.datetime.combine(
+                                self.start_date.date() +
+                                datetime.timedelta(days=idx),
+                                self.mgetins[idx]
+                            )
                             - rigg_res_start
                         ),
                         cest.localize(
-                            self.start_date.replace(hour=end[0], minute=end[1])
-                            + datetime.timedelta(days=idx)
+                            datetime.datetime.combine(
+                                self.start_date.date() +
+                                datetime.timedelta(days=idx),
+                                self.mgetouts[idx]
+                            )
                             + rigg_res_end
                         )
-                ))
+                    ))
+
+                else:
+                    self.dagar_list.append((
+                            cest.localize(
+                                self.start_date.replace(hour=start[0], minute=start[1])
+                                + datetime.timedelta(days=idx)
+                                - rigg_res_start
+                            ),
+                            cest.localize(
+                                self.start_date.replace(hour=end[0], minute=end[1])
+                                + datetime.timedelta(days=idx)
+                                + rigg_res_end
+                            )
+                    ))
 
                 hours_total += (self.dagar_list[-1][1].timestamp() - self.dagar_list[-1][0].timestamp()) / 60 / 60
 
-
-
+        while len(self.mgetins) < len(self.dagar_list):
+            self.mgetouts.append(None)
+            self.mgetins.append(None)
         self.ob_dict = {"0": [], "1": [], "2": [], "3": [], "4": []}
 
         skärtorsdagen = None
@@ -748,7 +812,7 @@ class Gig:
                     temp_date = stop
                 else:
                     temp_date = begin + datetime.timedelta(hours=hour)
-                
+
                 if temp_date in holidays.SWE(False, years=temp_date.year):
                     if (
                         holidays.SWE(False, years=temp_date.year)[temp_date]
@@ -834,11 +898,7 @@ class Gig:
         ) * 10
 
 
-        if self.dag_längd is not None:
-            for start, end in self.dagar_list:
-                self.gig_timmar += ((end - self.dagar_changes[1]) - (start + self.dagar_changes[0])).total_seconds() / 60 / 60
-        else:
-            raise TypeError("Daglängd is None")
+        
 
 
         if self.projekt_timmar is None:
@@ -992,8 +1052,8 @@ class Gig:
                 f"\t{self.gig_prylar[pryl]['amount']}st {pryl} - {self.gig_prylar[pryl]['mod']} kr ",
                 f"- {self.gig_prylar[pryl]['dagarMod']} kr pga {self.i_data['dagar']} dagar",
             )
-        
-            
+
+
         paket_id_list = []
         pryl_id_list = []
 
@@ -1043,7 +1103,7 @@ class Gig:
         # Move this to top
         self.post_text: bool = self.g_data('post_text', False)
         self.proj_typ = self.g_data('proj_typ', {'name': None})
-        
+
 
         print(self.kund, self.bestallare)
         self.projekt_typ = self.i_data.get("Projekt typ", 'live')
@@ -1163,14 +1223,42 @@ class Gig:
                 # Get all record ids of the already existing linked records in the projektkalender table
                 record_ids.append(item)
         if self.dagar_list is not None:
-            for getin, getout in self.dagar_list:
+            for idx, (getin, getout) in enumerate(self.dagar_list):
                 kalender_dict = {
-                    "Getin-hidden": (getin + self.dagar_changes[0]).isoformat(),
-                    "Getout-hidden": (getout - self.dagar_changes[1]).isoformat(),
-                    "Actual-getin": (getin + datetime.timedelta(hours=self.restid)).hour * 60 * 60 + (getin + datetime.timedelta(hours=self.restid)).minute * 60,
-                    "Actual-getout": (getout - datetime.timedelta(hours=self.restid)).hour * 60 * 60 + (getout - datetime.timedelta(hours=self.restid)).minute * 60,
-                    "Åka från svanis": getin.hour * 60 * 60 + getin.minute * 60,
-                    "Komma tillbaka till svanis": getout.hour * 60 * 60 + getout.minute * 60,
+                    "Getin-hidden": (
+                        getin + self.dagar_changes[0]
+                    ).isoformat(),
+                    "Getout-hidden": (
+                        getout - self.dagar_changes[1]
+                    ).isoformat(),
+                    "Program start-hidden": (self.program_tider[0][idx].hour*60*60 + self.program_tider[0][idx].minute*60 if self.program_tider[0][idx] is not None else None),
+                    "Program stop-hidden": (self.program_tider[1][idx].hour*60*60 + self.program_tider[1][idx].minute*60 if self.program_tider[1][idx] is not None else None),
+                    "Actual-getin": (
+                        getin + datetime.timedelta(
+                            hours=self.restid 
+                        )
+                    ).hour * 60 * 60 + (
+                        getin + (
+                            datetime.timedelta(
+                                hours=(
+                                    self.restid 
+                                )
+                            )
+                        )
+                    ).minute * 60,
+                    "Actual-getout": (
+                        getout - datetime.timedelta(
+                            hours=self.restid
+                        )
+                    ).hour * 60 * 60 + (
+                        getout - datetime.timedelta(
+                            hours=self.restid
+                        )
+                    ).minute * 60,
+                    "Åka från svanis": getin.hour * 60 * 60 +
+                    getin.minute * 60,
+                    "Komma tillbaka till svanis": getout.hour * 60 * 60 +
+                    getout.minute * 60,
                     "Projekt": output_from_airtable["fields"]["Projekt"],
                     "Leverans": [output_from_airtable["id"]],
                     "Frilans": frilans_personer,
@@ -1244,7 +1332,8 @@ class Gig:
             "prefill_Projekt typ": self.projekt_typ,
             "prefill_Anteckning": self.comment,
             "prefill_projekt_timmar": self.projekt_timmar_add,
-            "prefill_extra_name": self.extra_name
+            "prefill_extra_name": self.extra_name,
+            "prefill_getin-getout": self.i_data.get("getin-getout")
         }
         if len(self.person_field_list) > 0:
             params.update({"prefill_boka personal": True})
@@ -1322,9 +1411,9 @@ class Gig:
         create = [x for x in inventarie_list if x['Based on'] not in existing_list]
         if len(create) > 0:
             inventarie.batch_create(create)
-        
-        
-    
+
+
+
     def updating(self):
         input_data_table = Table(api_key, base_id, "Input data")
 
