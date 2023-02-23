@@ -276,7 +276,7 @@ class Gig:
         self.person_field_list = [
             'Bildproducent', 'Fotograf', 'Ljudtekniker', 'Ljustekniker',
             'Grafikproducent', 'Animatör', 'Körproducent',
-            'Innehållsproducent', 'Scenmästare', 'Tekniskt ansvarig', "Klippare"
+            'Innehållsproducent', 'Scenmästare', 'Tekniskt ansvarig', 'Klippare'
         ]
         # Make a dict of all the types of tasks with lists of people recIDs inside
         self.person_dict_grouped = {
@@ -665,11 +665,11 @@ class Gig:
 
 
     def tid(self, config):
-
+    
         ins = [
-            datetime.time.fromisoformat(time_thing)
+            datetime.time.fromisoformat(time_thing if ":" in time_thing else "00:00")
             for combined in self.i_data.get("getin-getout", "00:00,00:00-00:00,00:00").split(",")
-            for time_thing in combined.split("-")
+            for time_thing in (combined.split("-") if "-" in combined else [combined, "00:00"])
         ]
 
         self.mgetins, self.mgetouts = ins[0::2], ins[1::2]
