@@ -43,8 +43,29 @@ class Person():
             else:
                 self.tim_kostnad_after_time = False
             self.input_string = information.get('input_string')
+            if self.input_string is not None:
+                input_string = self.input_string.split("--")
 
-    def get_cost(self, timmar: dict[str, int]):
+                self.konstant_kostnad = int(input_string[0])
+
+                tuples: list[tuple[int, int, int, str|None]] = []  # fixed, timpris, hourly_point, condition
+                for s in input_string[1].split("-"):
+                    if "|" in s:
+                        
+                        tuples.append(tuple(list(map(int, s.split("|")[0].split(","))) + [s.split("|")[1]]))
+                    else:
+                        tuples.append(tuple(list(map(int, s.split(","))) + [None]))
+
+                self.stuff_dict: dict[int,dict[str|None,tuple[int,int]]] = {}
+
+                for fixed_thingy, timpris_in_tup, hour_p, condition in tuples:
+                    if hour_p not in self.stuff_dict.keys():
+                        self.stuff_dict[hour_p] = {}
+
+                    self.stuff_dict[hour_p].update({condition:(fixed_thingy, timpris_in_tup)})
+
+
+    def get_cost(self, timmar: dict[str, int], typ_av_jobb: str | None = None):
         """Returns the money that the person should get for the time spent
 
         Args:
@@ -63,16 +84,22 @@ class Person():
             total_pris = tim_total * self.timpris
 
         elif self.input_string is not None:
-            
+
+            total_kostnad = self.konstant_kostnad
             tim_total = timmar['gig'] + timmar['rigg']
-            input_string = self.input_string.split("--")
+            counter = 0
+            current_hourly = 0
 
-            total_kostnad += int(input_string[0])
-            tuples: list[tuple[int, int, int]] = [] # fixed, timpris, hourly_point
-            for s in input_string[1].split("-"):
-                tuples.append(tuple(map(int, s.split(","))))
+            while counter <= tim_total:
+                temp = self.stuff_dict.get(counter, {}).get(typ_av_jobb)
+                if temp is not None:
+                    total_kostnad += temp[0]
+                    current_hourly = temp[1]
 
-            prev_hourly_point = 0
+                total_kostnad += current_hourly
+                counter += 1
+
+            """
             for idx, t in enumerate(tuples):
                 old_hrs = tim_total
                 fixed, timpris, hourly_point = t
@@ -89,6 +116,7 @@ class Person():
                     tim_total = old_hrs
                 else:
                     break
+            """
             """if self.hyrkostnad:
                 total_kostnad += self.hyrkostnad
 
@@ -151,7 +179,7 @@ class Folk():
         # Get id of person with lowest cost and then get person object
         return self.folk_dictionary[k[v.index(min(v))]], min(v)
 
-    def total_cost(self, personer: list, timmar: dict, levande_video: bool):
+    def total_cost(self, personer: list, timmar: dict, levande_video: bool, grouped_thingies: dict):
         """Make list of people into a total cost
 
         Args:
@@ -174,9 +202,13 @@ class Folk():
         person_cost_list = {}
         for person in personer:
             if self.get_person(person).levande_video == levande_video:
+                typ_av_arbete = None
+                for key, value in grouped_thingies.items():
+                    if person in value:
+                        typ_av_arbete = key
                 temp_total_kostnad, temp_total_pris, temp_tim = self.get_person(
                     person
-                ).get_cost(timmar)
+                ).get_cost(timmar, typ_av_arbete)
                 person_cost_list[person] = temp_total_kostnad
                 total_kostnad += temp_total_kostnad
                 tim_total += temp_tim

@@ -10,6 +10,8 @@ import urllib.parse
 
 import googlemaps
 import holidays
+
+
 import pandas as pd
 import pytz
 import requests
@@ -271,6 +273,8 @@ class Gig:
             if self.bestallare is not None:
                 tmp_out = bestallare_table.create({"Jobbar åt": self.kund, "Namn": self.bestallare}, typecast=True)
                 self.kund, self.bestallare = tmp_out['fields']['Jobbar åt'], tmp_out['id']
+                get_prylar()
+
         self.name = self.make_name()
 
         self.person_field_list = [
@@ -420,7 +424,7 @@ class Gig:
         self.output()
 
         #if self.use_inventarie:
-        self.inventarie()
+        #self.inventarie()
 
         self.frilans_to_airtable()
 
@@ -617,7 +621,7 @@ class Gig:
         return temp_pris
 
     def adress_check(self):
-        if self.adress is not None and self.tid_to_adress is None:
+        if self.adress is not None and self.tid_to_adress is None and not self.svanis:
             print("using maps api")
 
             self.adress_update = True
@@ -662,7 +666,7 @@ class Gig:
 
         if self.restid is None:
             self.restid = 0.0
-
+        self.restid = round(self.restid*12)/12
 
     def tid(self, config):
     
@@ -820,9 +824,10 @@ class Gig:
                             "Trettondedag jul",
                             "Kristi himmelsfärdsdag",
                             "Alla helgons dag",
+                            "Första maj"
                         ] and temp_date.hour >= 7
                     ):
-                        self.ob_dict["3"].append(temp_date.timestamp())
+                        self.ob_dict["3"].append(temp_date)
                     elif (
                         holidays.SWE(False, years=temp_date.year)[temp_date]
                         in ["Nyårsafton"] and temp_date.hour >= 18
@@ -834,16 +839,16 @@ class Gig:
                                             "Julafton",
                                         ] and temp_date.hour >= 7
                     ):
-                        self.ob_dict["4"].append(temp_date.timestamp())
+                        self.ob_dict["4"].append(temp_date)
                     else:
-                        self.ob_dict["0"].append(temp_date.timestamp())
+                        self.ob_dict["0"].append(temp_date)
                 elif (
                     str(temp_date).split(" ")[0] == str(skärtorsdagen)
                     and temp_date.hour >= 18
                 ):
                     self.ob_dict["4"].append(temp_date)
                 elif temp_date.isoweekday() < 6:
-                    if temp_date.hour > 18:
+                    if temp_date.hour >= 18:
                         self.ob_dict["1"].append(temp_date)
                     elif temp_date.hour < 7:
                         self.ob_dict["2"].append(temp_date)
@@ -860,7 +865,7 @@ class Gig:
 
         for key, value in self.ob_dict.items():
             if len(value) > 0:# and key != "0":
-                self.ob_text += f"OB {key}: {value[0].isoformat()} - {(value[-1] + datetime.timedelta(minutes=(30 if key != '0' else 0))).isoformat()} ({int(len(value)/2) if len(value)/2 % 1 == 0 else len(value)/2}h)\n"
+                self.ob_text += f"OB {key}: {value[0].isoformat()} - {value[-1].isoformat()} ({round((value[-1] - value[0]).seconds/60/60*2)/2}h)\n"
         avg = hours_total / len(self.dagar_list)
 
         self.dag_längd = avg
@@ -918,7 +923,7 @@ class Gig:
 
         self.folk = Folk(self.lön_kostnad, self.timpris, config['hyrMulti'])
         self.frilans_kostnad, self.total_tim_frilans, self.antal_frilans, self.frilans_personal_dict = self.folk.total_cost(
-            self.person_list, self.tim_dict, False
+            self.person_list, self.tim_dict, False, self.person_dict_grouped#[key for person in self.person_list for key, value in self.person_dict_grouped.items() if person == value]
         )
 
 
