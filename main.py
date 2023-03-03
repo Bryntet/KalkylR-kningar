@@ -910,7 +910,7 @@ class Gig:
             # Slask timmar för tid spenderat på planering
             self.projekt_timmar = math.ceil(
                 (self.gig_timmar + self.rigg_timmar) * config["projektTid"] / total_personal if total_personal != 0 else 0
-            ) + self.projekt_timmar_add
+            ) + (self.projekt_timmar_add / total_personal)
 
         self.tim_dict = {
             'gig': int(self.gig_timmar),
