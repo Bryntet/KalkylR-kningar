@@ -3,23 +3,25 @@ from pyairtable import metadata, Base
 import os
 import math
 
-
-table_schema = metadata.get_base_schema(Base(os.environ['api_key'], os.environ['base_id']))
+table_schema = metadata.get_base_schema(
+    Base(os.environ["api_key"], os.environ["base_id"])
+)
 
 
 def record_to_orm(table, record_input):
     new_ORM = table()
-    new_ORM.id = record_input['id']
+    new_ORM.id = record_input["id"]
 
-    for table_ in table_schema['tables']:
-        if table_['id'] == table().Meta.table_name:
-            tbl_flds = table_['fields']
+    for table_ in table_schema["tables"]:
+        if table_["id"] == table().Meta.table_name:
+            tbl_flds = table_["fields"]
 
-    for field_name, value in record_input['fields'].items():
-        for field_id, name in [(x['id'], x['name']) for x in tbl_flds]:
+    for field_name, value in record_input["fields"].items():
+        for field_id, name in [(x["id"], x["name"]) for x in tbl_flds]:
             if field_name == name:
-                new_ORM.__dict__['_fields'][field_id] = value
+                new_ORM.__dict__["_fields"][field_id] = value
     return new_ORM
+
 
 class Prylar(Model):
     name = fields.TextField("fldAakG5Ntk1Mro4S")
@@ -32,12 +34,10 @@ class Prylar(Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-
     def calc_pris(self):
-
         self.pris = (
-            math.floor((self.in_pris * config["prylKostnadMulti"]) /
-                       10 * self.mult) * 10
+            math.floor((self.in_pris * config["prylKostnadMulti"]) / 10 * self.mult)
+            * 10
         )
 
     class Meta:
@@ -46,11 +46,10 @@ class Prylar(Model):
         api_key = os.environ["api_key"]
 
 
-
 class Paket(Model):
     name = fields.TextField("fld3ec1hcB3LK56R7")
     Uträknat_pris = fields.FloatField("fld0tl6Outn8f6lEj")
-    #paket_i_pryl_paket = fields.LinkField("fld1PIcwxpsFkrcYy", "Paket")
+    # paket_i_pryl_paket = fields.LinkField("fld1PIcwxpsFkrcYy", "Paket")
     paket_prylar = fields.LinkField("fldGkPJMOquzQGrO9", Prylar)
     antal_av_pryl = fields.TextField("fldUTezg1xtekQBir")
     Personal = fields.FloatField("fldTTcF0qCx9p8Bz2")
@@ -66,6 +65,7 @@ class Paket(Model):
 
 class Projekt(Model):
     name = fields.TextField("fldkyXKKGJIsj0sQF")
+
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
@@ -113,6 +113,7 @@ class Adressbok(Model):
         api_key = os.environ["api_key"]
         table_name = "tblUEO56t49XAJBhD"
 
+
 class Bestallare(Model):
     name = fields.TextField("fldte0gaCRgXDZnsn")
     kund = fields.LinkField("fldkIuEhfMdkVJVWQ", Kund)
@@ -155,8 +156,8 @@ class Projektkalender(Model):
     rigg_dagen_innan = fields.CheckboxField("fldZ8orE83xtYmSkM")
     m_getin = fields.FloatField("fld6F3xuRadz07hyv")
     m_getout = fields.FloatField("fldRxrXmAiZBKO4cu")
-    #dagen_innan_rigg = fields.LinkField("fldYjafIh96hI3pTe", )
-    #frilans_uträkningar = fields.LinkField("flds3BC39ufa1eTVc", Frilans_uträkningar)
+    # dagen_innan_rigg = fields.LinkField("fldYjafIh96hI3pTe", )
+    # frilans_uträkningar = fields.LinkField("flds3BC39ufa1eTVc", Frilans_uträkningar)
     extra_rigg = fields.FloatField("fldPLMeJSbypPygtK")
     i_d = fields.IntegerField("fldnOyMoIQlfEJNXb")
     fakturanummer = fields.TextField("fldj3L72EeGGRE0gV")
@@ -168,6 +169,7 @@ class Projektkalender(Model):
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tbllVOQa9PrKax1PY"
+
 
 class Leverans(Model):
     projekt_kalender = fields.LinkField("fld8sMBfKU73Rt5RB", Projektkalender)
@@ -222,7 +224,7 @@ class Leverans(Model):
     Adress = fields.LinkField("fldCOxzZAj9SAFvQK", Adressbok)
     beställare = fields.LinkField("fldMYoZLCVZGBlAjA", Bestallare)
     input_id = fields.TextField("fldCjxYHX7V1Av2mq")
-    #made_by = fields.LinkField("fldHAQqd9ApYknmUL", input_data)
+    # made_by = fields.LinkField("fldHAQqd9ApYknmUL", input_data)
     post_deadline = fields.DatetimeField("fldXUpUZC5Ng6eXM2")
     All_personal = fields.LinkField("fldGx5cRPG7o69xk8", People)
     slutkund_temp = fields.LinkField("fldCJ9Qupbuvr7uWr", Slutkund)
@@ -235,7 +237,6 @@ class Leverans(Model):
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tbl2JdL4S1Wl1jhdB"
-
 
 
 class input_data(Model):
@@ -305,7 +306,6 @@ class input_data(Model):
 
 
 class Inventarie(Model):
-
     based_on = fields.LinkField("fld486RrDoIslIVdY", Prylar)
     leverans = fields.LinkField("fldjDT2LWD8NUxXrP", Leverans)
     amount = fields.IntegerField("fldNjNPsb1Kx7vcdP")
