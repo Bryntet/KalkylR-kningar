@@ -10,15 +10,14 @@ table_schema = metadata.get_base_schema(Base(os.environ['api_key'], os.environ['
 def record_to_orm(table, record_input):
     new_ORM = table()
     new_ORM.id = record_input['id']
-    
+
     for table_ in table_schema['tables']:
         if table_['id'] == table().Meta.table_name:
             tbl_flds = table_['fields']
-    
+
     for field_name, value in record_input['fields'].items():
         for field_id, name in [(x['id'], x['name']) for x in tbl_flds]:
             if field_name == name:
-                print(field_name, value)
                 new_ORM.__dict__['_fields'][field_id] = value
     return new_ORM
 
@@ -35,7 +34,7 @@ class Prylar(Model):
 
 
     def calc_pris(self):
-        
+
         self.pris = (
             math.floor((self.in_pris * config["prylKostnadMulti"]) /
                        10 * self.mult) * 10
@@ -67,7 +66,6 @@ class Paket(Model):
 
 class Projekt(Model):
     name = fields.TextField("fldkyXKKGJIsj0sQF")
-
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
@@ -108,6 +106,7 @@ class Adressbok(Model):
     time_car = fields.IntegerField("fldTr4mYBAha7sXhZ")
     transport_type = fields.TextField("fld4xpwxz0lnQdphA")
     kund = fields.LinkField("fldHH4DFi1ES93saa", Kund)
+    used_time = fields.IntegerField("fldsOvDT5kugGCP9G")
 
     class Meta:
         base_id = os.environ["base_id"]
@@ -126,16 +125,61 @@ class Bestallare(Model):
         table_name = "tblpRCxCSLYEK41J0"
 
 
+class Projektkalender(Model):
+    status = fields.TextField("fldUrrqRZBsVLxxx4")
+    kommentar_till_frilans = fields.TextField("fldK5zcWy7mVF47qe")
+    grejer = fields.TextField("fld0ha80TlVUoU3LG")
+    packlista__keep = fields.TextField("fldVAczarHpOYDfWn")
+    slides = fields.CheckboxField("fldDhBQk3opw1CSgk")
+    fakturareferens = fields.TextField("fldSEEzRXfRgwKKl2")
+    skicka_mejl = fields.CheckboxField("fld7w7Rt5T1vVhzXb")
+    åka_från_svanis = fields.FloatField("fldi5mO5lix7abnXm")
+    actual_getin = fields.IntegerField("fldSQcKggYPFHtEAB")
+    åka_från_svanis = fields.IntegerField("fldi5mO5lix7abnXm")
+    komma_tillbaka_till_svanis = fields.IntegerField("flddKPdxarm5UYnZm")
+    calendar_description = fields.TextField("fldeTVUkgCro8oAIg")
+    actual_getout = fields.IntegerField("fldmIHQYnKeYVk9PU")
+    egna_anteckningar = fields.TextField("fldYX8PWAbiRL3Qv9")
+    projekt = fields.LinkField("fldfFm1RO4zqAP2zi", Projekt)
+    getin_hidden = fields.DatetimeField("fldwFIqEsJo8duHMs")
+    getout_hidden = fields.DatetimeField("fldW0wdl6U7kthQPj")
+    frilans = fields.LinkField("flddiOloJS1I8BafH", People)
+    packlista_detaljerad = fields.TextField("fldUPh7sIGcpNoDkL")
+    projekt_copy = fields.TextField("fldOgfAK8SlXhzKgH")
+    leveranser_copy = fields.TextField("fldPRDJlVSSOfccb8")
+    projekt_2 = fields.TextField("fldXXtWhMURLywgE3")
+    levandevideo = fields.LinkField("fldxTl0TKgoLymqFK", People)
+    frilans_mail = fields.EmailField("flduU5Lyuuf5RGPFC")
+    egen_getin = fields.FloatField("fldnz9NbGRgz9bFBT")
+    bara_riggtid = fields.CheckboxField("fldEmgb8XCtjGlk3z")
+    rigg_dagen_innan = fields.CheckboxField("fldZ8orE83xtYmSkM")
+    m_getin = fields.FloatField("fld6F3xuRadz07hyv")
+    m_getout = fields.FloatField("fldRxrXmAiZBKO4cu")
+    #dagen_innan_rigg = fields.LinkField("fldYjafIh96hI3pTe", )
+    #frilans_uträkningar = fields.LinkField("flds3BC39ufa1eTVc", Frilans_uträkningar)
+    extra_rigg = fields.FloatField("fldPLMeJSbypPygtK")
+    i_d = fields.IntegerField("fldnOyMoIQlfEJNXb")
+    fakturanummer = fields.TextField("fldj3L72EeGGRE0gV")
+    betalningsdatum = fields.DateField("fldjsKIIPTOhfg7gW")
+    program_stop_hidden = fields.FloatField("fldpW1yaKniipOP0z")
+    program_start_hidden = fields.FloatField("fldZhrBxTQ1azrdEz")
 
+    class Meta:
+        base_id = os.environ["base_id"]
+        api_key = os.environ["api_key"]
+        table_name = "tbllVOQa9PrKax1PY"
 
 class Leverans(Model):
+    projekt_kalender = fields.LinkField("fld8sMBfKU73Rt5RB", Projektkalender)
+    link_to_update = fields.TextField("fldnAUE87gCkyzUW7")
+    link_to_copy = fields.TextField("fldkVvmHIDCofPTxE")
+    eget_pris = fields.IntegerField("fldh6JAFQjK5RMDPT")
     name = fields.TextField("fldeZo8wMi9C8D78j")
     Pris = fields.FloatField("fld0O9MGtVYeB87DC")
     Personal = fields.FloatField("fldGj04MBtd7yVS6y")
     extraPersonal = fields.IntegerField("flds76lS0HTW380WJ")
     Projekt_timmar = fields.IntegerField("fldrztHjZrLDjky6q")
     Rigg_timmar = fields.IntegerField("fldVfzIAGpa49C8qy")
-    Totalt_timmar = fields.FloatField("fldQNHFGZRoSpZtcR")
     Pryl_pris = fields.FloatField("fldnQYR5MbklAQKSU")
     prylPaket = fields.LinkField("fldrUHtmGbW4OTX8Z", Paket)
     extraPrylar = fields.LinkField("fldIt8Y4P3xSP5xxG", Prylar)
@@ -143,8 +187,8 @@ class Leverans(Model):
     antalPrylar = fields.TextField("fldwLzWn0LXYpOz4z")
     Projekt_kanban = fields.TextField("fld5Ba3wtFv6PvDW6")
     Projekt = fields.LinkField("fldXdY47lGYDUFIge", Projekt)
-    börjaDatum = fields.DatetimeField("fldsJHqZu5eM08Kki")
-    slutaDatum = fields.DatetimeField("fldfBtMD4wSQT1ikA")
+    börja_datum = fields.DatetimeField("fldsJHqZu5eM08Kki")
+    sluta_datum = fields.DatetimeField("fldfBtMD4wSQT1ikA")
     dagar = fields.IntegerField("fldTxuAKtqGenuEzd")
     packlista = fields.TextField("fldninb2sH5xg2rdf")
     restid = fields.IntegerField("fldJCj4KjK2I8RdsG")
@@ -172,11 +216,11 @@ class Leverans(Model):
     Resten = fields.LinkField("fldSrxR4SLDGJZ6Hq", People)
     producent = fields.LinkField("fldPfJgkTgTmQxgj3", People)
     leverans_nummer = fields.IntegerField("fldlXvqQJi31guMWY")
-    Kund = fields.LinkField("fldYGBNxXLwxy6Ej1", Kund)
+    kund = fields.LinkField("fldYGBNxXLwxy6Ej1", Kund)
     Svanis = fields.CheckboxField("fldlj8nYVzBfeYMe2")
     Typ = fields.TextField("fldPW8EUxYhNRFUCg")
     Adress = fields.LinkField("fldCOxzZAj9SAFvQK", Adressbok)
-    Beställare = fields.LinkField("fldMYoZLCVZGBlAjA", Bestallare)
+    beställare = fields.LinkField("fldMYoZLCVZGBlAjA", Bestallare)
     input_id = fields.TextField("fldCjxYHX7V1Av2mq")
     #made_by = fields.LinkField("fldHAQqd9ApYknmUL", input_data)
     post_deadline = fields.DatetimeField("fldXUpUZC5Ng6eXM2")
@@ -190,7 +234,7 @@ class Leverans(Model):
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
-        table_name = "fldeZo8wMi9C8D78j"
+        table_name = "tbl2JdL4S1Wl1jhdB"
 
 
 
@@ -209,8 +253,8 @@ class input_data(Model):
     Svanis = fields.CheckboxField("fldgJioVMIGqVqVDE")
     extraPersonal = fields.FloatField("fldgdbo04e5daul7r")
     hyrKostnad = fields.FloatField("fldqpTwSSKNDL9fGT")
-    Börja_datum = fields.DateField("fldgIVyUu8kci0haJ")
-    preSluta_datum = fields.DateField("fldjr98jyFoWSOsHw")
+    börja_datum = fields.DatetimeField("fldgIVyUu8kci0haJ")
+    sluta_datum = fields.DatetimeField("fldBRV7PMCSYPemuP")
     tid_för_gig = fields.TextField("fldg8mwbEEcEtsuFy")
     riggDag = fields.DatetimeField("fldK7uLbgb5mNC18I")
     uppdateraa = fields.CheckboxField("fldkZgi81M0SoCbIi")
@@ -221,7 +265,7 @@ class input_data(Model):
     Frilans = fields.LinkField("fldnH3dsbRixSXDVI", People)
     Projekt_typ = fields.TextField("fldFpABlroJj4muC9")
     Adress = fields.TextField("fldUrjpo5l48QCBHT")
-    Beställare = fields.LinkField("fldocj6Gxh5Ss1Ko2", People)
+    beställare = fields.LinkField("fldocj6Gxh5Ss1Ko2", Bestallare)
     Projekt = fields.LinkField("fldLoNFu0HfYXlEII", People)
     post_deadline = fields.DatetimeField("fldYkABLiPlDItyyO")
     ny_beställare_bool = fields.CheckboxField("fldX2fFwPDu51Msrn")
@@ -245,7 +289,7 @@ class input_data(Model):
     extra_name = fields.TextField("fldM7myaiGPyiHqNc")
     boka_personal = fields.CheckboxField("fldsNgx88aUVIqazE")
     Klippare = fields.LinkField("fldq8fLKuhlHveZ2e", People)
-    Koppla_till_kund = fields.LinkField("fldRhcdwudTuW9bT6", Kund)
+    koppla_till_kund = fields.LinkField("fldRhcdwudTuW9bT6", Kund)
     getin_getout = fields.TextField("fldgCwZHHkIj5cxFS")
     nytt_projekt = fields.CheckboxField("fldB06TMygWWfyiyM")
     Output_table = fields.LinkField("fldKy8eQZejPBt6ta", Leverans)
@@ -258,3 +302,15 @@ class input_data(Model):
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblzLH9vrPOvkmOrh"
+
+
+class Inventarie(Model):
+
+    based_on = fields.LinkField("fld486RrDoIslIVdY", Prylar)
+    leverans = fields.LinkField("fldjDT2LWD8NUxXrP", Leverans)
+    amount = fields.IntegerField("fldNjNPsb1Kx7vcdP")
+
+    class Meta:
+        base_id = os.environ["base_id"]
+        api_key = os.environ["api_key"]
+        table_name = "tblHV8tzp8C7kdKCN"
