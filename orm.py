@@ -2,10 +2,16 @@ from pyairtable.orm import Model, fields
 from pyairtable import metadata, Base
 import os
 import math
+import time
+import json
+base = Base(os.environ['api_key'], os.environ['base_id'])
 
 
-table_schema = metadata.get_base_schema(Base(os.environ['api_key'], os.environ['base_id']))
+table_schema = metadata.get_base_schema(base)
+config = {record['fields']['fldkXGyb94cqSXzhU']: record['fields']['fldVAEPybe7cvFFrS'] for record in base.get_table("tbloHfNdwu6Adw97g").all(return_fields_by_field_id=True)}
 
+def get_all_in_orm(orm):
+    return [orm().from_record(record) for record in orm().all(return_fields_by_field_id=True)]
 
 def record_to_orm(table, record_input):
     new_ORM = table()
@@ -21,48 +27,156 @@ def record_to_orm(table, record_input):
                 new_ORM.__dict__['_fields'][field_id] = value
     return new_ORM
 
+
+
 class Prylar(Model):
     name = fields.TextField("fldAakG5Ntk1Mro4S")
-    uträknat_pris = fields.FloatField("fld1qKXF28Qz2pJG2")
-    in_pris = fields.FloatField("fldgY78pJgbgBi4Dy")
+    pris = fields.FloatField("fld1qKXF28Qz2pJG2")
+    in_pris = fields.IntegerField("fldgY78pJgbgBi4Dy")
     livs_längd = fields.TextField("fldwG40TFkeqHVMYG")
     antal_inventarie = fields.FloatField("fldO8AaLRqgoQtmAz")
     hide_from_calendar = fields.CheckboxField("fldb0Hgi9WB3OD8mI")
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def make_mult(self):
+        mult = 100 + (config['livsLängdSteg'] * 3)
+        mult -= int(self.livs_längd) * config['livsLängdSteg']
+        mult /= 100
+        return mult
 
 
     def calc_pris(self):
-
+        self.mult = self.make_mult()
         self.pris = (
             math.floor((self.in_pris * config["prylKostnadMulti"]) /
                        10 * self.mult) * 10
-        )
+        ) * 1.0
+
+    def _update_all(self):
+        prylar = self.all(return_fields_by_field_id=True)
+        prylar_list = []
+        for pryl in prylar:
+            pryl = self.from_record(pryl)
+            pryl.calc_pris()
+            prylar_list.append(pryl.to_record())
+        return self.get_table().batch_update(prylar_list, return_fields_by_field_id=True)
+
+
 
     class Meta:
         base_id = os.environ["base_id"]
-        table_name = "Prylar"
         api_key = os.environ["api_key"]
+        table_name = "tblsxui7L2zsDDdiy"
 
 
-
-class Paket(Model):
+class PaketPaket(Model):
     name = fields.TextField("fld3ec1hcB3LK56R7")
-    Uträknat_pris = fields.FloatField("fld0tl6Outn8f6lEj")
-    #paket_i_pryl_paket = fields.LinkField("fld1PIcwxpsFkrcYy", "Paket")
-    paket_prylar = fields.LinkField("fldGkPJMOquzQGrO9", Prylar)
-    antal_av_pryl = fields.TextField("fldUTezg1xtekQBir")
+    pris = fields.FloatField("fld0tl6Outn8f6lEj")
+    prylar = fields.LinkField("fldGkPJMOquzQGrO9", Prylar)
+    antal_prylar = fields.TextField("fldUTezg1xtekQBir")
     Personal = fields.FloatField("fldTTcF0qCx9p8Bz2")
     Svanis = fields.CheckboxField("fldp2Il8ITQdFXhVR")
-    Hyreskostnad = fields.FloatField("fld8iEEeEjhi9KT3c")
+    hyra = fields.FloatField("fld8iEEeEjhi9KT3c")
     hide_from_calendar = fields.CheckboxField("fldQqTyRk9wzLd5fC")
+
+    def get_amount(self):
+        if self.antal_prylar is None:
+            self.antal_prylar = ""
+        self.amount_list = self.antal_prylar.split(",")
+        output = []
+        if self.prylar is not None:
+            for idx, pryl in enumerate(self.prylar):
+                if idx < len(self.amount_list) and self.amount_list[idx] != "":
+                    output.append((pryl, int(self.amount_list[idx])))
+                else:
+                    output.append((pryl, 1))
+        return output
+
+
+    def calculate(self):
+        self.pris = 0.0
+        for pryl, amount in self.get_amount():
+            if pryl.pris is None:
+                pryl.fetch()
+                if pryl.pris is None:
+                    pryl.calc_pris()
+                    pryl.save()
+            self.pris += pryl.pris * amount
+        if self.hyra is not None:
+            self.pris += self.hyra
+
 
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblVThDQ16pIEkY9m"
 
+
+
+class Paket(Model):
+    name = fields.TextField("fld3ec1hcB3LK56R7")
+    pris = fields.FloatField("fld0tl6Outn8f6lEj")
+    paket_i_pryl_paket = fields.LinkField("fld1PIcwxpsFkrcYy", PaketPaket)
+    prylar = fields.LinkField("fldGkPJMOquzQGrO9", Prylar)
+    antal_prylar = fields.TextField("fldUTezg1xtekQBir")
+    Personal = fields.FloatField("fldTTcF0qCx9p8Bz2")
+    Svanis = fields.CheckboxField("fldp2Il8ITQdFXhVR")
+    hyra = fields.FloatField("fld8iEEeEjhi9KT3c")
+    hide_from_calendar = fields.CheckboxField("fldQqTyRk9wzLd5fC")
+    _force_update = False
+    def get_amount(self):
+        if self.antal_prylar is None:
+            self.antal_prylar = ""
+        self.amount_list = self.antal_prylar.split(",")
+        output = []
+        
+        for idx, pryl in enumerate(self.prylar):
+            if pryl.pris is None:
+                pryl.fetch()
+                if pryl.pris is None or self._force_update:
+                    pryl.calc_pris()
+                    pryl.save()
+            if idx < len(self.amount_list) and self.amount_list[idx] != "":
+                output.append((pryl, int(self.amount_list[idx])))
+            else:
+                output.append((pryl, 1))
+        return output
+
+
+    def calculate(self):
+        self.pris = 0.0
+        if self.prylar is not None:
+            for pryl, amount in self.get_amount():
+                self.pris += pryl.pris * amount
+        if self.paket_i_pryl_paket is not None:
+            for paket in self.paket_i_pryl_paket:
+                if paket.pris is None:
+                    paket.fetch()
+                    paket.calculate()
+                assert type(paket.pris) is float
+                self.pris += paket.pris
+        if self.hyra is not None:
+            self.pris += self.hyra
+
+    def _update_all(self):
+        
+        paket = self.all(return_fields_by_field_id=True)
+        amount_of_paket = len(paket)
+        paket_list = []
+        for idx, paket in enumerate(paket):
+            paket = self.from_record(paket)
+            paket.calculate()
+            paket_list.append(paket.to_record())
+            print(round((idx+1)/amount_of_paket*1000)/10, "%", paket.pris, "KR")
+        return self.get_table().batch_update(paket_list, return_fields_by_field_id=True)
+
+    class Meta:
+        base_id = os.environ["base_id"]
+        api_key = os.environ["api_key"]
+        table_name = "tblVThDQ16pIEkY9m"
+
+
+
+Paket()._update_all()
 
 class Projekt(Model):
     name = fields.TextField("fldkyXKKGJIsj0sQF")
@@ -218,7 +332,7 @@ class Leverans(Model):
     leverans_nummer = fields.IntegerField("fldlXvqQJi31guMWY")
     kund = fields.LinkField("fldYGBNxXLwxy6Ej1", Kund)
     Svanis = fields.CheckboxField("fldlj8nYVzBfeYMe2")
-    Typ = fields.TextField("fldPW8EUxYhNRFUCg")
+    typ = fields.TextField("fldPW8EUxYhNRFUCg")
     Adress = fields.LinkField("fldCOxzZAj9SAFvQK", Adressbok)
     beställare = fields.LinkField("fldMYoZLCVZGBlAjA", Bestallare)
     input_id = fields.TextField("fldCjxYHX7V1Av2mq")
