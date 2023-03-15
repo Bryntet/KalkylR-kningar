@@ -68,6 +68,8 @@ class Prylar(Model):
         table_name = "tblsxui7L2zsDDdiy"
 
 
+
+
 class PaketPaket(Model):
     name = fields.TextField("fld3ec1hcB3LK56R7")
     pris = fields.FloatField("fld0tl6Outn8f6lEj")
@@ -78,7 +80,7 @@ class PaketPaket(Model):
     hyra = fields.FloatField("fld8iEEeEjhi9KT3c")
     hide_from_calendar = fields.CheckboxField("fldQqTyRk9wzLd5fC")
 
-    def get_amount(self):
+    def get_amount(self) -> list[tuple[Prylar, int]]:
         if self.antal_prylar is None:
             self.antal_prylar = ""
         self.amount_list = self.antal_prylar.split(",")
@@ -91,35 +93,42 @@ class PaketPaket(Model):
                     output.append((pryl, 1))
         return output
 
+    def get_all_prylar(self):
+        pryl_list = []
+        if self.prylar is not None:
+            for pryl, amount in self.get_amount():
+                for _ in range(amount):
+                    pryl_list.append(pryl)
+        return pryl_list
 
     def calculate(self):
         self.pris = 0.0
         for pryl, amount in self.get_amount():
+
             if pryl.pris is None:
                 pryl.fetch()
                 if pryl.pris is None:
                     pryl.calc_pris()
                     pryl.save()
+            assert pryl.pris is not None
             self.pris += pryl.pris * amount
         if self.hyra is not None:
             self.pris += self.hyra
-
 
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblVThDQ16pIEkY9m"
 
-
-
 class Paket(Model):
+
     name = fields.TextField("fld3ec1hcB3LK56R7")
     pris = fields.FloatField("fld0tl6Outn8f6lEj")
     paket_i_pryl_paket = fields.LinkField("fld1PIcwxpsFkrcYy", PaketPaket)
     prylar = fields.LinkField("fldGkPJMOquzQGrO9", Prylar)
     antal_prylar = fields.TextField("fldUTezg1xtekQBir")
-    Personal = fields.FloatField("fldTTcF0qCx9p8Bz2")
-    Svanis = fields.CheckboxField("fldp2Il8ITQdFXhVR")
+    personal = fields.FloatField("fldTTcF0qCx9p8Bz2")
+    svanis = fields.CheckboxField("fldp2Il8ITQdFXhVR")
     hyra = fields.FloatField("fld8iEEeEjhi9KT3c")
     hide_from_calendar = fields.CheckboxField("fldQqTyRk9wzLd5fC")
     _force_update = False
@@ -128,7 +137,7 @@ class Paket(Model):
             self.antal_prylar = ""
         self.amount_list = self.antal_prylar.split(",")
         output = []
-        
+
         for idx, pryl in enumerate(self.prylar):
             if pryl.pris is None:
                 pryl.fetch()
@@ -141,7 +150,24 @@ class Paket(Model):
                 output.append((pryl, 1))
         return output
 
+    def get_all_prylar(self):
+        pryl_list = []
+        if self.prylar is not None:
+            for pryl, amount in self.get_amount():
+                for _ in range(amount):
+                    pryl_list.append(pryl)
 
+        if self.paket_i_pryl_paket is not None:
+            for paket in self.paket_i_pryl_paket:
+                if paket.pris is None:
+                    paket.fetch()
+                pryl_list.extend(paket.get_all_prylar())
+        for pryl in pryl_list:
+            if pryl.name is None:
+                pryl.fetch()
+            print(pryl.name, pryl.pris)
+        print(self.name, self.pris, pryl_list)
+        return pryl_list
     def calculate(self):
         self.pris = 0.0
         if self.prylar is not None:
@@ -157,16 +183,27 @@ class Paket(Model):
         if self.hyra is not None:
             self.pris += self.hyra
 
-    def _update_all(self):
-        
+    def _update_all(self, force_update=False):
+        self._force_update = force_update
+        if self._force_update:
+            Prylar()._update_all()
         paket = self.all(return_fields_by_field_id=True)
         amount_of_paket = len(paket)
         paket_list = []
         for idx, paket in enumerate(paket):
-            paket = self.from_record(paket)
+            paket = Paket().from_record(paket)
             paket.calculate()
             paket_list.append(paket.to_record())
             print(round((idx+1)/amount_of_paket*1000)/10, "%", paket.pris, "KR")
+        temp_tups = []
+        for rec_id, paket in self._linked_cache.items():
+            if isinstance(PaketPaket(), type(paket)):
+                print(paket)
+                temp_tups.append((rec_id, paket))
+
+        for rec_id, paket in temp_tups:
+            self._linked_cache.pop(rec_id, None)
+
         return self.get_table().batch_update(paket_list, return_fields_by_field_id=True)
 
     class Meta:
@@ -176,7 +213,6 @@ class Paket(Model):
 
 
 
-Paket()._update_all()
 
 class Projekt(Model):
     name = fields.TextField("fldkyXKKGJIsj0sQF")
@@ -185,14 +221,129 @@ class Projekt(Model):
         api_key = os.environ["api_key"]
         table_name = "tblR29p86mCcK9NBL"
 
+class FrilansAccounting(Model):
+    gissad_kostnad = fields.FloatField("fldx8vULV8QQ57Bfq")
 
-class People(Model):
+    class Meta:
+        base_id = os.environ["base_id"]
+        api_key = os.environ["api_key"]
+        table_name = "tblfUnngvWcn2u2at"
+
+
+
+
+class Person(Model):
     name = fields.TextField("fld6TVIRKXVSBPplt")
+    levande_video = fields.CheckboxField("fldbKIKHToEe4oA7x")
+    epost = fields.EmailField("fld91TTZnGJBtPESY")
+    input_string = fields.TextField("fld8XSSOjSjACYIBy")
+    kan_göra = fields.TextField("fld6khXiTavP5xtOc")
+    uträkning = fields.LinkField("fldDgH3SedjG0X1bS", FrilansAccounting)
+
+    def fix(self):
+        if self.kan_göra is None:
+            self.kan_göra = ""
+        self.available_tasks = "".join(self.kan_göra[1:-1].split("'")).split(", ")
+        if self.levande_video:
+            self.timpris = config["levandeVideoLön"]
+            self.lön_kostnad = self.timpris * (config["socialaAvgifter"] + 1)
+        else:
+            self.make_frilans_costs()
+
+    def make_frilans_costs(self):
+        if self.input_string is not None:
+            input_string = self.input_string.split("--")
+
+            self.konstant_kostnad = int(input_string[0])
+
+            tuples: list[tuple[int, int, int, str|None]] = []  # fixed, timpris, hourly_point, condition
+            for s in input_string[1].split("-"):
+                if "|" in s:
+
+                    tuples.append(tuple(list(map(int, s.split("|")[0].split(","))) + [s.split("|")[1]]))
+                else:
+                    tuples.append(tuple(list(map(int, s.split(","))) + [None]))
+
+            self.conditions_dict: dict[int,dict[str|None,tuple[int,int]]] = {}
+
+            for fixed_price, timpris_in_tup, hour_p, condition in tuples:
+                if hour_p not in self.conditions_dict.keys():
+                    self.conditions_dict[hour_p] = {}
+
+                self.conditions_dict[hour_p].update({condition:(fixed_price, timpris_in_tup)})
+
+    def can_do(self, task):
+        return task in self.available_tasks
+
+    def get_cost(self, timmar: dict[str, int], typ_av_jobb: str | None = None):
+        """Returns the money that the person should get for the time spent
+
+        Args:
+            timmar (dict): dict with type of hours
+
+        Returns:
+            int: Money
+        """
+        total_kostnad = 0
+        total_pris = 0
+        tim_total = 0
+        if self.levande_video:  # TODO kan finnas stora problem här
+            tim_total = timmar['gig'] + timmar['rigg'] + timmar[
+                'proj'] + timmar['res']
+            total_kostnad = tim_total * self.tim_kostnad
+            total_pris = tim_total * self.timpris
+            return total_kostnad, total_pris, tim_total
+        elif self.input_string is not None:
+
+            total_kostnad = self.konstant_kostnad
+            tim_total = timmar['gig'] + timmar['rigg']
+            counter = 0
+            current_hourly = 0
+
+            while counter <= tim_total:
+                temp = self.conditions_dict.get(counter, {}).get(typ_av_jobb)
+                if temp is not None:
+                    total_kostnad += temp[0]
+                    current_hourly = temp[1]
+
+                total_kostnad += current_hourly
+                counter += 1
+            self.kostnad = total_kostnad
+            return total_kostnad, tim_total
+
+    def set_frilans_cost(self):
+        self.uträkning = [FrilansAccounting(gissad_kostnad=self.kostnad)]
+        self.uträkning[0].save()
+        self.save()
+        return self.uträkning[0].id
 
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblxHIlUSQ8VxEGts"
+
+
+class Tidrapport(Model):
+    person = fields.TextField("fld0rfqy45K5IOb34")
+    datum = fields.DateField("fldZd6hRrxR5T0KL2")
+    tid = fields.FloatField("fldzCupBWoGl6cgR8")
+    start_tid = fields.FloatField("fldS7uDn92PtAEYCR")
+    o_b = fields.TextField("fld5jc0S4rQALPsvY")
+    kommentar = fields.TextField("fldnpajIJz62nDCk8")
+    mil = fields.FloatField("fldcL3qksoVqN9le6")
+    is_default = fields.CheckboxField("fldzupNeSCkJ0hMcl")
+    månad = fields.TextField("fldWhREtVWvRThp4b")
+    unused = fields.CheckboxField("fldcbw9qh1f5Aq8XG")
+    i_d = fields.IntegerField("fldSnPZyBh7cjv8bc")
+    month_calculations = fields.TextField("fldvdZjWPhlMAJIfu")
+    robot = fields.CheckboxField("fld4JqaTdWzgTwdiC")
+    person_link = fields.LinkField("fldT3ZLsQpw9S7Y2h", Person)
+
+    class Meta:
+        base_id = os.environ["base_id"]
+        api_key = os.environ["api_key"]
+        table_name = "tblCxKQvWh3QfVIRg"
+
 
 
 class Kund(Model):
@@ -240,6 +391,13 @@ class Bestallare(Model):
 
 
 class Projektkalender(Model):
+
+    name2 = fields.TextField("fldO8TzRQVNgt02qU")
+    getin = fields.IntegerField("fldITTqANmwPUjYuC")
+    getout = fields.IntegerField("fldAnBswzCzNt7OFs")
+    program_start = fields.IntegerField("fldDVxfuTkDruHHL8")
+    program_slut = fields.IntegerField("flddD7XrPVHYHIPST")
+    datum = fields.DateField("fld81rwHaQu7eRx53")
     status = fields.TextField("fldUrrqRZBsVLxxx4")
     kommentar_till_frilans = fields.TextField("fldK5zcWy7mVF47qe")
     grejer = fields.TextField("fld0ha80TlVUoU3LG")
@@ -257,12 +415,12 @@ class Projektkalender(Model):
     projekt = fields.LinkField("fldfFm1RO4zqAP2zi", Projekt)
     getin_hidden = fields.DatetimeField("fldwFIqEsJo8duHMs")
     getout_hidden = fields.DatetimeField("fldW0wdl6U7kthQPj")
-    frilans = fields.LinkField("flddiOloJS1I8BafH", People)
+    frilans = fields.LinkField("flddiOloJS1I8BafH", Person)
     packlista_detaljerad = fields.TextField("fldUPh7sIGcpNoDkL")
     projekt_copy = fields.TextField("fldOgfAK8SlXhzKgH")
     leveranser_copy = fields.TextField("fldPRDJlVSSOfccb8")
     projekt_2 = fields.TextField("fldXXtWhMURLywgE3")
-    levandevideo = fields.LinkField("fldxTl0TKgoLymqFK", People)
+    levandevideo = fields.LinkField("fldxTl0TKgoLymqFK", Person)
     frilans_mail = fields.EmailField("flduU5Lyuuf5RGPFC")
     egen_getin = fields.FloatField("fldnz9NbGRgz9bFBT")
     bara_riggtid = fields.CheckboxField("fldEmgb8XCtjGlk3z")
@@ -270,14 +428,15 @@ class Projektkalender(Model):
     m_getin = fields.FloatField("fld6F3xuRadz07hyv")
     m_getout = fields.FloatField("fldRxrXmAiZBKO4cu")
     #dagen_innan_rigg = fields.LinkField("fldYjafIh96hI3pTe", )
-    #frilans_uträkningar = fields.LinkField("flds3BC39ufa1eTVc", Frilans_uträkningar)
+    frilans_uträkningar = fields.LinkField("flds3BC39ufa1eTVc", FrilansAccounting)
     extra_rigg = fields.FloatField("fldPLMeJSbypPygtK")
     i_d = fields.IntegerField("fldnOyMoIQlfEJNXb")
     fakturanummer = fields.TextField("fldj3L72EeGGRE0gV")
     betalningsdatum = fields.DateField("fldjsKIIPTOhfg7gW")
     program_stop_hidden = fields.FloatField("fldpW1yaKniipOP0z")
     program_start_hidden = fields.FloatField("fldZhrBxTQ1azrdEz")
-
+    projekt_typ = fields.TextField("fldjq2WoRhwPnO2xE")
+    leverans_rid = fields.TextField("fldJunVGOofzOVrov")
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
@@ -291,7 +450,7 @@ class Leverans(Model):
     name = fields.TextField("fldeZo8wMi9C8D78j")
     Pris = fields.FloatField("fld0O9MGtVYeB87DC")
     Personal = fields.FloatField("fldGj04MBtd7yVS6y")
-    extraPersonal = fields.IntegerField("flds76lS0HTW380WJ")
+    extraPersonal = fields.FloatField("flds76lS0HTW380WJ")
     Projekt_timmar = fields.IntegerField("fldrztHjZrLDjky6q")
     Rigg_timmar = fields.IntegerField("fldVfzIAGpa49C8qy")
     Pryl_pris = fields.FloatField("fldnQYR5MbklAQKSU")
@@ -301,8 +460,8 @@ class Leverans(Model):
     antalPrylar = fields.TextField("fldwLzWn0LXYpOz4z")
     Projekt_kanban = fields.TextField("fld5Ba3wtFv6PvDW6")
     Projekt = fields.LinkField("fldXdY47lGYDUFIge", Projekt)
-    börja_datum = fields.DatetimeField("fldsJHqZu5eM08Kki")
-    sluta_datum = fields.DatetimeField("fldfBtMD4wSQT1ikA")
+    börja_datum = fields.DateField("fldsJHqZu5eM08Kki")
+    sluta_datum = fields.DateField("fldfBtMD4wSQT1ikA")
     dagar = fields.IntegerField("fldTxuAKtqGenuEzd")
     packlista = fields.TextField("fldninb2sH5xg2rdf")
     restid = fields.IntegerField("fldJCj4KjK2I8RdsG")
@@ -314,21 +473,23 @@ class Leverans(Model):
     avkastWithoutPris = fields.FloatField("fldFQjYyG5LGQnYPU")
     avkast2 = fields.FloatField("fldnrs1UnBqz2I8Bt")
     frilanstimmar = fields.FloatField("fldKunOK7Gpqx3x77")
-    total_tid_ex_frilans = fields.FloatField("fldQRQQz3L6DiEUHA")
-    frilans = fields.LinkField("fld5dISuz2dXpyFWl", People)
-    Bildproducent = fields.LinkField("flduzo0PJJRBF8TlT", People)
-    Fotograf = fields.LinkField("fldb0SgazCjDUGJK9", People)
-    Ljudtekniker = fields.LinkField("fldXo5Mr0lkWoUqyk", People)
-    Ljustekniker = fields.LinkField("fld137CDZNCBJVGu6", People)
-    Grafikproducent = fields.LinkField("fldIdXKDXXnPJNtjK", People)
-    Animatör = fields.LinkField("fldB87dsAvgR2s5fG", People)
-    Körproducent = fields.LinkField("fldn8ieh409MItTAC", People)
-    Innehållsproducent = fields.LinkField("fldzosWR8ODEpyR0F", People)
-    Scenmästare = fields.LinkField("fldm9REcfR7tQdf50", People)
-    Tekniskt_ansvarig = fields.LinkField("fldJieGtJ9gmUKdll", People)
-    Klippare = fields.LinkField("fldbEXQbGNjFi4bzI", People)
-    Resten = fields.LinkField("fldSrxR4SLDGJZ6Hq", People)
-    producent = fields.LinkField("fldPfJgkTgTmQxgj3", People)
+    frilans = fields.LinkField("fld5dISuz2dXpyFWl", Person)
+    Bildproducent = fields.LinkField("flduzo0PJJRBF8TlT", Person)
+    Fotograf = fields.LinkField("fldb0SgazCjDUGJK9", Person)
+    Ljudtekniker = fields.LinkField("fldXo5Mr0lkWoUqyk", Person)
+    Ljustekniker = fields.LinkField("fld137CDZNCBJVGu6", Person)
+    Grafikproducent = fields.LinkField("fldIdXKDXXnPJNtjK", Person)
+    Animatör = fields.LinkField("fldB87dsAvgR2s5fG", Person)
+    Körproducent = fields.LinkField("fldn8ieh409MItTAC", Person)
+    Innehållsproducent = fields.LinkField("fldzosWR8ODEpyR0F", Person)
+    Scenmästare = fields.LinkField("fldm9REcfR7tQdf50", Person)
+    Tekniskt_ansvarig = fields.LinkField("fldJieGtJ9gmUKdll", Person)
+    Klippare = fields.LinkField("fldbEXQbGNjFi4bzI", Person)
+    Resten = fields.LinkField("fldSrxR4SLDGJZ6Hq", Person)
+    producent = fields.LinkField("fldPfJgkTgTmQxgj3", Person)
+    projektledare = fields.LinkField("fld4ALH1wr3eoi1wj", Person)
+    latest_added = fields.CheckboxField("fldVW1DEIYPH0fcUG")
+
     leverans_nummer = fields.IntegerField("fldlXvqQJi31guMWY")
     kund = fields.LinkField("fldYGBNxXLwxy6Ej1", Kund)
     Svanis = fields.CheckboxField("fldlj8nYVzBfeYMe2")
@@ -336,14 +497,19 @@ class Leverans(Model):
     Adress = fields.LinkField("fldCOxzZAj9SAFvQK", Adressbok)
     beställare = fields.LinkField("fldMYoZLCVZGBlAjA", Bestallare)
     input_id = fields.TextField("fldCjxYHX7V1Av2mq")
+    frilans_uträkningar = fields.LinkField("fldtDfWE1Wj7jXEN9", FrilansAccounting)
+    tidrapport = fields.LinkField("flduRCHi8EEYlsA4B", Tidrapport)
     #made_by = fields.LinkField("fldHAQqd9ApYknmUL", input_data)
     post_deadline = fields.DatetimeField("fldXUpUZC5Ng6eXM2")
-    All_personal = fields.LinkField("fldGx5cRPG7o69xk8", People)
+    All_personal = fields.LinkField("fldGx5cRPG7o69xk8", Person)
     slutkund_temp = fields.LinkField("fldCJ9Qupbuvr7uWr", Slutkund)
     role_format = fields.TextField("fldDAwoL2Sd1bKW3N")
     extra_namn = fields.TextField("fldAa4QimQWLXEosO")
     ob = fields.TextField("fldCcecFWkEr6QMIS")
     Kommentar_från_formulär = fields.TextField("fldp4H3xsgi2puMNO")
+
+
+
 
     class Meta:
         base_id = os.environ["base_id"]
@@ -367,20 +533,20 @@ class input_data(Model):
     Svanis = fields.CheckboxField("fldgJioVMIGqVqVDE")
     extraPersonal = fields.FloatField("fldgdbo04e5daul7r")
     hyrKostnad = fields.FloatField("fldqpTwSSKNDL9fGT")
-    börja_datum = fields.DatetimeField("fldgIVyUu8kci0haJ")
+    börja_datum = fields.DatetimeField("fldWI184kPDtbd76h")
     sluta_datum = fields.DatetimeField("fldBRV7PMCSYPemuP")
     tid_för_gig = fields.TextField("fldg8mwbEEcEtsuFy")
     riggDag = fields.DatetimeField("fldK7uLbgb5mNC18I")
     uppdateraa = fields.CheckboxField("fldkZgi81M0SoCbIi")
-    projektledare = fields.LinkField("fldMpFwH617TIYHkk", People)
-    producent = fields.LinkField("fld2Q7WAm4q5MaLSO", People)
+    projektledare = fields.LinkField("fldMpFwH617TIYHkk", Person)
+    producent = fields.LinkField("fld2Q7WAm4q5MaLSO", Person)
     post_text = fields.CheckboxField("fldQJP25CrDQdZGRg")
     Textning_minuter = fields.IntegerField("fldPxGMqLTl0BYZms")
-    Frilans = fields.LinkField("fldnH3dsbRixSXDVI", People)
+    Frilans = fields.LinkField("fldnH3dsbRixSXDVI", Person)
     Projekt_typ = fields.TextField("fldFpABlroJj4muC9")
     Adress = fields.TextField("fldUrjpo5l48QCBHT")
     beställare = fields.LinkField("fldocj6Gxh5Ss1Ko2", Bestallare)
-    Projekt = fields.LinkField("fldLoNFu0HfYXlEII", People)
+    Projekt = fields.LinkField("fldLoNFu0HfYXlEII", Person)
     post_deadline = fields.DatetimeField("fldYkABLiPlDItyyO")
     ny_beställare_bool = fields.CheckboxField("fldX2fFwPDu51Msrn")
     ny_kund_bool = fields.CheckboxField("fldBDyoWf3IZygI3G")
@@ -388,21 +554,21 @@ class input_data(Model):
     ny_beställare = fields.TextField("fldoTuaIttzRWDPYy")
     existerande_adress = fields.LinkField("fldKr9l8iJym15vnv", Adressbok)
     projekt_timmar = fields.IntegerField("fldQibfzkvf2pPPsK")
-    Bildproducent = fields.LinkField("fld2bU8lAGsjDR0rd", People)
-    Fotograf = fields.LinkField("fldGhbhWOU144JENx", People)
-    Ljudtekniker = fields.LinkField("fldPG0KxCs1KQZlat", People)
-    Ljustekniker = fields.LinkField("fldGNHurJz9o0r00q", People)
-    Grafikproducent = fields.LinkField("fldzs3apF4e6l5e1k", People)
-    Animatör = fields.LinkField("fldZR7VIgfSWvRgxm", People)
-    Körproducent = fields.LinkField("fldt604xRNZmtplgE", People)
-    Innehållsproducent = fields.LinkField("fldKY31C9MOjFoVYa", People)
-    Scenmästare = fields.LinkField("fldzmnvyBqodXYEb7", People)
-    Tekniskt_ansvarig = fields.LinkField("fld9XX0CYmGJTRNWq", People)
-    Mer_personal = fields.LinkField("fld8CHNj4LD1ErSpm", People)
+    Bildproducent = fields.LinkField("fld2bU8lAGsjDR0rd", Person)
+    Fotograf = fields.LinkField("fldGhbhWOU144JENx", Person)
+    Ljudtekniker = fields.LinkField("fldPG0KxCs1KQZlat", Person)
+    Ljustekniker = fields.LinkField("fldGNHurJz9o0r00q", Person)
+    Grafikproducent = fields.LinkField("fldzs3apF4e6l5e1k", Person)
+    Animatör = fields.LinkField("fldZR7VIgfSWvRgxm", Person)
+    Körproducent = fields.LinkField("fldt604xRNZmtplgE", Person)
+    Innehållsproducent = fields.LinkField("fldKY31C9MOjFoVYa", Person)
+    Scenmästare = fields.LinkField("fldzmnvyBqodXYEb7", Person)
+    Tekniskt_ansvarig = fields.LinkField("fld9XX0CYmGJTRNWq", Person)
+    Mer_personal = fields.LinkField("fld8CHNj4LD1ErSpm", Person)
     Anteckning = fields.TextField("fld77P6NIqwO6sWTf")
     extra_name = fields.TextField("fldM7myaiGPyiHqNc")
     boka_personal = fields.CheckboxField("fldsNgx88aUVIqazE")
-    Klippare = fields.LinkField("fldq8fLKuhlHveZ2e", People)
+    Klippare = fields.LinkField("fldq8fLKuhlHveZ2e", Person)
     koppla_till_kund = fields.LinkField("fldRhcdwudTuW9bT6", Kund)
     getin_getout = fields.TextField("fldgCwZHHkIj5cxFS")
     nytt_projekt = fields.CheckboxField("fldB06TMygWWfyiyM")
@@ -428,3 +594,7 @@ class Inventarie(Model):
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblHV8tzp8C7kdKCN"
+
+
+if __name__ == "__main__":
+    Paket()._update_all()

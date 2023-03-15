@@ -139,7 +139,7 @@ class Person():
 
 class Folk():
     def __init__(self, lön, timpris, hyr_multi):
-
+        
         with open("folk.json", "r") as f:
             json_data = json.load(f)
             self.folk_dictionary = {
