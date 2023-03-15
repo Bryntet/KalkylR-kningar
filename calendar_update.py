@@ -15,37 +15,40 @@ from gcsa.serializers.event_serializer import EventSerializer
 from gcsa.google_calendar import SendUpdatesMode
 import orm
 
+
 def dict_symmetric_difference(a, b):
     return {
         k: a[k] if k in a else b[k]
         for k in set(a.keys()).symmetric_difference(b.keys())
     }
+
+
 def phone_number(nrs: str) -> str:
-    return f'{nrs[:3]} {nrs[3:6]} {nrs[6:8]} {nrs[8:10]}'
+    return f"{nrs[:3]} {nrs[3:6]} {nrs[6:8]} {nrs[8:10]}"
 
 
 def delete_event(record_id):
-    if os.path.exists('projektkalender.json'):
+    if os.path.exists("projektkalender.json"):
         with open("projektkalender.json", "r", encoding="utf-8") as f:
             kalender = json.load(f)
-        gc = GoogleCalendar(gcal_id, credentials_path='credentials.json')
-        gc.delete_event(kalender[record_id]['post'])
+        gc = GoogleCalendar(gcal_id, credentials_path="credentials.json")
+        gc.delete_event(kalender[record_id]["post"])
 
 
 def main():
     api_key = os.environ["api_key"]
     base_id = os.environ["base_id"]
     gcal_id = os.environ["gcal_id"]
-    #mail_passwd = os.environ["mail_passwd"]
-    gc = GoogleCalendar(gcal_id, credentials_path='credentials.json')
+    # mail_passwd = os.environ["mail_passwd"]
+    gc = GoogleCalendar(gcal_id, credentials_path="credentials.json")
 
-    #mail = EmailMessage()
-    #mail.add_header('reply-to', 'info@levandevideo.se')
-    #s = smtplib.SMTP('mail.levandevideo.se', port=26)
-    #s.login('bokning@levandevideo.se', mail_passwd)
+    # mail = EmailMessage()
+    # mail.add_header('reply-to', 'info@levandevideo.se')
+    # s = smtplib.SMTP('mail.levandevideo.se', port=26)
+    # s.login('bokning@levandevideo.se', mail_passwd)
 
-    #s.send_message(mail)
-    #s.quit()
+    # s.send_message(mail)
+    # s.quit()
 
     base = Base(api_key, base_id)
     projektkalender = base.get_table("Projektkalender")
@@ -55,42 +58,41 @@ def main():
     bestallare = base.get_table("Beställare")
     new_thing = {}
 
-
-    prylartable = base.get_table('Prylar')
-    #mail.add_header('Content-Type', 'text/html')
-    #ending_of_mail = "<sub>Jag är en robot och lär mig nya saker varje dag, ifall det blev fel så kan du antingen skicka iväg ett mejl till din kontakt på Levande Video eller till <a href='mailto: epost@edvinbryntesson.se'>mig</a> :)</sub>"
-    #mail.set_payload('Body of <b>email{}</b>'.format(ending_of_mail))
-
+    prylartable = base.get_table("Prylar")
+    # mail.add_header('Content-Type', 'text/html')
+    # ending_of_mail = "<sub>Jag är en robot och lär mig nya saker varje dag, ifall det blev fel så kan du antingen skicka iväg ett mejl till din kontakt på Levande Video eller till <a href='mailto: epost@edvinbryntesson.se'>mig</a> :)</sub>"
+    # mail.set_payload('Body of <b>email{}</b>'.format(ending_of_mail))
 
     emails = {}
     namn = {}
     phone_numbers = {}
     adresser_dict = {}
-    SCOPES = ['https://www.googleapis.com/auth/calendar']
+    SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
-    kalender: dict[str, dict[str,str]] = {}
-    if os.path.exists('projektkalender.json'):
+    kalender: dict[str, dict[str, str]] = {}
+    if os.path.exists("projektkalender.json"):
         with open("projektkalender.json", "r", encoding="utf-8") as f:
             kalender = json.load(f)
     else:
         with open("projektkalender.json", "w", encoding="utf-8") as f:
             json.dump({}, f)
 
-
     for person_record in people.all():
-        if 'E-post' in person_record['fields'].keys():
-            emails[person_record['id']] = person_record['fields']['E-post'].split(', ')
-        if 'Name' in person_record['fields'].keys():
-            namn[person_record['id']] = person_record['fields']['Name']
-        if 'telefon nr' in person_record['fields'].keys():
-            nrs = person_record['fields']['telefon nr']
-            phone_numbers[person_record['id']] = phone_number(nrs)
-    lv_emails = [epost[0] for epost in emails.values() if '@levandevideo.se' in epost[0] or epost[0] == "epost@edvinbryntesson.se"]
-
+        if "E-post" in person_record["fields"].keys():
+            emails[person_record["id"]] = person_record["fields"]["E-post"].split(", ")
+        if "Name" in person_record["fields"].keys():
+            namn[person_record["id"]] = person_record["fields"]["Name"]
+        if "telefon nr" in person_record["fields"].keys():
+            nrs = person_record["fields"]["telefon nr"]
+            phone_numbers[person_record["id"]] = phone_number(nrs)
+    lv_emails = [
+        epost[0]
+        for epost in emails.values()
+        if "@levandevideo.se" in epost[0] or epost[0] == "epost@edvinbryntesson.se"
+    ]
 
     for adress in adresser.all():
-        adresser_dict[adress['id']] = adress['fields']['Adress']
-
+        adresser_dict[adress["id"]] = adress["fields"]["Adress"]
 
     for idx, prooj in enumerate(orm.get_all_in_orm(orm.Projektkalender)):
         if prooj.id == "rec8HgtNPA7GrWQnf":
@@ -113,31 +115,42 @@ def main():
         for person in all_people:
             if person.name is None:
                 person.fetch()
-        
-        invite_list = [person.epost for person in all_people if person.epost is not None] #if email in lv_emails]
 
-
-
+        invite_list = [
+            person.epost for person in all_people if person.epost is not None
+        ]  # if email in lv_emails]
 
         if event.datum is None or event.getin is None or event.getout is None:
             continue
         datum = event.datum
         if datum < datetime.datetime.now().date():
             continue
-        #print(fields['Getin'])
+        # print(fields['Getin'])
 
-        getin = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(seconds=event.getin)
-        getout = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(seconds=event.getout)
+        getin = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(
+            seconds=event.getin
+        )
+        getout = datetime.datetime.fromisoformat(
+            datum.isoformat()
+        ) + datetime.timedelta(seconds=event.getout)
         if event.program_start is not None and event.program_slut is not None:
-            program_start = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(seconds=event.getin) + datetime.timedelta(seconds=event.program_start)
-            program_slut = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(seconds=event.getin) + datetime.timedelta(seconds=event.program_slut)
+            program_start = (
+                datetime.datetime.fromisoformat(datum.isoformat())
+                + datetime.timedelta(seconds=event.getin)
+                + datetime.timedelta(seconds=event.program_start)
+            )
+            program_slut = (
+                datetime.datetime.fromisoformat(datum.isoformat())
+                + datetime.timedelta(seconds=event.getin)
+                + datetime.timedelta(seconds=event.program_slut)
+            )
         else:
             program_start, program_slut = None, None
         if event.status is not None:
-            if event.status == 'Obekräftat projekt':
-                status = 'tentative'
-            elif event.status == 'Avbokat': # remove or skip cancelled events
-                status = 'cancelled'
+            if event.status == "Obekräftat projekt":
+                status = "tentative"
+            elif event.status == "Avbokat":  # remove or skip cancelled events
+                status = "cancelled"
                 if event.status in kalender.keys():
                     # mail.set_content("""\n"""+ending_of_mail)
                     # mail['Subject'] = 'Gigget den {} har blivit inställt'.format(datum.isoformat())
@@ -147,36 +160,63 @@ def main():
                     # s.send_message(mail)
 
                     try:
-                        gc.delete_event(kalender[event.id]['post'])
+                        gc.delete_event(kalender[event.id]["post"])
                     except Exception as e:
                         print("Error", e)
                     kalender.pop(event.id)
                 continue
 
             else:
-                status = 'confirmed'
+                status = "confirmed"
         else:
-            status = 'confirmed'
-        description = ''
-        saker = ['Projektledare', 'producent',
-            'Bildproducent', 'Fotograf', 'Ljudtekniker', 'Ljustekniker',
-            'Grafikproducent', 'Animatör', 'Körproducent', 'Innehållsproducent',
-            'Scenmästare', 'Tekniskt_ansvarig'
+            status = "confirmed"
+        description = ""
+        saker = [
+            "Projektledare",
+            "producent",
+            "Bildproducent",
+            "Fotograf",
+            "Ljudtekniker",
+            "Ljustekniker",
+            "Grafikproducent",
+            "Animatör",
+            "Körproducent",
+            "Innehållsproducent",
+            "Scenmästare",
+            "Tekniskt_ansvarig",
         ]
         for field in saker:
-            if field in leverans.__dict__['_fields'].keys():
-                if field == 'producent':
+            if field in leverans.__dict__["_fields"].keys():
+                if field == "producent":
                     description += "Producent: \n{}".format(
-                        "\n".join([((namn[x] + " - " + phone_numbers[x]) if x in phone_numbers.keys() else namn[x]) for x in leverans_thing['fields'][field]])
+                        "\n".join(
+                            [
+                                (
+                                    (namn[x] + " - " + phone_numbers[x])
+                                    if x in phone_numbers.keys()
+                                    else namn[x]
+                                )
+                                for x in leverans_thing["fields"][field]
+                            ]
+                        )
                     )
                 else:
                     description += "{}: \n{}".format(
                         field,
-                        "\n".join([((namn[x] + " - " + phone_numbers[x]) if x in phone_numbers.keys() else namn[x]) for x in leverans_thing['fields'][field]])
+                        "\n".join(
+                            [
+                                (
+                                    (namn[x] + " - " + phone_numbers[x])
+                                    if x in phone_numbers.keys()
+                                    else namn[x]
+                                )
+                                for x in leverans_thing["fields"][field]
+                            ]
+                        ),
                     )
-                description += '\n\n'
+                description += "\n\n"
 
-        #description += "\n"
+        # description += "\n"
         if leverans.prylPaket is not None:
             paketen = leverans.prylPaket
         else:
@@ -195,12 +235,14 @@ def main():
             antal_prylar = []
         paketen_string = "Beställning: \n"
         for idx, paket in enumerate(paketen):
-            if idx < len(antal_paket): #and not paket_dict[paket].get('hide from calendar', False):
+            if idx < len(
+                antal_paket
+            ):  # and not paket_dict[paket].get('hide from calendar', False):
                 if paket.name is None:
                     try:
                         paket.fetch()
                     except Exception as e:
-                       pass 
+                        pass
                 assert type(paket.name) is str
                 org_paket = paket.name
                 regex_thing = re.search(r"([^[]*),? ?( [.*]?)*", org_paket)
@@ -218,7 +260,9 @@ def main():
                 else:
                     paketen_string += antal_paket[idx] + "st - " + paket_namn + "\n"
         for idx, pryl in enumerate(prylar):
-            if idx < len(antal_prylar): #and not prylar_dict[pryl].get('hide from calendar', False):
+            if idx < len(
+                antal_prylar
+            ):  # and not prylar_dict[pryl].get('hide from calendar', False):
                 if pryl.name is None:
                     pryl.fetch()
                 assert type(pryl.name) is str
@@ -237,22 +281,19 @@ def main():
                 else:
                     paketen_string += antal_prylar[idx] + "st - " + pryl_namn + "\n"
 
-
-
-
         if leverans.beställare is not None:
             bestallare = leverans.beställare[0]
-            description += 'Beställare: {}'.format(bestallare.name)
+            description += "Beställare: {}".format(bestallare.name)
             if bestallare.phone is not None:
-                description += ' - {}'.format(phone_number(bestallare.phone))
-            description += '\n\n'
+                description += " - {}".format(phone_number(bestallare.phone))
+            description += "\n\n"
         if program_start is not None:
-            description += 'Körtider: {}-{}\n'.format(program_start.strftime("%H:%M"), program_slut.strftime("%H:%M"))
-
+            description += "Körtider: {}-{}\n".format(
+                program_start.strftime("%H:%M"), program_slut.strftime("%H:%M")
+            )
 
         if event.kommentar_till_frilans is not None:
             description += event.kommentar_till_frilans
-
 
         if paketen_string != "":
             description += "\n" + paketen_string
@@ -272,24 +313,37 @@ def main():
             leverans.Adress = []
 
         my_event = Event(
-            event.name2[2:-2] + (' [OBEKRÄFTAT]' if event.status == 'Obekräftat projekt' else "") + (" [RIGG]" if leverans.typ == "Rigg" else ""),
+            event.name2[2:-2]
+            + (" [OBEKRÄFTAT]" if event.status == "Obekräftat projekt" else "")
+            + (" [RIGG]" if leverans.typ == "Rigg" else ""),
             getin,
             getout,
             location=leverans.Adress[0].name if len(leverans.Adress) > 0 else None,
             attendees=invite_list,
             status=status,
             description=description,
-            extendedProperties={"private": {"autogenerated": "true"}}
+            extendedProperties={"private": {"autogenerated": "true"}},
         )
-
-
 
         if event.id in kalender.keys():
             before_update: Event = EventSerializer.to_object(kalender[event.id])
             my_event.event_id = before_update.event_id
 
-            pop_thingies = ["sequence", "iCalUID", "htmlLink", "eventType", "visibility", "etag", "kind", "location", "send_updates"]
-            formatted_dict = [EventSerializer.to_json(my_event), EventSerializer.to_json(before_update)]
+            pop_thingies = [
+                "sequence",
+                "iCalUID",
+                "htmlLink",
+                "eventType",
+                "visibility",
+                "etag",
+                "kind",
+                "location",
+                "send_updates",
+            ]
+            formatted_dict = [
+                EventSerializer.to_json(my_event),
+                EventSerializer.to_json(before_update),
+            ]
 
             more_thingies = ["responseStatus", "displayName"]
 
@@ -298,24 +352,28 @@ def main():
                     for popthing in more_thingies:
                         formatted_dict[number]["attendees"][i].pop(popthing, None)
 
-            for person in formatted_dict[1]['attendees']:
+            for person in formatted_dict[1]["attendees"]:
                 for key in person:
                     if key != "email":
                         print("fuck")
 
             for pop_thing in pop_thingies:
-                if pop_thing == "location" and any([x.get("location", "") != "" for x in [formatted_dict[0], formatted_dict[1]]]):
+                if pop_thing == "location" and any(
+                    [
+                        x.get("location", "") != ""
+                        for x in [formatted_dict[0], formatted_dict[1]]
+                    ]
+                ):
                     continue
                 formatted_dict[0].pop(pop_thing, None)
                 formatted_dict[1].pop(pop_thing, None)
 
-
             ping_conditions = ["attendees", "status", "start", "end", "location"]
 
-            #print(
+            # print(
             #    json.dumps(formatted_dict[0], indent=2),
             #    json.dumps(formatted_dict[1], indent=2)
-            #)
+            # )
             if formatted_dict[0] == formatted_dict[1]:
                 kalender[event.id] = EventSerializer.to_json(before_update)
                 continue
@@ -323,7 +381,10 @@ def main():
                 before_update.description = my_event.description
                 gc.update_event(before_update, SendUpdatesMode.NONE)
                 update = SendUpdatesMode.NONE
-                if any(formatted_dict[0].get(dict_key) != formatted_dict[1].get(dict_key) for dict_key in ping_conditions):
+                if any(
+                    formatted_dict[0].get(dict_key) != formatted_dict[1].get(dict_key)
+                    for dict_key in ping_conditions
+                ):
                     update = SendUpdatesMode.ALL
                 my_event = gc.update_event(my_event, update)
         else:
@@ -339,7 +400,7 @@ def main():
     for key in kalender.keys():
         if key not in all_ids:
             try:
-                gc.delete_event(kalender[key].get('id'))
+                gc.delete_event(kalender[key].get("id"))
             except:
                 pass
             keys_to_del.append(key)
@@ -350,7 +411,6 @@ def main():
         json.dump(kalender, f, ensure_ascii=False, indent=2)
     with open("new_calendar.json", "w", encoding="utf-8") as f:
         json.dump(new_thing, f, ensure_ascii=False, indent=2)
-
 
 
 while __name__ == "__main__":

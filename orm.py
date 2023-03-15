@@ -4,29 +4,38 @@ import os
 import math
 import time
 import json
-base = Base(os.environ['api_key'], os.environ['base_id'])
 
+base = Base(os.environ["api_key"], os.environ["base_id"])
 
 table_schema = metadata.get_base_schema(base)
-config = {record['fields']['fldkXGyb94cqSXzhU']: record['fields']['fldVAEPybe7cvFFrS'] for record in base.get_table("tbloHfNdwu6Adw97g").all(return_fields_by_field_id=True)}
+config = {
+    record["fields"]["fldkXGyb94cqSXzhU"]: record["fields"]["fldVAEPybe7cvFFrS"]
+    for record in base.get_table("tbloHfNdwu6Adw97g").all(
+        return_fields_by_field_id=True
+    )
+}
+
 
 def get_all_in_orm(orm):
-    return [orm().from_record(record) for record in orm().all(return_fields_by_field_id=True)]
+    return [
+        orm().from_record(record)
+        for record in orm().all(return_fields_by_field_id=True)
+    ]
+
 
 def record_to_orm(table, record_input):
     new_ORM = table()
-    new_ORM.id = record_input['id']
+    new_ORM.id = record_input["id"]
 
-    for table_ in table_schema['tables']:
-        if table_['id'] == table().Meta.table_name:
-            tbl_flds = table_['fields']
+    for table_ in table_schema["tables"]:
+        if table_["id"] == table().Meta.table_name:
+            tbl_flds = table_["fields"]
 
-    for field_name, value in record_input['fields'].items():
-        for field_id, name in [(x['id'], x['name']) for x in tbl_flds]:
+    for field_name, value in record_input["fields"].items():
+        for field_id, name in [(x["id"], x["name"]) for x in tbl_flds]:
             if field_name == name:
-                new_ORM.__dict__['_fields'][field_id] = value
+                new_ORM.__dict__["_fields"][field_id] = value
     return new_ORM
-
 
 
 class Prylar(Model):
@@ -38,17 +47,16 @@ class Prylar(Model):
     hide_from_calendar = fields.CheckboxField("fldb0Hgi9WB3OD8mI")
 
     def make_mult(self):
-        mult = 100 + (config['livsLängdSteg'] * 3)
-        mult -= int(self.livs_längd) * config['livsLängdSteg']
+        mult = 100 + (config["livsLängdSteg"] * 3)
+        mult -= int(self.livs_längd) * config["livsLängdSteg"]
         mult /= 100
         return mult
-
 
     def calc_pris(self):
         self.mult = self.make_mult()
         self.pris = (
-            math.floor((self.in_pris * config["prylKostnadMulti"]) /
-                       10 * self.mult) * 10
+            math.floor((self.in_pris * config["prylKostnadMulti"]) / 10 * self.mult)
+            * 10
         ) * 1.0
 
     def _update_all(self):
@@ -58,16 +66,14 @@ class Prylar(Model):
             pryl = self.from_record(pryl)
             pryl.calc_pris()
             prylar_list.append(pryl.to_record())
-        return self.get_table().batch_update(prylar_list, return_fields_by_field_id=True)
-
-
+        return self.get_table().batch_update(
+            prylar_list, return_fields_by_field_id=True
+        )
 
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblsxui7L2zsDDdiy"
-
-
 
 
 class PaketPaket(Model):
@@ -104,7 +110,6 @@ class PaketPaket(Model):
     def calculate(self):
         self.pris = 0.0
         for pryl, amount in self.get_amount():
-
             if pryl.pris is None:
                 pryl.fetch()
                 if pryl.pris is None:
@@ -120,8 +125,8 @@ class PaketPaket(Model):
         api_key = os.environ["api_key"]
         table_name = "tblVThDQ16pIEkY9m"
 
-class Paket(Model):
 
+class Paket(Model):
     name = fields.TextField("fld3ec1hcB3LK56R7")
     pris = fields.FloatField("fld0tl6Outn8f6lEj")
     paket_i_pryl_paket = fields.LinkField("fld1PIcwxpsFkrcYy", PaketPaket)
@@ -132,6 +137,7 @@ class Paket(Model):
     hyra = fields.FloatField("fld8iEEeEjhi9KT3c")
     hide_from_calendar = fields.CheckboxField("fldQqTyRk9wzLd5fC")
     _force_update = False
+
     def get_amount(self):
         if self.antal_prylar is None:
             self.antal_prylar = ""
@@ -168,6 +174,7 @@ class Paket(Model):
             print(pryl.name, pryl.pris)
         print(self.name, self.pris, pryl_list)
         return pryl_list
+
     def calculate(self):
         self.pris = 0.0
         if self.prylar is not None:
@@ -194,7 +201,7 @@ class Paket(Model):
             paket = Paket().from_record(paket)
             paket.calculate()
             paket_list.append(paket.to_record())
-            print(round((idx+1)/amount_of_paket*1000)/10, "%", paket.pris, "KR")
+            print(round((idx + 1) / amount_of_paket * 1000) / 10, "%", paket.pris, "KR")
         temp_tups = []
         for rec_id, paket in self._linked_cache.items():
             if isinstance(PaketPaket(), type(paket)):
@@ -212,14 +219,14 @@ class Paket(Model):
         table_name = "tblVThDQ16pIEkY9m"
 
 
-
-
 class Projekt(Model):
     name = fields.TextField("fldkyXKKGJIsj0sQF")
+
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblR29p86mCcK9NBL"
+
 
 class FrilansAccounting(Model):
     gissad_kostnad = fields.FloatField("fldx8vULV8QQ57Bfq")
@@ -228,8 +235,6 @@ class FrilansAccounting(Model):
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblfUnngvWcn2u2at"
-
-
 
 
 class Person(Model):
@@ -256,21 +261,29 @@ class Person(Model):
 
             self.konstant_kostnad = int(input_string[0])
 
-            tuples: list[tuple[int, int, int, str|None]] = []  # fixed, timpris, hourly_point, condition
+            tuples: list[
+                tuple[int, int, int, str | None]
+            ] = []  # fixed, timpris, hourly_point, condition
             for s in input_string[1].split("-"):
                 if "|" in s:
-
-                    tuples.append(tuple(list(map(int, s.split("|")[0].split(","))) + [s.split("|")[1]]))
+                    tuples.append(
+                        tuple(
+                            list(map(int, s.split("|")[0].split(",")))
+                            + [s.split("|")[1]]
+                        )
+                    )
                 else:
                     tuples.append(tuple(list(map(int, s.split(","))) + [None]))
 
-            self.conditions_dict: dict[int,dict[str|None,tuple[int,int]]] = {}
+            self.conditions_dict: dict[int, dict[str | None, tuple[int, int]]] = {}
 
             for fixed_price, timpris_in_tup, hour_p, condition in tuples:
                 if hour_p not in self.conditions_dict.keys():
                     self.conditions_dict[hour_p] = {}
 
-                self.conditions_dict[hour_p].update({condition:(fixed_price, timpris_in_tup)})
+                self.conditions_dict[hour_p].update(
+                    {condition: (fixed_price, timpris_in_tup)}
+                )
 
     def can_do(self, task):
         return task in self.available_tasks
@@ -288,15 +301,13 @@ class Person(Model):
         total_pris = 0
         tim_total = 0
         if self.levande_video:  # TODO kan finnas stora problem här
-            tim_total = timmar['gig'] + timmar['rigg'] + timmar[
-                'proj'] + timmar['res']
+            tim_total = timmar["gig"] + timmar["rigg"] + timmar["proj"] + timmar["res"]
             total_kostnad = tim_total * self.tim_kostnad
             total_pris = tim_total * self.timpris
             return total_kostnad, total_pris, tim_total
         elif self.input_string is not None:
-
             total_kostnad = self.konstant_kostnad
-            tim_total = timmar['gig'] + timmar['rigg']
+            tim_total = timmar["gig"] + timmar["rigg"]
             counter = 0
             current_hourly = 0
 
@@ -345,7 +356,6 @@ class Tidrapport(Model):
         table_name = "tblCxKQvWh3QfVIRg"
 
 
-
 class Kund(Model):
     name = fields.TextField("fld3IGUwPTS8v3t44")
 
@@ -378,6 +388,7 @@ class Adressbok(Model):
         api_key = os.environ["api_key"]
         table_name = "tblUEO56t49XAJBhD"
 
+
 class Bestallare(Model):
     name = fields.TextField("fldte0gaCRgXDZnsn")
     kund = fields.LinkField("fldkIuEhfMdkVJVWQ", Kund)
@@ -391,7 +402,6 @@ class Bestallare(Model):
 
 
 class Projektkalender(Model):
-
     name2 = fields.TextField("fldO8TzRQVNgt02qU")
     getin = fields.IntegerField("fldITTqANmwPUjYuC")
     getout = fields.IntegerField("fldAnBswzCzNt7OFs")
@@ -427,7 +437,7 @@ class Projektkalender(Model):
     rigg_dagen_innan = fields.CheckboxField("fldZ8orE83xtYmSkM")
     m_getin = fields.FloatField("fld6F3xuRadz07hyv")
     m_getout = fields.FloatField("fldRxrXmAiZBKO4cu")
-    #dagen_innan_rigg = fields.LinkField("fldYjafIh96hI3pTe", )
+    # dagen_innan_rigg = fields.LinkField("fldYjafIh96hI3pTe", )
     frilans_uträkningar = fields.LinkField("flds3BC39ufa1eTVc", FrilansAccounting)
     extra_rigg = fields.FloatField("fldPLMeJSbypPygtK")
     i_d = fields.IntegerField("fldnOyMoIQlfEJNXb")
@@ -437,10 +447,12 @@ class Projektkalender(Model):
     program_start_hidden = fields.FloatField("fldZhrBxTQ1azrdEz")
     projekt_typ = fields.TextField("fldjq2WoRhwPnO2xE")
     leverans_rid = fields.TextField("fldJunVGOofzOVrov")
+
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tbllVOQa9PrKax1PY"
+
 
 class Leverans(Model):
     projekt_kalender = fields.LinkField("fld8sMBfKU73Rt5RB", Projektkalender)
@@ -499,7 +511,7 @@ class Leverans(Model):
     input_id = fields.TextField("fldCjxYHX7V1Av2mq")
     frilans_uträkningar = fields.LinkField("fldtDfWE1Wj7jXEN9", FrilansAccounting)
     tidrapport = fields.LinkField("flduRCHi8EEYlsA4B", Tidrapport)
-    #made_by = fields.LinkField("fldHAQqd9ApYknmUL", input_data)
+    # made_by = fields.LinkField("fldHAQqd9ApYknmUL", input_data)
     post_deadline = fields.DatetimeField("fldXUpUZC5Ng6eXM2")
     All_personal = fields.LinkField("fldGx5cRPG7o69xk8", Person)
     slutkund_temp = fields.LinkField("fldCJ9Qupbuvr7uWr", Slutkund)
@@ -508,14 +520,10 @@ class Leverans(Model):
     ob = fields.TextField("fldCcecFWkEr6QMIS")
     Kommentar_från_formulär = fields.TextField("fldp4H3xsgi2puMNO")
 
-
-
-
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tbl2JdL4S1Wl1jhdB"
-
 
 
 class input_data(Model):
@@ -585,7 +593,6 @@ class input_data(Model):
 
 
 class Inventarie(Model):
-
     based_on = fields.LinkField("fld486RrDoIslIVdY", Prylar)
     leverans = fields.LinkField("fldjDT2LWD8NUxXrP", Leverans)
     amount = fields.IntegerField("fldNjNPsb1Kx7vcdP")
