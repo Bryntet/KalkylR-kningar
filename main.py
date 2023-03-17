@@ -546,10 +546,7 @@ class Gig:
         #Custom riggtimmar
         if self.data.special_rigg is not None and self.data.special_rigg == 1:
             
-            try:
-                assert self.data.rigg_timmar_spec is not None            
-                self.rigg_timmar = self.data.rigg_timmar_spec / self.output_record.Personal if self.output_record.Personal is not None and self.output_record.Personal > 0.0 else 0.0
-            except AssertionError:
+            self.rigg_timmar = self.data.rigg_timmar_spec / self.output_record.Personal if self.output_record.Personal is not None and self.output_record.Personal > 0.0 else 0.0
                                 
         else:
             self.rigg_timmar = math.floor(
@@ -1017,7 +1014,7 @@ class Gig:
 
         self.output_record.Projekt_kanban = self.output_record.name
         self.output_record.Projekt_timmar = int(float(self.gig_timmar)*self.output_record.Personal*float(len(self.dagar_list)))
-        self.output_record.Rigg_timmar = int(self.rigg_timmar*self.output_record.Personal if )
+        self.output_record.Rigg_timmar = int(self.rigg_timmar*(self.output_record.Personal if self.output_record.Personal is not None else 0))
 
         self.output_record.prylPaket = self.prylpaket
         self.output_record.extraPrylar = self.extra_prylar
