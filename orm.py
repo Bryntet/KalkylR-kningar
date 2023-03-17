@@ -577,7 +577,8 @@ class input_data(Model):
     Leveranser_copy = fields.TextField("fld8E15CzhDcbYvI4")
     Leveranser_copy = fields.TextField("fldc4TYAbX80h3XIe")
     Börja_tidigare = fields.FloatField("fldxANgmnX6XuDIwN")
-
+    special_rigg = fields.IntegerField("fld9Blpuyi40ZI4YR")
+    rigg_timmar_spec = fields.FloatField("fldnnOlN8Z9opg4eD")
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]

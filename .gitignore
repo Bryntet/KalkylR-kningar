@@ -30,3 +30,4 @@ drive_struct.json
 projektkalender.json
 token.pickle
 token_drive.json
+*.json
