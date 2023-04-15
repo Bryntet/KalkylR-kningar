@@ -126,8 +126,8 @@ def main():
             getin = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(seconds=event.getin)
             getout = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(seconds=event.getout)
             if event.program_start is not None and event.program_slut is not None:
-                program_start = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(seconds=event.getin) + datetime.timedelta(seconds=event.program_start)
-                program_slut = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(seconds=event.getin) + datetime.timedelta(seconds=event.program_slut)
+                program_start = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(seconds=event.program_start)
+                program_slut = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(seconds=event.program_slut)
             else:
                 program_start, program_slut = None, None
             if event.status is not None:
@@ -191,49 +191,52 @@ def main():
             else:
                 antal_prylar = []
             paketen_string = "Beställning: \n"
-            for idx, paket in enumerate(paketen):
-                if idx < len(antal_paket): #and not paket_dict[paket].get('hide from calendar', False):
-                    if paket.name is None:
-                        try:
-                            paket.fetch()
-                        except Exception as e:
-                            pass 
-                    assert type(paket.name) is str
-                    org_paket = paket.name
-                    regex_thing = re.search(r"([^[]*),? ?( [.*]?)*", org_paket)
-                    if regex_thing:
-                        paket_namn = regex_thing.group(1)
-                        new_reg = re.search(r"((.*), ?|.*)", paket_namn)
-                        if new_reg:
-                            if new_reg.group(2) is not None:
-                                paket_namn = new_reg.group(2)
+            try:
+                
+                for idx, paket in enumerate(paketen):
+                    if idx < len(antal_paket): #and not paket_dict[paket].get('hide from calendar', False):
+                        if paket.name is None:
+                            try:
+                                paket.fetch()
+                            except Exception as e:
+                                pass 
+                        assert type(paket.name) is str
+                        org_paket = paket.name
+                        regex_thing = re.search(r"([^[]*),? ?( [.*]?)*", org_paket)
+                        if regex_thing:
+                            paket_namn = regex_thing.group(1)
+                            new_reg = re.search(r"((.*), ?|.*)", paket_namn)
+                            if new_reg:
+                                if new_reg.group(2) is not None:
+                                    paket_namn = new_reg.group(2)
 
-                    else:
-                        paket_namn = org_paket
-                    if antal_paket[idx] == "":
-                        paketen_string += "1st - " + paket_namn + "\n"
-                    else:
-                        paketen_string += antal_paket[idx] + "st - " + paket_namn + "\n"
-            for idx, pryl in enumerate(prylar):
-                if idx < len(antal_prylar): #and not prylar_dict[pryl].get('hide from calendar', False):
-                    if pryl.name is None:
-                        pryl.fetch()
-                    assert type(pryl.name) is str
-                    org_pryl = pryl.name
-                    regex_thing = re.search(r"([^[]*),? ?( [.*]?)*", org_pryl)
-                    if regex_thing:
-                        pryl_namn = regex_thing.group(1)
-                        new_reg = re.search(r"((.*), ?|.*)", pryl_namn)
-                        if new_reg:
-                            if new_reg.group(2) is not None:
-                                pryl_namn = new_reg.group(2)
-                    else:
-                        pryl_namn = org_pryl
-                    if antal_prylar[idx] == "":
-                        paketen_string += "1st - " + pryl_namn + "\n"
-                    else:
-                        paketen_string += antal_prylar[idx] + "st - " + pryl_namn + "\n"
-
+                        else:
+                            paket_namn = org_paket
+                        if antal_paket[idx] == "":
+                            paketen_string += "1st - " + paket_namn + "\n"
+                        else:
+                            paketen_string += antal_paket[idx] + "st - " + paket_namn + "\n"
+                for idx, pryl in enumerate(prylar):
+                    if idx < len(antal_prylar): #and not prylar_dict[pryl].get('hide from calendar', False):
+                        if pryl.name is None:
+                            pryl.fetch()
+                        assert type(pryl.name) is str
+                        org_pryl = pryl.name
+                        regex_thing = re.search(r"([^[]*),? ?( [.*]?)*", org_pryl)
+                        if regex_thing:
+                            pryl_namn = regex_thing.group(1)
+                            new_reg = re.search(r"((.*), ?|.*)", pryl_namn)
+                            if new_reg:
+                                if new_reg.group(2) is not None:
+                                    pryl_namn = new_reg.group(2)
+                        else:
+                            pryl_namn = org_pryl
+                        if antal_prylar[idx] == "":
+                            paketen_string += "1st - " + pryl_namn + "\n"
+                        else:
+                            paketen_string += antal_prylar[idx] + "st - " + pryl_namn + "\n"
+            except AssertionError:
+                print("assert error :(")
 
 
 
@@ -281,7 +284,7 @@ def main():
 
 
 
-            if event.id in kalender.keys():
+            if event.id in kalender.keys() and kalender[event.id].get("id") is not None:
                 before_update: Event = EventSerializer.to_object(kalender[event.id])
                 my_event.event_id = before_update.event_id
 
@@ -331,7 +334,7 @@ def main():
             print(my_event)
             kalender[event.id] = EventSerializer.to_json(my_event)
         except Exception as e:
-            print(e)
+            print(e, event)
 
     keys_to_del = []
     all_ids = [record["id"] for record in projektkalender.all()]

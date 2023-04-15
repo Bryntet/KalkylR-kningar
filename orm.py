@@ -4,6 +4,7 @@ import os
 import math
 import time
 import json
+import re
 base = Base(os.environ['api_key'], os.environ['base_id'])
 
 
@@ -70,68 +71,74 @@ class Prylar(Model):
 
 
 
-class PaketPaket(Model):
-    name = fields.TextField("fld3ec1hcB3LK56R7")
-    pris = fields.FloatField("fld0tl6Outn8f6lEj")
-    prylar = fields.LinkField("fldGkPJMOquzQGrO9", Prylar)
-    antal_prylar = fields.TextField("fldUTezg1xtekQBir")
-    Personal = fields.FloatField("fldTTcF0qCx9p8Bz2")
-    Svanis = fields.CheckboxField("fldp2Il8ITQdFXhVR")
-    hyra = fields.FloatField("fld8iEEeEjhi9KT3c")
-    hide_from_calendar = fields.CheckboxField("fldQqTyRk9wzLd5fC")
+# class PaketPaket(Model):
+#     name = fields.TextField("fld3ec1hcB3LK56R7")
+#     pris = fields.FloatField("fld0tl6Outn8f6lEj")
+#     prylar = fields.LinkField("fldGkPJMOquzQGrO9", Prylar)
+#     antal_prylar = fields.TextField("fldUTezg1xtekQBir")
+#     Personal = fields.FloatField("fldTTcF0qCx9p8Bz2")
+#     Svanis = fields.CheckboxField("fldp2Il8ITQdFXhVR")
+#     hyra = fields.FloatField("fld8iEEeEjhi9KT3c")
+#     hide_from_calendar = fields.CheckboxField("fldQqTyRk9wzLd5fC")
 
-    def get_amount(self) -> list[tuple[Prylar, int]]:
-        if self.antal_prylar is None:
-            self.antal_prylar = ""
-        self.amount_list = self.antal_prylar.split(",")
-        output = []
-        if self.prylar is not None:
-            for idx, pryl in enumerate(self.prylar):
-                if idx < len(self.amount_list) and self.amount_list[idx] != "":
-                    output.append((pryl, int(self.amount_list[idx])))
-                else:
-                    output.append((pryl, 1))
-        return output
+#     def get_amount(self) -> list[tuple[Prylar, int]]:
+#         if self.antal_prylar is None:
+#             self.antal_prylar = ""
+#         self.amount_list = self.antal_prylar.split(",")
+#         output = []
+#         if self.prylar is not None:
+#             for idx, pryl in enumerate(self.prylar):
+#                 if idx < len(self.amount_list) and self.amount_list[idx] != "":
+#                     output.append((pryl, int(self.amount_list[idx])))
+#                 else:
+#                     output.append((pryl, 1))
+#         return output
 
-    def get_all_prylar(self):
-        pryl_list = []
-        if self.prylar is not None:
-            for pryl, amount in self.get_amount():
-                for _ in range(amount):
-                    pryl_list.append(pryl)
-        return pryl_list
+#     def get_all_prylar(self):
+#         pryl_list = []
+#         if self.prylar is not None:
+#             for pryl, amount in self.get_amount():
+#                 for _ in range(amount):
+#                     pryl_list.append(pryl)
+#         return pryl_list
 
-    def calculate(self):
-        self.pris = 0.0
-        for pryl, amount in self.get_amount():
+#     def calculate(self):
+#         self.pris = 0.0
+#         for pryl, amount in self.get_amount():
 
-            if pryl.pris is None:
-                pryl.fetch()
-                if pryl.pris is None:
-                    pryl.calc_pris()
-                    pryl.save()
-            assert pryl.pris is not None
-            self.pris += pryl.pris * amount
-        if self.hyra is not None:
-            self.pris += self.hyra
+#             if pryl.pris is None:
+#                 pryl.fetch()
+#                 if pryl.pris is None:
+#                     pryl.calc_pris()
+#                     pryl.save()
+#             assert pryl.pris is not None
+#             self.pris += pryl.pris * amount
+#         if self.hyra is not None:
+#             self.pris += self.hyra
 
-    class Meta:
-        base_id = os.environ["base_id"]
-        api_key = os.environ["api_key"]
-        table_name = "tblVThDQ16pIEkY9m"
+#     class Meta:
+#         base_id = os.environ["base_id"]
+#         api_key = os.environ["api_key"]
+#         table_name = "Prylpaket"
+
+
 
 class Paket(Model):
-
+    
     name = fields.TextField("fld3ec1hcB3LK56R7")
     pris = fields.FloatField("fld0tl6Outn8f6lEj")
-    paket_i_pryl_paket = fields.LinkField("fld1PIcwxpsFkrcYy", PaketPaket)
+    test_field = fields.Field("fld1PIcwxpsFkrcYy")
     prylar = fields.LinkField("fldGkPJMOquzQGrO9", Prylar)
+    paket_i_pryl_paket = fields.LinkField("fld1PIcwxpsFkrcYy", None, True)
     antal_prylar = fields.TextField("fldUTezg1xtekQBir")
     personal = fields.FloatField("fldTTcF0qCx9p8Bz2")
     svanis = fields.CheckboxField("fldp2Il8ITQdFXhVR")
     hyra = fields.FloatField("fld8iEEeEjhi9KT3c")
     hide_from_calendar = fields.CheckboxField("fldQqTyRk9wzLd5fC")
     _force_update = False
+    
+    
+    
     def get_amount(self):
         if self.antal_prylar is None:
             self.antal_prylar = ""
@@ -175,6 +182,7 @@ class Paket(Model):
                 self.pris += pryl.pris * amount
         if self.paket_i_pryl_paket is not None:
             for paket in self.paket_i_pryl_paket:
+                print(paket)
                 if paket.pris is None:
                     paket.fetch()
                     paket.calculate()
@@ -196,13 +204,14 @@ class Paket(Model):
             paket_list.append(paket.to_record())
             print(round((idx+1)/amount_of_paket*1000)/10, "%", paket.pris, "KR")
         temp_tups = []
-        for rec_id, paket in self._linked_cache.items():
-            if isinstance(PaketPaket(), type(paket)):
-                print(paket)
-                temp_tups.append((rec_id, paket))
+        
+        # for rec_id, paket in self._linked_cache.items():
+        #     if isinstance(PaketPaket(), type(paket)):
+        #         print(paket)
+        #         temp_tups.append((rec_id, paket))
 
-        for rec_id, paket in temp_tups:
-            self._linked_cache.pop(rec_id, None)
+        # for rec_id, paket in temp_tups:
+        #     self._linked_cache.pop(rec_id, None)
 
         return self.get_table().batch_update(paket_list, return_fields_by_field_id=True)
 
@@ -210,8 +219,6 @@ class Paket(Model):
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblVThDQ16pIEkY9m"
-
-
 
 
 class Projekt(Model):
@@ -241,9 +248,12 @@ class Person(Model):
     uträkning = fields.LinkField("fldDgH3SedjG0X1bS", FrilansAccounting)
 
     def fix(self):
+        if self.name is None:
+            self.fetch()
         if self.kan_göra is None:
             self.kan_göra = ""
-        self.available_tasks = "".join(self.kan_göra[1:-1].split("'")).split(", ")
+        self.available_tasks = re.findall(r"\[*'([\w\såäöÅÄÖ]+)'\]*", self.kan_göra)
+        self.kan_göra = ", ".join(self.available_tasks)
         if self.levande_video:
             self.timpris = config["levandeVideoLön"]
             self.lön_kostnad = self.timpris * (config["socialaAvgifter"] + 1)
@@ -312,10 +322,10 @@ class Person(Model):
             return total_kostnad, tim_total
 
     def set_frilans_cost(self):
-        self.uträkning = [FrilansAccounting(gissad_kostnad=self.kostnad)]
+        self.uträkning = [FrilansAccounting(gissad_kostnad=self.kostnad*1.0)]
         self.uträkning[0].save()
-        self.save()
-        return self.uträkning[0].id
+        self.save(False)
+        return self.uträkning[0]
 
     class Meta:
         base_id = os.environ["base_id"]
@@ -391,7 +401,7 @@ class Bestallare(Model):
 
 
 class Projektkalender(Model):
-
+    
     name2 = fields.TextField("fldO8TzRQVNgt02qU")
     getin = fields.IntegerField("fldITTqANmwPUjYuC")
     getout = fields.IntegerField("fldAnBswzCzNt7OFs")
@@ -405,7 +415,6 @@ class Projektkalender(Model):
     slides = fields.CheckboxField("fldDhBQk3opw1CSgk")
     fakturareferens = fields.TextField("fldSEEzRXfRgwKKl2")
     skicka_mejl = fields.CheckboxField("fld7w7Rt5T1vVhzXb")
-    åka_från_svanis = fields.FloatField("fldi5mO5lix7abnXm")
     actual_getin = fields.IntegerField("fldSQcKggYPFHtEAB")
     åka_från_svanis = fields.IntegerField("fldi5mO5lix7abnXm")
     komma_tillbaka_till_svanis = fields.IntegerField("flddKPdxarm5UYnZm")
@@ -489,7 +498,7 @@ class Leverans(Model):
     producent = fields.LinkField("fldPfJgkTgTmQxgj3", Person)
     projektledare = fields.LinkField("fld4ALH1wr3eoi1wj", Person)
     latest_added = fields.CheckboxField("fldVW1DEIYPH0fcUG")
-
+    status = fields.TextField("fldWbvJbz9N20yFww")
     leverans_nummer = fields.IntegerField("fldlXvqQJi31guMWY")
     kund = fields.LinkField("fldYGBNxXLwxy6Ej1", Kund)
     Svanis = fields.CheckboxField("fldlj8nYVzBfeYMe2")
@@ -546,7 +555,7 @@ class input_data(Model):
     Projekt_typ = fields.TextField("fldFpABlroJj4muC9")
     Adress = fields.TextField("fldUrjpo5l48QCBHT")
     beställare = fields.LinkField("fldocj6Gxh5Ss1Ko2", Bestallare)
-    Projekt = fields.LinkField("fldLoNFu0HfYXlEII", Person)
+    Projekt = fields.LinkField("fldLoNFu0HfYXlEII", Projekt)
     post_deadline = fields.DatetimeField("fldYkABLiPlDItyyO")
     ny_beställare_bool = fields.CheckboxField("fldX2fFwPDu51Msrn")
     ny_kund_bool = fields.CheckboxField("fldBDyoWf3IZygI3G")

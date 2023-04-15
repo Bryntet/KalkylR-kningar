@@ -55,6 +55,7 @@ pryl_table = Table(api_key, base_id, "Prylar")
 projekt_table = Table(api_key, base_id, "Projekt")
 slutkund_table = Table(api_key, base_id, "Slutkund")
 bestallare_table = Table(api_key, base_id, "Beställare")
+error_table = Table(api_key, base_id, "tbl0NUM7MHa2iVmrw")
 
 beforeTime = time.time()
 output_tables = []
@@ -111,7 +112,7 @@ class Gig:
         with open("output.json", "r", encoding="utf-8") as f:
             prev_out = json.load(f)
 
-       
+
 
         self.data = orm.input_data()
         self.data.id = input_RID
@@ -121,7 +122,8 @@ class Gig:
         if self.data.uppdateraa:
             self.output_record.id = self.data.uppdateraProjekt[0].id
             self.output_record.fetch()
-
+        else:
+            self.output_record.status = "Obekräftat projekt"
 
 
 
@@ -167,12 +169,12 @@ class Gig:
         if self.output_record.beställare is None:
             self.bestallare = None
         self.extra_name =  check_with_default(self.data.extra_name, "")
-
-        self.start_date = self.data.börja_datum.replace(hour=0, tzinfo=pytz.timezone('Europe/Stockholm'))
+        assert self.data.börja_datum is not None
+        self.start_date = self.data.börja_datum.replace(hour=0).astimezone(pytz.timezone('Europe/Stockholm'))
 
 
         if self.data.sluta_datum is not None:
-            self.end_date = self.data.sluta_datum.replace(hour=0,tzinfo=pytz.timezone('Europe/Stockholm'))
+            self.end_date = self.data.sluta_datum.replace(hour=0).astimezone(pytz.timezone('Europe/Stockholm'))
         else:
             self.end_date = self.start_date
         self.start_date
@@ -211,10 +213,10 @@ class Gig:
         self.adress_update = False
         self.tid_to_adress_car = None
         #self.tid_to_adress = self.adress.used_time
-
+        self.antal_paket = None
         self.gmaps = googlemaps.Client(key=os.environ["maps_api"])
         self.url = None
-        self.dagar_amount = (self.output_record.sluta_datum - self.output_record.börja_datum).days
+        self.dagar_amount = (self.output_record.sluta_datum - self.output_record.börja_datum).days + 1
         self.dagar_list: list[tuple[datetime.datetime, datetime.datetime]] = []
         self.extra_gig_tid = None
         self.ob_mult = None
@@ -331,22 +333,8 @@ class Gig:
 
         box_check()
 
-        if self.update:
-            self.updating()
-        if self.adress_update:
-            adress_table = Table(api_key, base_id, "Adressbok")
-            for record in adress_table.all():
-                if record["fields"]["Adress"] == self.adress:
-                    record_id = record["id"]
-                    break
-            adress_table.update(
-                record_id,
-                {
-                    "tid_cykel": self.tid_to_adress,
-                    "tid_bil": self.tid_to_adress_car,
-                    "distans": self.distance_to_adress
-                },
-            )
+
+        
         # self.make_tidrapport()
         self.output_to_json()
         #google_drive_handler.do_one(self.projekt)
@@ -355,9 +343,6 @@ class Gig:
             if record.latest_added and record.id != self.output_record.id:
                 record.latest_added = False
                 record.save()
-
-
-
 
 
     def make_name(self):
@@ -399,9 +384,9 @@ class Gig:
         if self.data.antalPrylar is not None:
             if "," in self.data.antalPrylar:
                 antal_list = self.data.antalPrylar.split(",")
-                for idx, pryl in self.extra_prylar:
+                for idx, pryl in enumerate(self.extra_prylar):
                     if idx < len(antal_list):
-                        for _ in range(antal_list[idx]):
+                        for _ in range(int(antal_list[idx])):
                             self.pre_gig_prylar.append(pryl)
                     else:
                         self.pre_gig_prylar.append(pryl)
@@ -453,7 +438,6 @@ class Gig:
                     if pryl.name is None:
                         pryl.fetch()
                     self.pre_gig_prylar.append(pryl)
-
 
     def count_them(self):
         self.pryl_lista: list[tuple[orm.Prylar,int]] = []
@@ -525,6 +509,7 @@ class Gig:
 
             try:
                 self.adress.time_bike = gmaps_bike['rows'][0]['elements'][0]['duration']['value']
+                print(self.adress.time_bike)
             except KeyError:
                 raise InvalidMapsAdress("Invalid adress")
             if self.adress.time_bike / 60 > 60:
@@ -539,27 +524,32 @@ class Gig:
                     self.adress.time_car = gmaps_car["rows"][0]["elements"][0]["duration"]["value"]
                 except KeyError:
                     raise InvalidMapsAdress("Invalid adress")
-            self.adress.distance = self.adress.time_car if self.adress.time_car is not None else self.adress.time_bike
+            self.adress.distance = str((self.adress.time_car if self.adress.time_car is not None else self.adress.time_bike) / 60 / 60) + "h"
+            self.adress.kund = [self.kund]
+            for record in self.adress.all():
+                if record["fields"]["Adress"] == self.adress.name:
+                    self.adress.id = record["id"]
+                    break
             self.adress.save()
 
     def rakna_timmar(self, config):
         #Custom riggtimmar
         if self.data.special_rigg is not None and self.data.special_rigg == 1:
-            
+            assert self.data.rigg_timmar_spec is not None
             self.rigg_timmar = self.data.rigg_timmar_spec / self.output_record.Personal if self.output_record.Personal is not None and self.output_record.Personal > 0.0 else 0.0
-                                
+
         else:
             self.rigg_timmar = math.floor(
                 self.output_record.Pryl_pris * config["andelRiggTimmar"] /
                 self.output_record.Personal
             ) if self.output_record.Personal is not None and self.output_record.Personal > 0 else 0
-
+        if self.adress.exists() and self.adress.name is None:
+            self.adress.fetch()
         if self.adress.used_time is not None:
-            
             self.restid = self.adress.used_time / 60 / 60
-        
         else:
             self.restid = self.dagar_amount * config["restid"]
+
 
         if self.svanis:
             self.restid = 0.0
@@ -568,10 +558,12 @@ class Gig:
             self.restid = 0.0
         self.restid = round(self.restid*12)/12
 
+        self.per_pers_restid = self.restid * 2.0 * float(self.dagar_amount) if self.restid < 2.0 else self.restid*2.0
 
 
     def tid(self, config):
-
+        self.dagar_changes = []
+        self.restid_list = []
         ins = [
             datetime.time.fromisoformat(time_thing if ":" in time_thing else "00:00")
             for combined in (self.data.getin_getout if self.data.getin_getout is not None else "00:00,00:00-00:00,00:00").split(",")
@@ -649,26 +641,42 @@ class Gig:
                     else: # Minimum extra tid innan & efter är en halvtimme
                         rigg_after = 0.5
                         rigg_before = 0.5
+                check = False
+                default_restid = 0
+                if self.restid < 2 * 60 * 60:
+                    check = True
+                if check:
+                    if idx == 0:
+                        beginn = self.restid
+                        endn = default_restid
+                    elif idx == len(self.extra_gig_tid)-1:
+                        beginn = default_restid
+                        endn = self.restid
+                    else:
+                        beginn, endn = default_restid, default_restid
+                else:
+                    beginn, endn = self.restid, self.restid
+                self.restid_list.append((beginn, endn))
 
                 rigg_res_start = (
                     datetime.timedelta(
-                        hours=rigg_before + self.restid + self.begin_earlier
+                        hours=rigg_before + beginn + self.begin_earlier
                     )
                 )
-                rigg_res_end = (datetime.timedelta(hours=rigg_after+self.restid))
+                rigg_res_end = (datetime.timedelta(hours=rigg_after+endn))
 
-                self.dagar_changes = (rigg_res_start, rigg_res_end)
+                self.dagar_changes.append((rigg_res_start, rigg_res_end))
 
-                if len(self.mgetins) <= idx+1 and self.mgets_outs_true:
+                if len(self.mgetins) > idx and self.mgets_outs_true:
                     self.dagar_list.append((
                         datetime.datetime.combine(
                             self.start_date + datetime.timedelta(days=idx),
                             self.mgetins[idx]
-                        ) - rigg_res_start,
+                        ) - datetime.timedelta(hours=beginn),
                         datetime.datetime.combine(
                             self.start_date + datetime.timedelta(days=idx),
                             self.mgetouts[idx]
-                        ) + rigg_res_end
+                        ) + datetime.timedelta(hours=endn)
                     ))
 
                 else:
@@ -751,8 +759,14 @@ class Gig:
         self.ob_text = ""
 
         for key, value in self.ob_dict.items():
+            value: list[datetime.datetime]
             if len(value) > 0:# and key != "0":
-                self.ob_text += f"OB {key}: {value[0].isoformat()} - {value[-1].isoformat()} ({round((value[-1] - value[0]).seconds/60/60*2)/2}h)\n"
+                self.ob_text += f"OB {key}: "
+
+                for time in value:
+                    day = time.day
+                    self.ob_text += f"{time.strftime('%m-%d %H:%M')}, "
+                self.ob_text += "\n"
         avg = hours_total / len(self.dagar_list)
 
         self.dag_längd = avg
@@ -805,8 +819,7 @@ class Gig:
             'proj': int(self.projekt_timmar),
             'res': int(self.restid),
         }
-
-        total_tid = (self.gig_timmar + self.rigg_timmar + self.projekt_timmar + self.restid*2) * total_personal if total_personal > 0 else 0
+        total_tid = (self.gig_timmar * self.dagar_amount + self.rigg_timmar + self.projekt_timmar + self.per_pers_restid) * total_personal if total_personal is not None and total_personal > 0 else 0
         self.frilans_kostnad, self.total_tim_frilans, self.antal_frilans = 0, 0, 0
         if self.output_record.frilans_uträkningar is not None:
             for uträkning in self.output_record.frilans_uträkningar:
@@ -818,11 +831,13 @@ class Gig:
                 person.fix()
                 if not person.levande_video:
                     person.make_frilans_costs()
-            if not person.levande_video:
-                cost = person.get_cost()
+            if not person.levande_video and person.input_string is not None:
+                cost = person.get_cost(self.tim_dict)
                 self.frilans_kostnad += cost[0]
                 self.total_tim_frilans += cost[1]
                 self.antal_frilans += 1
+                if self.output_record.frilans_uträkningar is None:
+                    self.output_record.frilans_uträkningar = []
                 self.output_record.frilans_uträkningar.append(person.set_frilans_cost())
 
         # self.folk = Folk(self.lön_kostnad, self.timpris, config['hyrMulti'])
@@ -847,7 +862,7 @@ class Gig:
         self.teoretisk_lön_kostnad = self.total_tim_budget * self.lön_kostnad
         self.teoretisk_lön_pris = self.total_tim_budget * self.timpris
         self.output_record.Personal = total_personal * 1.0
-        self.output_record.restid = int(self.restid * float(check_with_default(self.output_record.Personal, 0)) * 2.0 * float(len(self.dagar_list)))
+        self.output_record.restid = int(self.per_pers_restid * check_with_default(self.output_record.Personal, 0.0))
 
     def post_text_func(self):
         try:
@@ -972,14 +987,13 @@ class Gig:
 
         antal_string = ""
 
-        try:
+        if self.data.antalPrylar is not None:
             for antal in self.data.antalPrylar:
                 if antal_string == "":
                     antal_string += antal
                 else:
                     antal_string += "," + antal
-        except (KeyError, TypeError):
-            pass
+
         antal_paket_string = ""
         if self.data.antalPaket is not None and self.antal_paket is not None:
             for antal in self.antal_paket:
@@ -1006,7 +1020,7 @@ class Gig:
         self.old_output = old_output
         # Move this to top
         self.post_text: bool = self.data.post_text
-       
+
         if self.bestallare:
             print(self.kund.name, self.bestallare.name)
         self.projekt_typ = self.data.Projekt_typ if self.data.Projekt_typ is not None else "live"
@@ -1046,14 +1060,28 @@ class Gig:
         self.output_record.extra_namn = self.extra_name
         self.output_record.ob = self.ob_text
         self.output_record.Kommentar_från_formulär = self.comment
-        self.output_record.projekt_kalender = []
 
         if riggdag:
             self.output_record.eget_pris = 0
 
-        self.output_record.__dict__.update({x: '' for x in self.person_field_list})
-        self.output_record.__dict__.update(self.person_dict_grouped)
 
+
+
+
+        self.output_record.Bildproducent = self.data.Bildproducent if self.data.Bildproducent is not None else []
+        self.output_record.Ljudtekniker = self.data.Ljudtekniker if self.data.Ljudtekniker is not None else []
+        self.output_record.Fotograf = self.data.Fotograf if self.data.Fotograf is not None else []
+        self.output_record.Ljustekniker = self.data.Ljustekniker if self.data.Ljustekniker is not None else []
+        self.output_record.Animatör = self.data.Animatör if self.data.Animatör is not None else []
+        self.output_record.Körproducent = self.data.Körproducent if self.data.Körproducent is not None else []
+        self.output_record.Scenmästare = self.data.Scenmästare if self.data.Scenmästare is not None else []
+        self.output_record.Klippare = self.data.Klippare if self.data.Klippare is not None else []
+        self.output_record.Tekniskt_ansvarig = self.data.Tekniskt_ansvarig if self.data.Tekniskt_ansvarig is not None else []
+        self.output_record.Innehållsproducent = self.data.Innehållsproducent if self.data.Innehållsproducent is not None else []
+        self.output_record.Grafikproducent = self.data.Grafikproducent if self.data.Grafikproducent is not None else []
+        self.output_record.Resten = []
+        if self.output_record.projekt_kalender is None:
+            self.output_record.projekt_kalender = []
         for key in self.person_dict_grouped.keys():
             if key not in ["Bildproducent", "Ljudtekniker"]:
                 for person in self.person_dict_grouped[key]:
@@ -1067,7 +1095,7 @@ class Gig:
 
         print(time.time() - self.start_time)
 
-        
+
 
         if not self.output_record.exists():
             assert self.output_record.save()
@@ -1079,14 +1107,14 @@ class Gig:
         # print(output)
         projektkalender_records = []
 
-        
+
         i = 0
         calendar_records: list[orm.Projektkalender] = []
         # Add the dates to the projektkalender table
         if self.update:
             for record in self.output_record.projekt_kalender:
                 # Get all record ids of the already existing linked records in the projektkalender table
-                if record.m_getin is None:
+                if record.getin_hidden is None:
                     record.fetch()
                 calendar_records.append(record)
 
@@ -1104,19 +1132,19 @@ class Gig:
                     calendar_records.append(orm.Projektkalender())
                     record = calendar_records[-1]
                 if record is not None:
-                    record.getin_hidden = (getin + self.dagar_changes[0]).astimezone(pytz.timezone("Europe/Stockholm")).replace(tzinfo=None)
-                    record.getout_hidden = (getout - self.dagar_changes[1]).astimezone(pytz.timezone("Europe/Stockholm")).replace(tzinfo=None)
+                    record.getin_hidden = (getin + self.dagar_changes[idx][0]).astimezone(pytz.timezone("Europe/Stockholm")).replace(tzinfo=None)
+                    record.getout_hidden = (getout - self.dagar_changes[idx][1]).astimezone(pytz.timezone("Europe/Stockholm")).replace(tzinfo=None)
                     record.program_stop_hidden = float(self.program_tider[1][idx].hour*60*60 + self.program_tider[1][idx].minute*60 if self.program_tider[1][idx] is not None else None)
                     record.program_start_hidden = float(self.program_tider[0][idx].hour*60*60 + self.program_tider[0][idx].minute*60 if self.program_tider[0][idx] is not None else None)
                     record.actual_getin = (
-                        getin + datetime.timedelta(hours=self.restid)
+                        getin + datetime.timedelta(hours=self.restid_list[idx][0])
                     ).hour * 60 * 60 + (
-                        getin + (datetime.timedelta(hours=(self.restid)))
+                        getin + (datetime.timedelta(hours=(self.restid_list[idx][0])))
                     ).minute * 60
                     record.actual_getout = (
-                        getout - datetime.timedelta(hours=self.restid)
+                        getout - datetime.timedelta(hours=self.restid_list[idx][1])
                     ).hour * 60 * 60 + (
-                        getout - datetime.timedelta(hours=self.restid)
+                        getout - datetime.timedelta(hours=self.restid_list[idx][1])
                     ).minute * 60
                     record.åka_från_svanis = getin.hour * 60 * 60 + getin.minute * 60
                     record.komma_tillbaka_till_svanis = getout.hour * 60 * 60 + getout.minute * 60
@@ -1131,6 +1159,22 @@ class Gig:
             if not record.exists():
                 assert record.save()
             else:
+                # Make sure not to update computed fields
+                fields = [
+                    "fldO8TzRQVNgt02qU", "fldITTqANmwPUjYuC",
+                    "fldAnBswzCzNt7OFs", "fldDVxfuTkDruHHL8",
+                    "flddD7XrPVHYHIPST", "fldVAczarHpOYDfWn",
+                    "fldUPh7sIGcpNoDkL", "fldOgfAK8SlXhzKgH",
+                    "fldPRDJlVSSOfccb8", "fldXXtWhMURLywgE3",
+                    "fldnOyMoIQlfEJNXb", "fldj3L72EeGGRE0gV",
+                    "fldjsKIIPTOhfg7gW", "fld81rwHaQu7eRx53",
+                    "fldJunVGOofzOVrov", "fldjq2WoRhwPnO2xE"
+                ]
+                for field in fields:
+                    record.__dict__["_fields"].pop(field, None)
+
+
+
                 record.save()
 
         # if self.update:
@@ -1164,16 +1208,15 @@ class Gig:
             "prefill_fld2Q7WAm4q5MaLSO": self.producent[0].id,
             "prefill_flddagkZF2A0fGIUF": ",".join([x.id for x in self.output_record.prylPaket if x is not None]),
             "prefill_fldSee4Tb6eABK6qY": ",".join([x.id for x in self.output_record.extraPrylar if x is not None]),
-            "prefill_fldMuiKyy5M4Ic36o": ",".join(self.antal_paket),
-            "prefill_fldKPZXPgaAGvypFZ": ",".join(self.antal_prylar),
+            "prefill_fldMuiKyy5M4Ic36o": self.antal_paket,
+            "prefill_fldKPZXPgaAGvypFZ": self.antal_prylar,
             "prefill_fldgdbo04e5daul7r": self.extra_personal,
             "prefill_fldqpTwSSKNDL9fGT": self.data.hyrKostnad,
             "prefill_fldg8mwbEEcEtsuFy": self.data.tid_för_gig,
             "prefill_fldQJP25CrDQdZGRg": self.post_text,
             "prefill_fldPxGMqLTl0BYZms": self.data.Textning_minuter,
             "prefill_fldnH3dsbRixSXDVI": ",".join([x.id for x in self.data.Frilans if x is not None]) if self.data.Frilans is not None else None,
-            "prefill_fldKr9l8iJym15vnv": ",".join(self.adress.id) if (type(self.adress) is not str and self.adress is not None) else self.adress,
-            "prefill_fld2IwCPbq7b8Yjik": self.output_record.name,
+            "prefill_fldKr9l8iJym15vnv": self.adress.id,
             "prefill_fldocj6Gxh5Ss1Ko2": self.bestallare.id if self.bestallare is not None else None,
             "prefill_fldS7HP5BJ5hh59VQ": self.slutkund.id if self.slutkund.exists() else None,
             "prefill_fldFpABlroJj4muC9": self.projekt_typ,
@@ -1193,7 +1236,7 @@ class Gig:
             "prefill_fldkZgi81M0SoCbIi": True,
             "prefill_fldG8glSnyO1voEt0": self.output_record.id,
             "prefill_fldgIVyUu8kci0haJ": self.output_record.börja_datum,
-            "prefill_pfldjr98jyFoWSOsHw": self.data.sluta_datum,
+            "prefill_fldjr98jyFoWSOsHw": self.data.sluta_datum,
         })
         hidden_update = ["fldkZgi81M0SoCbIi", "fldG8glSnyO1voEt0"]
         for field in hidden_update:
@@ -1379,10 +1422,16 @@ def auth_test():
 @app.route("/start", methods=["POST"])
 @token_required
 def start():
-
     input_record_id = request.data.decode("utf-8")
     print('hello')
-    Gig(input_record_id)
+
+    if os.environ.get("airtable_debug", "yes") != "no":
+        Gig(input_record_id)
+    else:
+        try:
+            Gig(input_record_id)
+        except Exception as e:
+            error_table.create(fields={"fld11NQUETyWAJ7ZR": str(e)})
 
     return "OK!", 200
 
