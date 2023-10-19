@@ -31,11 +31,12 @@ def delete_event(record_id):
         gc = GoogleCalendar(gcal_id, credentials_path='credentials.json')
         gc.delete_event(kalender[record_id]['post'])
 
-
+api_key = os.environ["api_key"]
+base_id = os.environ["base_id"]
+gcal_id = os.environ["gcal_id"]
+base = Base(api_key, base_id)
 def main():
-    api_key = os.environ["api_key"]
-    base_id = os.environ["base_id"]
-    gcal_id = os.environ["gcal_id"]
+
     #mail_passwd = os.environ["mail_passwd"]
     gc = GoogleCalendar(gcal_id, credentials_path='credentials.json')
 
@@ -47,7 +48,7 @@ def main():
     #s.send_message(mail)
     #s.quit()
 
-    base = Base(api_key, base_id)
+
     projektkalender = base.get_table("Projektkalender")
     people = base.get_table("Frilans")
     adresser = base.get_table("Adressbok")
@@ -88,16 +89,17 @@ def main():
     lv_emails = [epost[0] for epost in emails.values() if '@levandevideo.se' in epost[0] or epost[0] == "epost@edvinbryntesson.se"]
 
 
-    for adress in adresser.all():
-        adresser_dict[adress['id']] = adress['fields']['Adress']
+    for adress in orm.get_all_in_orm(orm.Adressbok):
+        adresser_dict[adress.id] = adress.name
 
 
-   
+    all_leverans = {x.id: x for x in orm.get_all_in_orm(orm.Leverans)}
 
     for event in orm.get_all_in_orm(orm.Projektkalender):
         try:
             assert event.leverans_rid is not None
-            leverans = orm.Leverans.from_id(event.leverans_rid[2:-2])
+
+            leverans = all_leverans[event.leverans_rid[2:-2]]
             if event.projekt_typ == "Utrustning" or event.projekt_typ == "Redigerat":
                 continue
             if leverans.All_personal is None:
@@ -110,7 +112,7 @@ def main():
             for person in all_people:
                 if person.name is None:
                     person.fetch()
-            
+
             invite_list = [person.epost for person in all_people if person.epost is not None] #if email in lv_emails]
 
 
@@ -135,7 +137,7 @@ def main():
                     status = 'tentative'
                 elif event.status == 'Avbokat': # remove or skip cancelled events
                     status = 'cancelled'
-                    if event.status in kalender.keys():
+                    if event.id in kalender.keys():
                         # mail.set_content("""\n"""+ending_of_mail)
                         # mail['Subject'] = 'Gigget den {} har blivit inställt'.format(datum.isoformat())
                         # mail['From'] = 'bokning@levandevideo.se'
@@ -144,10 +146,16 @@ def main():
                         # s.send_message(mail)
 
                         try:
-                            gc.delete_event(kalender[event.id]['post'])
+                            print(f"deleting one")
+                            print(f"{event.name2[2:-2]}")
+                            kal_del = EventSerializer.to_object(
+                                kalender[event.id]
+                            )
+
+                            gc.delete_event(kal_del)
+                            kalender.pop(event.id)
                         except Exception as e:
                             print("Error", e)
-                        kalender.pop(event.id)
                     continue
 
                 else:
@@ -192,14 +200,14 @@ def main():
                 antal_prylar = []
             paketen_string = "Beställning: \n"
             try:
-                
+
                 for idx, paket in enumerate(paketen):
                     if idx < len(antal_paket): #and not paket_dict[paket].get('hide from calendar', False):
                         if paket.name is None:
                             try:
                                 paket.fetch()
                             except Exception as e:
-                                pass 
+                                pass
                         assert type(paket.name) is str
                         org_paket = paket.name
                         regex_thing = re.search(r"([^[]*),? ?( [.*]?)*", org_paket)
@@ -260,7 +268,7 @@ def main():
             description += """\nFör mer information gällande framtida bokningar så kan du kolla här: https://airtable.com/invite/l?inviteId=invJnNIcV8mTqcKR9&inviteToken=92b5c354ee319e7b9b30a85c2d89dd32ec269cb38a4631f51c83befb0b290c87&utm_medium=email&utm_source=product_team&utm_content=transactional-alerts"""
 
             projektkalender.update(event.id, {"Calendar description": description})
-    
+
             if event.status is None:
                 continue
             assert event.name2 is not None
@@ -270,6 +278,8 @@ def main():
                 assert leverans.Adress[0].name is not None
             else:
                 leverans.Adress = []
+
+
 
             my_event = Event(
                 event.name2[2:-2] + (' [OBEKRÄFTAT]' if event.status == 'Obekräftat projekt' else "") + (" [RIGG]" if leverans.typ == "Rigg" else ""),
@@ -285,6 +295,8 @@ def main():
 
 
             if event.id in kalender.keys() and kalender[event.id].get("id") is not None:
+                if event.id == "m12hrq8qq8ii1at6r5bl6llbt8":
+                    print("{my_event}")
                 before_update: Event = EventSerializer.to_object(kalender[event.id])
                 my_event.event_id = before_update.event_id
 
@@ -326,15 +338,18 @@ def main():
                     if any(formatted_dict[0].get(dict_key) != formatted_dict[1].get(dict_key) for dict_key in ping_conditions):
                         update = SendUpdatesMode.ALL
                     my_event = gc.update_event(my_event, update)
+                    print(my_event)
             else:
                 try:
                     my_event = gc.add_event(my_event, SendUpdatesMode.ALL)
+                    print(my_event)
                 except:
                     pass
-            print(my_event)
             kalender[event.id] = EventSerializer.to_json(my_event)
         except Exception as e:
             print(e, event)
+            if event.leverans_rid[2:-2] == "recQTkEOxpgfazdxN":
+                print("HELLO HERE")
 
     keys_to_del = []
     all_ids = [record["id"] for record in projektkalender.all()]
@@ -354,8 +369,14 @@ def main():
         json.dump(new_thing, f, ensure_ascii=False, indent=2)
 
 
-
+error_table = base.get_table("tbl0NUM7MHa2iVmrw")
 while __name__ == "__main__":
-    main()
+    if os.environ.get("airtable_debug", "yes") != "no":
+        main()
+    else:
+        try:
+            main()
+        except Exception as e:
+            error_table.create(fields={"fld11NQUETyWAJ7ZR": str(e)})
     print("Sleeping for 10 minutes")
     time.sleep(600)

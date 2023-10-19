@@ -124,7 +124,7 @@ class Prylar(Model):
 
 
 class Paket(Model):
-    
+
     name = fields.TextField("fld3ec1hcB3LK56R7")
     pris = fields.FloatField("fld0tl6Outn8f6lEj")
     test_field = fields.Field("fld1PIcwxpsFkrcYy")
@@ -136,9 +136,9 @@ class Paket(Model):
     hyra = fields.FloatField("fld8iEEeEjhi9KT3c")
     hide_from_calendar = fields.CheckboxField("fldQqTyRk9wzLd5fC")
     _force_update = False
-    
-    
-    
+
+
+
     def get_amount(self):
         if self.antal_prylar is None:
             self.antal_prylar = ""
@@ -169,11 +169,13 @@ class Paket(Model):
                 if paket.pris is None:
                     paket.fetch()
                 pryl_list.extend(paket.get_all_prylar())
+
         for pryl in pryl_list:
             if pryl.name is None:
                 pryl.fetch()
             print(pryl.name, pryl.pris)
-        print(self.name, self.pris, pryl_list)
+        if self.name == "Trekamera G2 [1 personal]" or self.name == "Trekamera Angela G2 [1 personal]":
+            print(self.name, self.pris, pryl_list)
         return pryl_list
     def calculate(self):
         self.pris = 0.0
@@ -204,7 +206,7 @@ class Paket(Model):
             paket_list.append(paket.to_record())
             print(round((idx+1)/amount_of_paket*1000)/10, "%", paket.pris, "KR")
         temp_tups = []
-        
+
         # for rec_id, paket in self._linked_cache.items():
         #     if isinstance(PaketPaket(), type(paket)):
         #         print(paket)
@@ -401,7 +403,7 @@ class Bestallare(Model):
 
 
 class Projektkalender(Model):
-    
+
     name2 = fields.TextField("fldO8TzRQVNgt02qU")
     getin = fields.IntegerField("fldITTqANmwPUjYuC")
     getout = fields.IntegerField("fldAnBswzCzNt7OFs")
@@ -450,6 +452,14 @@ class Projektkalender(Model):
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tbllVOQa9PrKax1PY"
+
+
+class EdvinsProblem(Model):
+    class Meta:
+        base_id = os.environ["base_id"]
+        api_key = os.environ["api_key"]
+        table_name = "tblleX4SfjkO9DyFR"
+
 
 class Leverans(Model):
     projekt_kalender = fields.LinkField("fld8sMBfKU73Rt5RB", Projektkalender)
@@ -516,9 +526,10 @@ class Leverans(Model):
     extra_namn = fields.TextField("fldAa4QimQWLXEosO")
     ob = fields.TextField("fldCcecFWkEr6QMIS")
     Kommentar_från_formulär = fields.TextField("fldp4H3xsgi2puMNO")
-
-
-
+    rabatt = fields.FloatField("fldQw9OqKfVWNrDru")
+    equipment_url = fields.TextField("fldecfG6DnmrybU1X")
+    edvs_probs = fields.LinkField("fldAkqW8feXXld8ED", EdvinsProblem)
+    personal_kostnad = fields.FloatField("fldSLwsJFWFdyVThg")
 
     class Meta:
         base_id = os.environ["base_id"]

@@ -139,7 +139,7 @@ class Gig:
         else:
             self.slutkund = orm.Slutkund()
 
-
+        self
 
         if self.data.ny_beställare_bool:
             if self.data.ny_kund:
@@ -152,6 +152,7 @@ class Gig:
                 self.kund.fetch()
             self.bestallare = orm.Bestallare(name = self.data.ny_beställare, kund = [self.kund])
             self.bestallare.save()
+            self.bestallare.fetch()
             self.output_record.beställare = [self.bestallare]
             self.output_record.kund = [self.kund]
             #get_prylar()
@@ -310,7 +311,8 @@ class Gig:
         self.pryl_mod(config)
 
         self.adress_check()
-
+        if self.adress.exists():
+            self.output_record.Adress = [self.adress]
         self.rakna_timmar(config)
 
         self.tid(config)
@@ -756,17 +758,17 @@ class Gig:
 
             self.start_date += datetime.timedelta(days=1)
 
-        self.ob_text = ""
+        self.ob_text = "OB för en personal:\n"
 
         for key, value in self.ob_dict.items():
             value: list[datetime.datetime]
             if len(value) > 0:# and key != "0":
-                self.ob_text += f"OB {key}: "
-
-                for time in value:
-                    day = time.day
-                    self.ob_text += f"{time.strftime('%m-%d %H:%M')}, "
-                self.ob_text += "\n"
+                if key == "0":
+                    self.ob_text += f"Timmar utan OB: {len(value) / 2}\n"
+                else:
+                    self.ob_text += f"OB {key}: {len(value) / 2}\n"
+                
+               
         avg = hours_total / len(self.dagar_list)
 
         self.dag_längd = avg
@@ -851,7 +853,7 @@ class Gig:
         self.levande_video_kostnad = self.lön_kostnad * (total_tid/total_personal) * (total_personal - self.antal_frilans) if total_personal > self.antal_frilans else 0
 
 
-        self.output_record.Personal_kostnad = self.frilans_kostnad + self.levande_video_kostnad
+        self.output_record.personal_kostnad = self.frilans_kostnad + self.levande_video_kostnad
         self.output_record.Personal_pris =  self.timpris * total_tid # Frilans is not used for pris
 
 
@@ -889,7 +891,7 @@ class Gig:
 
         self.kostnad = (
             self.pryl_kostnad + self.data.hyrKostnad +
-            self.post_text_kostnad + self.output_record.Personal_kostnad
+            self.post_text_kostnad + self.output_record.personal_kostnad
         )
 
         self.output_record.Pris += self.hyr_pris + self.post_text_pris + self.output_record.Personal_pris
@@ -917,14 +919,7 @@ class Gig:
         self.teoretisk_avkastning = round(
             self.output_record.Pris - self.teoretisk_kostnad
         )
-        #self.avkastning_without_pris = (
-        #    -1 * self.slit_kostnad - self.output_record.Personal_kostnad -
-        #    self.data.hyrKostnad
-        #)
-        #self.avkastning_without_pris_gammal = (
-        #    -1 * self.slit_kostnad - self.output_record.Personal_kostnad_gammal -
-        #    self.data.hyrKostnad
-        #)
+
 
         self.hyr_things = self.data.hyrKostnad * (
             1 - config["hyrMulti"] * config["hyrMarginal"]
@@ -1063,8 +1058,8 @@ class Gig:
 
         if riggdag:
             self.output_record.eget_pris = 0
-
-
+            self.output_record.rabatt = 1.0
+    
 
 
 
@@ -1208,8 +1203,8 @@ class Gig:
             "prefill_fld2Q7WAm4q5MaLSO": self.producent[0].id,
             "prefill_flddagkZF2A0fGIUF": ",".join([x.id for x in self.output_record.prylPaket if x is not None]),
             "prefill_fldSee4Tb6eABK6qY": ",".join([x.id for x in self.output_record.extraPrylar if x is not None]),
-            "prefill_fldMuiKyy5M4Ic36o": self.antal_paket,
-            "prefill_fldKPZXPgaAGvypFZ": self.antal_prylar,
+            "prefill_fldMuiKyy5M4Ic36o": self.antal_paket if type(self.antal_paket) is not list else ",".join(self.antal_paket),
+            "prefill_fldKPZXPgaAGvypFZ": self.antal_prylar if type(self.antal_prylar) is not list else ",".join(self.antal_prylar),
             "prefill_fldgdbo04e5daul7r": self.extra_personal,
             "prefill_fldqpTwSSKNDL9fGT": self.data.hyrKostnad,
             "prefill_fldg8mwbEEcEtsuFy": self.data.tid_för_gig,
@@ -1225,6 +1220,13 @@ class Gig:
             "prefill_fldM7myaiGPyiHqNc": self.extra_name,
             "prefill_fldgCwZHHkIj5cxFS": self.data.getin_getout
         }
+        equip_url = {
+            "prefill_flddagkZF2A0fGIUF": ",".join([x.id for x in self.output_record.prylPaket if x is not None]),
+            "prefill_fldSee4Tb6eABK6qY": ",".join([x.id for x in self.output_record.extraPrylar if x is not None]),
+            "prefill_fldMuiKyy5M4Ic36o": self.antal_paket if type(self.antal_paket) is not list else ",".join(self.antal_paket),
+            "prefill_fldKPZXPgaAGvypFZ": self.antal_prylar if type(self.antal_prylar) is not list else ",".join(self.antal_prylar)
+        }
+        self.output_record.equipment_url = urllib.parse.urlencode(equip_url) + "&hide_flddagkZF2A0fGIUF=true&hide_fldSee4Tb6eABK6qY=true&hide_fldMuiKyy5M4Ic36o=true&hide_fldKPZXPgaAGvypFZ=true"
         if len(self.person_field_list) > 0:
             params.update({"prefill_fldsNgx88aUVIqazE": True})
         for work_area in self.person_field_list:
