@@ -1,18 +1,29 @@
-from pyairtable.orm import Model, fields
-from pyairtable import metadata, Base
-import os
-import math
-import time
 import json
+import math
+import os
 import re
+import time
+
+from pyairtable import Base, metadata
+from pyairtable.orm import Model, fields
+
 base = Base(os.environ['api_key'], os.environ['base_id'])
 
-
 table_schema = metadata.get_base_schema(base)
-config = {record['fields']['fldkXGyb94cqSXzhU']: record['fields']['fldVAEPybe7cvFFrS'] for record in base.get_table("tbloHfNdwu6Adw97g").all(return_fields_by_field_id=True)}
+config = {
+    record['fields']['fldkXGyb94cqSXzhU']: record['fields']
+    ['fldVAEPybe7cvFFrS']
+    for record in base.get_table("tbloHfNdwu6Adw97g"
+                                 ).all(return_fields_by_field_id=True)
+}
+
 
 def get_all_in_orm(orm):
-    return [orm().from_record(record) for record in orm().all(return_fields_by_field_id=True)]
+    return [
+        orm().from_record(record)
+        for record in orm().all(return_fields_by_field_id=True)
+    ]
+
 
 def record_to_orm(table, record_input):
     new_ORM = table()
@@ -29,7 +40,6 @@ def record_to_orm(table, record_input):
     return new_ORM
 
 
-
 class Prylar(Model):
     name = fields.TextField("fldAakG5Ntk1Mro4S")
     pris = fields.FloatField("fld1qKXF28Qz2pJG2")
@@ -44,12 +54,12 @@ class Prylar(Model):
         mult /= 100
         return mult
 
-
     def calc_pris(self):
         self.mult = self.make_mult()
         self.pris = (
-            math.floor((self.in_pris * config["prylKostnadMulti"]) /
-                       10 * self.mult) * 10
+            math.floor(
+                (self.in_pris * config["prylKostnadMulti"]) / 10 * self.mult
+            ) * 10
         ) * 1.0
 
     def _update_all(self):
@@ -59,16 +69,14 @@ class Prylar(Model):
             pryl = self.from_record(pryl)
             pryl.calc_pris()
             prylar_list.append(pryl.to_record())
-        return self.get_table().batch_update(prylar_list, return_fields_by_field_id=True)
-
-
+        return self.get_table().batch_update(
+            prylar_list, return_fields_by_field_id=True
+        )
 
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblsxui7L2zsDDdiy"
-
-
 
 
 # class PaketPaket(Model):
@@ -122,7 +130,6 @@ class Prylar(Model):
 #         table_name = "Prylpaket"
 
 
-
 class Paket(Model):
 
     name = fields.TextField("fld3ec1hcB3LK56R7")
@@ -136,8 +143,6 @@ class Paket(Model):
     hyra = fields.FloatField("fld8iEEeEjhi9KT3c")
     hide_from_calendar = fields.CheckboxField("fldQqTyRk9wzLd5fC")
     _force_update = False
-
-
 
     def get_amount(self):
         if self.antal_prylar is None:
@@ -177,6 +182,7 @@ class Paket(Model):
         if self.name == "Trekamera G2 [1 personal]" or self.name == "Trekamera Angela G2 [1 personal]":
             print(self.name, self.pris, pryl_list)
         return pryl_list
+
     def calculate(self):
         self.pris = 0.0
         if self.prylar is not None:
@@ -204,7 +210,10 @@ class Paket(Model):
             paket = Paket().from_record(paket)
             paket.calculate()
             paket_list.append(paket.to_record())
-            print(round((idx+1)/amount_of_paket*1000)/10, "%", paket.pris, "KR")
+            print(
+                round((idx+1) / amount_of_paket * 1000) / 10, "%", paket.pris,
+                "KR"
+            )
         temp_tups = []
 
         # for rec_id, paket in self._linked_cache.items():
@@ -215,7 +224,9 @@ class Paket(Model):
         # for rec_id, paket in temp_tups:
         #     self._linked_cache.pop(rec_id, None)
 
-        return self.get_table().batch_update(paket_list, return_fields_by_field_id=True)
+        return self.get_table().batch_update(
+            paket_list, return_fields_by_field_id=True
+        )
 
     class Meta:
         base_id = os.environ["base_id"]
@@ -225,10 +236,12 @@ class Paket(Model):
 
 class Projekt(Model):
     name = fields.TextField("fldkyXKKGJIsj0sQF")
+
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblR29p86mCcK9NBL"
+
 
 class FrilansAccounting(Model):
     gissad_kostnad = fields.FloatField("fldx8vULV8QQ57Bfq")
@@ -237,8 +250,6 @@ class FrilansAccounting(Model):
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblfUnngvWcn2u2at"
-
-
 
 
 class Person(Model):
@@ -254,7 +265,9 @@ class Person(Model):
             self.fetch()
         if self.kan_göra is None:
             self.kan_göra = ""
-        self.available_tasks = re.findall(r"\[*'([\w\såäöÅÄÖ]+)'\]*", self.kan_göra)
+        self.available_tasks = re.findall(
+            r"\[*'([\w\såäöÅÄÖ]+)'\]*", self.kan_göra
+        )
         self.kan_göra = ", ".join(self.available_tasks)
         if self.levande_video:
             self.timpris = config["levandeVideoLön"]
@@ -268,21 +281,31 @@ class Person(Model):
 
             self.konstant_kostnad = int(input_string[0])
 
-            tuples: list[tuple[int, int, int, str|None]] = []  # fixed, timpris, hourly_point, condition
+            tuples: list[tuple[int, int, int, str | None]
+                         ] = []  # fixed, timpris, hourly_point, condition
             for s in input_string[1].split("-"):
                 if "|" in s:
 
-                    tuples.append(tuple(list(map(int, s.split("|")[0].split(","))) + [s.split("|")[1]]))
+                    tuples.append(
+                        tuple(
+                            list(map(int,
+                                     s.split("|")[0].split(","))) +
+                            [s.split("|")[1]]
+                        )
+                    )
                 else:
                     tuples.append(tuple(list(map(int, s.split(","))) + [None]))
 
-            self.conditions_dict: dict[int,dict[str|None,tuple[int,int]]] = {}
+            self.conditions_dict: dict[int, dict[str | None, tuple[int,
+                                                                   int]]] = {}
 
             for fixed_price, timpris_in_tup, hour_p, condition in tuples:
                 if hour_p not in self.conditions_dict.keys():
                     self.conditions_dict[hour_p] = {}
 
-                self.conditions_dict[hour_p].update({condition:(fixed_price, timpris_in_tup)})
+                self.conditions_dict[hour_p].update({
+                    condition: (fixed_price, timpris_in_tup)
+                })
 
     def can_do(self, task):
         return task in self.available_tasks
@@ -324,7 +347,7 @@ class Person(Model):
             return total_kostnad, tim_total
 
     def set_frilans_cost(self):
-        self.uträkning = [FrilansAccounting(gissad_kostnad=self.kostnad*1.0)]
+        self.uträkning = [FrilansAccounting(gissad_kostnad=self.kostnad * 1.0)]
         self.uträkning[0].save()
         self.save(False)
         return self.uträkning[0]
@@ -355,7 +378,6 @@ class Tidrapport(Model):
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblCxKQvWh3QfVIRg"
-
 
 
 class Kund(Model):
@@ -389,6 +411,7 @@ class Adressbok(Model):
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblUEO56t49XAJBhD"
+
 
 class Bestallare(Model):
     name = fields.TextField("fldte0gaCRgXDZnsn")
@@ -439,7 +462,9 @@ class Projektkalender(Model):
     m_getin = fields.FloatField("fld6F3xuRadz07hyv")
     m_getout = fields.FloatField("fldRxrXmAiZBKO4cu")
     #dagen_innan_rigg = fields.LinkField("fldYjafIh96hI3pTe", )
-    frilans_uträkningar = fields.LinkField("flds3BC39ufa1eTVc", FrilansAccounting)
+    frilans_uträkningar = fields.LinkField(
+        "flds3BC39ufa1eTVc", FrilansAccounting
+    )
     extra_rigg = fields.FloatField("fldPLMeJSbypPygtK")
     i_d = fields.IntegerField("fldnOyMoIQlfEJNXb")
     fakturanummer = fields.TextField("fldj3L72EeGGRE0gV")
@@ -448,6 +473,7 @@ class Projektkalender(Model):
     program_start_hidden = fields.FloatField("fldZhrBxTQ1azrdEz")
     projekt_typ = fields.TextField("fldjq2WoRhwPnO2xE")
     leverans_rid = fields.TextField("fldJunVGOofzOVrov")
+
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
@@ -516,7 +542,9 @@ class Leverans(Model):
     Adress = fields.LinkField("fldCOxzZAj9SAFvQK", Adressbok)
     beställare = fields.LinkField("fldMYoZLCVZGBlAjA", Bestallare)
     input_id = fields.TextField("fldCjxYHX7V1Av2mq")
-    frilans_uträkningar = fields.LinkField("fldtDfWE1Wj7jXEN9", FrilansAccounting)
+    frilans_uträkningar = fields.LinkField(
+        "fldtDfWE1Wj7jXEN9", FrilansAccounting
+    )
     tidrapport = fields.LinkField("flduRCHi8EEYlsA4B", Tidrapport)
     #made_by = fields.LinkField("fldHAQqd9ApYknmUL", input_data)
     post_deadline = fields.DatetimeField("fldXUpUZC5Ng6eXM2")
@@ -535,7 +563,6 @@ class Leverans(Model):
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tbl2JdL4S1Wl1jhdB"
-
 
 
 class input_data(Model):
@@ -599,6 +626,7 @@ class input_data(Model):
     Börja_tidigare = fields.FloatField("fldxANgmnX6XuDIwN")
     special_rigg = fields.IntegerField("fld9Blpuyi40ZI4YR")
     rigg_timmar_spec = fields.FloatField("fldnnOlN8Z9opg4eD")
+
     class Meta:
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
