@@ -138,8 +138,7 @@ class Gig:
             self.slutkund.fetch()
         else:
             self.slutkund = orm.Slutkund()
-
-        self
+        
 
         if self.data.ny_beställare_bool:
             if self.data.ny_kund:
@@ -1014,7 +1013,7 @@ class Gig:
 
         self.old_output = old_output
         # Move this to top
-        self.post_text: bool = self.data.post_text
+        self.post_text: bool | None = self.data.post_text
 
         if self.bestallare:
             print(self.kund.name, self.bestallare.name)

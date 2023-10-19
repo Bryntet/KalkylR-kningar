@@ -1,0 +1,12 @@
+# with open("paket.json", "r") as f:
+#     data = json.load(f)
+#     dict_thing = {data[rec_id]['namn3']: list(data[rec_id]['prylar'].keys()) for rec_id in data.keys()}
+#     list_thing = []
+#     for rec_id, values in data.items():
+#         out_dict = {'fields': {}, 'id':rec_id}
+#         if values['paket_i_pryl_paket'] is None:
+#             out_dict['fields']['paket_prylar'] = list(values['prylar'].keys())
+#         else:
+#             out_dict['fields']['paket_prylar'] = [x for x in values['prylar'].keys() if x not in dict_thing[values['paket_i_pryl_paket']['name']]]
+#         list_thing.append(out_dict)
+#     Paket.get_table().batch_update(list_thing)
