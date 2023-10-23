@@ -1,6 +1,5 @@
 import json
 
-import copy
 
 class Person():
 
@@ -25,7 +24,6 @@ class Person():
         else:
             self.frilans = True
 
-
             if information['hyrkostnad'] is not None:
                 self.hyrkostnad = information['hyrkostnad']
             else:
@@ -39,7 +37,7 @@ class Person():
 
             if information['timpeng efter'] is not None:
                 self.tim_kostnad_after_time = information['timpeng efter'
-                                                          ] / 60 / 60
+                                              ] / 60 / 60
             else:
                 self.tim_kostnad_after_time = False
             self.input_string = information.get('input_string')
@@ -48,22 +46,21 @@ class Person():
 
                 self.konstant_kostnad = int(input_string[0])
 
-                tuples: list[tuple[int, int, int, str|None]] = []  # fixed, timpris, hourly_point, condition
+                tuples: list[tuple[int, int, int, str | None]] = []  # fixed, timpris, hourly_point, condition
                 for s in input_string[1].split("-"):
                     if "|" in s:
-                        
+
                         tuples.append(tuple(list(map(int, s.split("|")[0].split(","))) + [s.split("|")[1]]))
                     else:
                         tuples.append(tuple(list(map(int, s.split(","))) + [None]))
 
-                self.stuff_dict: dict[int,dict[str|None,tuple[int,int]]] = {}
+                self.stuff_dict: dict[int, dict[str | None, tuple[int, int]]] = {}
 
                 for fixed_thingy, timpris_in_tup, hour_p, condition in tuples:
                     if hour_p not in self.stuff_dict.keys():
                         self.stuff_dict[hour_p] = {}
 
-                    self.stuff_dict[hour_p].update({condition:(fixed_thingy, timpris_in_tup)})
-
+                    self.stuff_dict[hour_p].update({condition: (fixed_thingy, timpris_in_tup)})
 
     def get_cost(self, timmar: dict[str, int], typ_av_jobb: str | None = None):
         """Returns the money that the person should get for the time spent
@@ -77,7 +74,7 @@ class Person():
         total_kostnad = 0
         total_pris = 0
         tim_total = 0
-        if self.levande_video: # TODO kan finnas stora problem här
+        if self.levande_video:  # TODO kan finnas stora problem här
             tim_total = timmar['gig'] + timmar['rigg'] + timmar[
                 'proj'] + timmar['res']
             total_kostnad = tim_total * self.tim_kostnad
@@ -139,7 +136,7 @@ class Person():
 
 class Folk():
     def __init__(self, lön, timpris, hyr_multi):
-        
+
         with open("folk.json", "r") as f:
             json_data = json.load(f)
             self.folk_dictionary = {

@@ -17,7 +17,7 @@ if (record) {
         try {
             dict[record.name][field.name] = (record.getCellValue(field.id));
         } catch (TypeError) {
-            continue
+
         }
     }
     dict[record.name]["input_id"] = record_id

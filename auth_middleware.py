@@ -1,6 +1,7 @@
 from functools import wraps
-from flask import request
+
 from flask import current_app
+from flask import request
 
 
 def token_required(f):

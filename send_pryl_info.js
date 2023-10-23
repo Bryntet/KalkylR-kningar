@@ -1,4 +1,3 @@
-
 let table = base.getTable("Leveranser")
 let records = {}
 
@@ -30,12 +29,10 @@ for (let person of folkQuery.records) {
         if (field == 'Levande Video') {
             if (person.getCellValue(field) === null) {
                 fields[field] = false
-            }
-            else {
+            } else {
                 fields[field] = true
             }
-        }
-        else if (field == 'Kan göra dessa uppgifter') {
+        } else if (field == 'Kan göra dessa uppgifter') {
             if (person.getCellValue(field) != null) {
                 let uppgift_lista = []
                 for (let uppgift of person.getCellValue(field)) {
@@ -44,12 +41,11 @@ for (let person of folkQuery.records) {
                 fields[field] = uppgift_lista
 
             }
-        }
-        else {
+        } else {
             fields[field] = await person.getCellValue(field)
         }
     }
-    
+
     folk_dict[person.id] = fields
 }
 

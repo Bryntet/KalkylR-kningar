@@ -10,6 +10,6 @@ if (record) {
         await kalender_table.deleteRecordAsync(dag2.id)
     }
     input.buttonsAsync('Okej!', []);
-    
+
     await table.deleteRecordAsync(record.id);
 }

@@ -4,11 +4,10 @@ let record = await input.recordAsync('Pick a record', table);
 let kalender_table = base.getTable("Projektkalender")
 let svar = await input.buttonsAsync('Det här kommer ta bort din leverans! Är du säker på att du vill det?',
     [
-        { label: 'Nej!', value: false, variant: 'primary' },
-        { label: 'Ja!', value: true, variant: 'danger' }
+        {label: 'Nej!', value: false, variant: 'primary'},
+        {label: 'Ja!', value: true, variant: 'danger'}
 
     ]);
-
 
 
 if (record && svar == true) {
@@ -26,7 +25,7 @@ if (record && svar == true) {
         if (auth_key) {
             await remoteFetchAsync("http://pi.levandevideo.se:5000/delete", {
                 method: "POST",
-                body: JSON.stringify({ "content": record.getCellValueAsString("Gig namn") }),
+                body: JSON.stringify({"content": record.getCellValueAsString("Gig namn")}),
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': auth_key
@@ -35,7 +34,6 @@ if (record && svar == true) {
         }
     }
     await table.deleteRecordAsync(record.id);
-}
-else {
+} else {
     input.buttonsAsync('Bra val!', []);
 }

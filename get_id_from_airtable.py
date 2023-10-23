@@ -1,31 +1,28 @@
 import os
+import re
+
 import requests
-import json
 from pyairtable.orm import Model, fields
 from pydantic import BaseModel
-import re
 
 api_key = os.environ["api_key"]
 base_id = os.environ["base_id"]
 
 url = "https://api.airtable.com/v0/meta/bases/appG1QEArAVGABdjm/tables"
 
-
-payload={}
+payload = {}
 
 headers = {
-  'Authorization': 'Bearer {}'.format(os.environ["meta_key"]),
-  'Cookie': 'brw=brwCwx8u9KwIzkmiJ; AWSALB=ay99AB8vnr+eFIkJZDmokIXwcpikQrt2KgtIchwf73Al3UvLwd3xTehb+lkZ9UIiDWr1e+d9Czv7R3kdYz+KkK+zb2qN8uxXp2hKjZG/e1zfTSIQDl/BsKhZB7f9; AWSALBCORS=ay99AB8vnr+eFIkJZDmokIXwcpikQrt2KgtIchwf73Al3UvLwd3xTehb+lkZ9UIiDWr1e+d9Czv7R3kdYz+KkK+zb2qN8uxXp2hKjZG/e1zfTSIQDl/BsKhZB7f9'
+    'Authorization': 'Bearer {}'.format(os.environ["meta_key"]),
+    'Cookie': 'brw=brwCwx8u9KwIzkmiJ; AWSALB=ay99AB8vnr+eFIkJZDmokIXwcpikQrt2KgtIchwf73Al3UvLwd3xTehb+lkZ9UIiDWr1e+d9Czv7R3kdYz+KkK+zb2qN8uxXp2hKjZG/e1zfTSIQDl/BsKhZB7f9; AWSALBCORS=ay99AB8vnr+eFIkJZDmokIXwcpikQrt2KgtIchwf73Al3UvLwd3xTehb+lkZ9UIiDWr1e+d9Czv7R3kdYz+KkK+zb2qN8uxXp2hKjZG/e1zfTSIQDl/BsKhZB7f9'
 }
 
-#tables = response.json()['tables']
+
+# tables = response.json()['tables']
 
 
-
-
-#with open("table_schema.json", "w", encoding="utf-8") as f:
+# with open("table_schema.json", "w", encoding="utf-8") as f:
 #    json.dump(tables, f, ensure_ascii=False, indent=2)
-
 
 
 def get_model_class(base_id):
@@ -38,7 +35,7 @@ def get_model_class(base_id):
             fldid: str
             name: str
             type: str
-            link: str|None
+            link: str | None
 
         class Table(BaseModel):
             tblid: str
@@ -47,6 +44,7 @@ def get_model_class(base_id):
 
         class Base(BaseModel):
             tables: list[Table]
+
         tables = response.json()['tables']
         for table in tables:
             table['tblid'] = table['id']
@@ -55,23 +53,25 @@ def get_model_class(base_id):
                 field['link'] = None
                 if any(x == field['type'] for x in ['formula', 'rollup', 'multipleLookupValues']):
                     field['type'] = None
-                    #if field.get("options", {}).get("result") is not None:
+                    # if field.get("options", {}).get("result") is not None:
                     #    field['type'] = field['options']['result']['type']
-                    #elif field['type'] == 'formula':
+                    # elif field['type'] == 'formula':
                     #    field['type'] = "text"
-                    #else:
+                    # else:
                     #    field['type'] = ""
 
-                elif any(x == field['type'] for x in ["singleLineText", "multilineText", "richText", "multipleSelects", "singleSelect", "url"]):
+                elif any(x == field['type'] for x in
+                         ["singleLineText", "multilineText", "richText", "multipleSelects", "singleSelect", "url"]):
                     field['type'] = "Text"
-                elif any(x == field['type'] for x in ["autoNumber", "number", "currency", "percent", "duration", "rating"]):
+                elif any(x == field['type'] for x in
+                         ["autoNumber", "number", "currency", "percent", "duration", "rating"]):
                     if field['type'] == "autoNumber" or field['options'].get('precision') == 0:
                         field['type'] = "Integer"
                     else:
                         field['type'] = "Float"
-                elif any(x == field['type'] for x in ["button","multipleAttachments"]):
+                elif any(x == field['type'] for x in ["button", "multipleAttachments"]):
                     field['type'] = None
-                    #field['type'] = ""
+                    # field['type'] = ""
                 elif any(x == field['type'] for x in ["multipleRecordLinks"]):
                     field['type'] = "Link"
                     if field['options'].get('linkedTableId') is not None:
@@ -96,7 +96,7 @@ def get_model_class(base_id):
             for field in table['fields']:
                 if field['type'] == "formula":
                     print("wtf")
-        base = Base.parse_obj({'tables':tables})
+        base = Base.parse_obj({'tables': tables})
 
         # Create model class for first table in base (you can modify this logic as needed)
         table = base.tables[0]
@@ -109,7 +109,7 @@ def get_model_class(base_id):
             field_type = getattr(fields, field.type.capitalize() + 'Field')
             if field.type == "Link":
                 continue
-                #attrs[field_name] = field_type(field.id, model=field.link)
+                # attrs[field_name] = field_type(field.id, model=field.link)
             else:
                 attrs[field_name] = field_type(field.fldid)
 
@@ -125,7 +125,7 @@ def get_model_class(base_id):
         attrs["Meta"] = meta_class
 
         # Create model class based on attributes
-        model_class = type(table.name.replace(" ", ""), (Model, ), attrs)
+        model_class = type(table.name.replace(" ", ""), (Model,), attrs)
 
         return model_class
 
@@ -133,9 +133,6 @@ def get_model_class(base_id):
         raise Exception(
             f"Request failed with status code {response.status_code}"
         )
-
-
-
 
 
 get_model_class(base_id)
@@ -147,20 +144,16 @@ for table in tables:
         type_thing = field.get('type')
         if type_list is not None and type_thing not in type_list:
             type_list.append(type_thing)
-        result = field.get('options',{}).get("result",{})
+        result = field.get('options', {}).get("result", {})
         if result is not None:
             result = result.get("type")
         if result is not None and result not in type_list:
             type_list.append(result)
 
-
 print(type_list)
 
 for field in tables[7]['fields']:
     Field(field)
-
-
-
 
 for table in tables:
     print(table['id'], table['name'], len(table['fields']))

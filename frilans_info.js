@@ -9,7 +9,6 @@ let thing = await input.recordAsync('Pick a record', view);
 let record_id = thing.getCellValue("input_id")
 
 
-
 let record = await input_table.selectRecordAsync(record_id)
 console.log(record)
 
@@ -23,7 +22,7 @@ if (record) {
         try {
             dict[record.name][field.name] = (record.getCellValue(field.id));
         } catch (TypeError) {
-            continue
+
         }
     }
 

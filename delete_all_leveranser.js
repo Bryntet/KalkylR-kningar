@@ -3,8 +3,8 @@ let table = base.getTable("Leveranser");
 let table2 = base.getTable("Projekt kalender")
 let svar = await input.buttonsAsync('Det här kommer ta bort ***alla*** dina leveranser! Är du säker på att du vill det?',
     [
-        { label: 'Nej!', value: false, variant: 'primary' },
-        { label: 'Ja!', value: true, variant: 'danger' }
+        {label: 'Nej!', value: false, variant: 'primary'},
+        {label: 'Ja!', value: true, variant: 'danger'}
 
     ]);
 
@@ -24,7 +24,7 @@ if (auth_rec) {
 
                 await remoteFetchAsync("http://81.232.191.203:5000/delete", {
                     method: "POST",
-                    body: JSON.stringify({ "content": record["name"] }),
+                    body: JSON.stringify({"content": record["name"]}),
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': auth_key
@@ -35,8 +35,7 @@ if (auth_rec) {
             for (let record of query2.records) {
                 await table2.deleteRecordAsync(record.id);
             }
-        }
-        else {
+        } else {
             input.buttonsAsync('Bra val!', []);
         }
     }

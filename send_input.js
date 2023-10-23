@@ -1,4 +1,3 @@
-
 let table = base.getTable("Input data")
 //let record = await input.recordAsync('Please select a record', table);
 

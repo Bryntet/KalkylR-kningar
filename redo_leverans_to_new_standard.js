@@ -17,7 +17,7 @@ if (record) {
             if (auth_key) {
                 let res1 = await remoteFetchAsync("http://pi.levandevideo.se:5000/delete", {
                     method: "POST",
-                    body: JSON.stringify({ "content": record.name }),
+                    body: JSON.stringify({"content": record.name}),
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': auth_key
@@ -27,7 +27,7 @@ if (record) {
                     console.log(res1)
                     let res2 = await remoteFetchAsync("http://pi.levandevideo.se:5000/delete", {
                         method: "POST",
-                        body: JSON.stringify({ "content": record.name.split("#")[0].concat("#1") }),
+                        body: JSON.stringify({"content": record.name.split("#")[0].concat("#1")}),
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': auth_key
@@ -79,7 +79,7 @@ if (record) {
             if (auth_key) {
                 let res1 = await remoteFetchAsync("http://pi.levandevideo.se:5000/delete", {
                     method: "POST",
-                    body: JSON.stringify({ "content": record.name }),
+                    body: JSON.stringify({"content": record.name}),
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': auth_key

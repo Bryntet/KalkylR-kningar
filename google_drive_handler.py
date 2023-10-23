@@ -1,16 +1,15 @@
 from __future__ import print_function
 
-import os
-import json
 import copy
-from pyairtable import Base
-
+import json
+import os
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from pyairtable import Base
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/drive']
@@ -43,7 +42,6 @@ def make_creds():
 
 
 def search_file(service):
-
     try:
         # create drive api client
         files = []
@@ -55,7 +53,7 @@ def search_file(service):
                 q="mimeType='image/jpeg'",
                 spaces='drive',
                 fields='nextPageToken, '
-                'files(id, name)',
+                       'files(id, name)',
                 pageToken=page_token
             ).execute()
             for file in response.get('files', []):
@@ -77,7 +75,6 @@ def search_file(service):
 
 
 def create_folder(service, name, parent_id=None) -> str:
-
     try:
 
         file_metadata = {
@@ -105,7 +102,6 @@ service = make_creds()
 airtable_base = Base(api_key, base_id)
 top_parent = os.environ['DRIVE_TOP_FOLDER']
 
-
 projekt_table = airtable_base.get_table('Projekt')
 our_clients = airtable_base.get_table('Kund')
 end_clients = airtable_base.get_table('Slutkund')
@@ -128,16 +124,15 @@ class Kund:
         else:
             self.KUND_DRID = self.make_folder(name)
 
-
-        if sub_DRIDs is not None: # If we have subfolders
+        if sub_DRIDs is not None:  # If we have subfolders
             self.sub_DRIDs: dict[str, dict] = sub_DRIDs
             if year not in self.sub_DRIDs.keys():
                 self.sub_DRIDs[year] = {'drid': self.make_folder(year, self.KUND_DRID)}
-        
-        else: #Make subfolder for year
+
+        else:  # Make subfolder for year
             self.sub_DRIDs = {year: {'drid': self.make_folder(year, self.KUND_DRID)}}
         self.lowest_DRID = self.sub_DRIDs[year]['drid']
-        
+
     def make_if_drid_not_none(self, name, parent_id, drid) -> str:
         if drid is not None:
             self.lowest_DRID = drid
@@ -145,10 +140,8 @@ class Kund:
         else:
             return self.make_folder(name, parent_id)
 
-
     def get_link(self) -> str:
         return f"https://drive.google.com/drive/folders/{self.lowest_DRID}"
-
 
     def make_folder(self, name, parent_id=None) -> str:
         if not parent_id:
@@ -156,7 +149,7 @@ class Kund:
             print('No parent id, using top parent')
         else:
             print(parent_id)
-            
+
         new_folder = create_folder(self.service, name, parent_id)
         self.lowest_DRID = copy.deepcopy(new_folder)
         return new_folder
@@ -170,9 +163,10 @@ class Kund:
         }
 
 
-
 class Slutkund(Kund):
-    def __init__(self, service, kund_top_parent: str, kund_name: str, kund_rid: str, year: str, slutkund: str, slutkund_rid: str, projekt: str, projekt_rid: str, slutkund_drid=None, leverans_drid=None, kund_DRID=None, kund_sub_DRIDs=None):
+    def __init__(self, service, kund_top_parent: str, kund_name: str, kund_rid: str, year: str, slutkund: str,
+                 slutkund_rid: str, projekt: str, projekt_rid: str, slutkund_drid=None, leverans_drid=None,
+                 kund_DRID=None, kund_sub_DRIDs=None):
         super().__init__(service, kund_top_parent, kund_name, kund_rid, year, kund_DRID, kund_sub_DRIDs)
 
         self.slutkund_name = slutkund
@@ -180,7 +174,8 @@ class Slutkund(Kund):
         self.slutkund_rid = slutkund_rid
         self.projekt_rid = projekt_rid
 
-        self.slutkund_drid = super().make_if_drid_not_none(self.slutkund_name, self.sub_DRIDs[year]['drid'], slutkund_drid)
+        self.slutkund_drid = super().make_if_drid_not_none(self.slutkund_name, self.sub_DRIDs[year]['drid'],
+                                                           slutkund_drid)
         self.projekt_drid = super().make_if_drid_not_none(self.projekt_name, self.slutkund_drid, leverans_drid)
 
         self.sub_DRIDs[self.year].update({
@@ -198,15 +193,15 @@ def main():
     else:
         big_dict_with_all = {}
 
-
     all_projekt = projekt_table.all()
     for projekt in all_projekt:
         the_len = len(all_projekt)
-        print(f"{all_projekt.index(projekt)+1}/{the_len} {all_projekt.index(projekt)/the_len*100}%")
+        print(f"{all_projekt.index(projekt) + 1}/{the_len} {all_projekt.index(projekt) / the_len * 100}%")
         big_dict_with_all = all_the_processes(big_dict_with_all, projekt)
-    
+
     with open('drive_struct.json', 'w', encoding='utf-8') as f:
         json.dump(big_dict_with_all, f, indent=4, ensure_ascii=False)
+
 
 def all_the_processes(big_dict_with_all, projekt) -> dict:
     p_fields = projekt['fields']
@@ -227,12 +222,12 @@ def all_the_processes(big_dict_with_all, projekt) -> dict:
                 sublist.pop('drid', None)
             next_thing = True
             if 'Slutkund' in p_keys:
-                if our_clients.get(p_fields['Kund'][0])['fields']['Kund'].lower() != end_clients.get(p_fields['Slutkund'][0])['fields']['Name'].lower():
+                if our_clients.get(p_fields['Kund'][0])['fields']['Kund'].lower() != \
+                        end_clients.get(p_fields['Slutkund'][0])['fields']['Name'].lower():
                     next_thing = False
                     slutkund = end_clients.get(p_fields['Slutkund'][0])
                     slutkund_name = slutkund['fields']['Name'].lower()
                     slutkund_rid = slutkund['id']
-
 
                     if kund_rid in big_dict_with_all.keys():
                         if year in big_dict_with_all[kund_rid].keys():
@@ -241,7 +236,9 @@ def all_the_processes(big_dict_with_all, projekt) -> dict:
                                 if projekt['id'] in big_dict_with_all[kund_rid][year][slutkund_rid].keys():
                                     projekt_drid = big_dict_with_all[kund_rid][year][slutkund_rid][projekt['id']]
                                     return big_dict_with_all
-                    x = Slutkund(service, top_parent, kund_name, kund_rid, year, slutkund_name, slutkund_rid, p_fields['Name'].lower(), projekt['id'], slutkund_drid, projekt_drid, kund_drid, sublist)
+                    x = Slutkund(service, top_parent, kund_name, kund_rid, year, slutkund_name, slutkund_rid,
+                                 p_fields['Name'].lower(), projekt['id'], slutkund_drid, projekt_drid, kund_drid,
+                                 sublist)
                     make_proj_rid = False
             if next_thing:
                 x = Kund(service, top_parent, kund_name, kund_rid, year, kund_drid, sublist)
@@ -259,6 +256,7 @@ def save(the_dict):
     with open('drive_struct.json', 'w', encoding='utf-8') as f:
         json.dump(the_dict, f, indent=4, ensure_ascii=False)
 
+
 def load():
     with open('drive_struct.json', 'r', encoding='utf-8') as f:
         return json.load(f)
@@ -268,7 +266,6 @@ def do_one(record_id):
     the_dict = load()
     save(all_the_processes(the_dict, projekt_table.get(record_id)[0]))
 
-    
-    
+
 if __name__ == '__main__':
     main()

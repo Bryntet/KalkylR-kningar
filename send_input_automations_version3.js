@@ -3,10 +3,10 @@ let record_id = inputConfig.record_id
 let table = base.getTable("Input data")
 let beställareid = inputConfig.beställareid
 let beställarename = inputConfig.beställarename
-let beställare = [{ "id": beställareid, "name": beställarename }]
+let beställare = [{"id": beställareid, "name": beställarename}]
 let kundid = inputConfig.kundid
 let kundname = inputConfig.kundname
-let kund = [{ "id": kundid, "name": kundname }]
+let kund = [{"id": kundid, "name": kundname}]
 let record = await table.selectRecordAsync(record_id)
 console.log(record)
 
@@ -20,7 +20,7 @@ if (record) {
         try {
             dict[record.name][field.name] = (record.getCellValue(field.id));
         } catch (TypeError) {
-            continue
+
         }
     }
     dict[record.name]["input_id"] = record_id
