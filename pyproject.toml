@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "kalkylr-kningar"
+version = "0.1.0"
+description = ""
+authors = ["Edvin Bryntesson <epost@edvinbryntesson.se>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.12"
+Flask= "3.0.0"
+gcsa = "2.1.0"
+google_api_python_client="2.104.0"
+google_auth_oauthlib="<1.0"
+googlemaps="4.10.0"
+holidays="0.35"
+pandas="2.1.1"
+protobuf="4.24.4"
+pyairtable = { path="pyairtable" }
+pytz="2023.3.post1"
+requests="^2.31.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
