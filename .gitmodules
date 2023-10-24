@@ -1,0 +1,3 @@
+[submodule "pyairtable"]
+	path = pyairtable
+	url = git@github.com:Bryntet/pyairtable.git
