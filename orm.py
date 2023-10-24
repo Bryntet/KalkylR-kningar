@@ -2,14 +2,21 @@ import math
 import os
 import re
 
-from pyairtable import metadata, Base
+import pyairtable
+from pyairtable import metadata
 from pyairtable.orm import Model, fields
 
-base = Base(os.environ['api_key'], os.environ['base_id'])
+LinkSelf = fields.LinkSelf
+
+api = pyairtable.Api(os.environ['api_key'])
+base = api.base(os.environ['base_id'])
 
 table_schema = metadata.get_base_schema(base)
-config = {record['fields']['fldkXGyb94cqSXzhU']: record['fields']['fldVAEPybe7cvFFrS'] for record in
-          base.get_table("tbloHfNdwu6Adw97g").all(return_fields_by_field_id=True)}
+
+config = {
+    record['fields']['fldkXGyb94cqSXzhU']: record['fields']['fldVAEPybe7cvFFrS']
+    for record in base.table("tbloHfNdwu6Adw97g").all(return_fields_by_field_id=True)
+}
 
 
 def get_all_in_orm(orm):
@@ -35,22 +42,25 @@ class Prylar(Model):
     name = fields.TextField("fldAakG5Ntk1Mro4S")
     pris = fields.FloatField("fld1qKXF28Qz2pJG2")
     in_pris = fields.IntegerField("fldgY78pJgbgBi4Dy")
-    livs_längd = fields.TextField("fldwG40TFkeqHVMYG")
+    lifespan = fields.SelectField("fldwG40TFkeqHVMYG")
     antal_inventarie = fields.FloatField("fldO8AaLRqgoQtmAz")
     hide_from_calendar = fields.CheckboxField("fldb0Hgi9WB3OD8mI")
 
     def make_mult(self):
         mult = 100 + (config['livsLängdSteg'] * 3)
-        mult -= int(self.livs_längd) * config['livsLängdSteg']
+        if self.lifespan is None:
+            self.lifespan = "3"
+        mult -= int(self.lifespan) * config['livsLängdSteg']
         mult /= 100
         return mult
 
     def calc_pris(self):
         self.mult = self.make_mult()
+        if self.in_pris is None:
+            self.in_pris = 0
         self.pris = (
-                            math.floor((self.in_pris * config["prylKostnadMulti"]) /
-                                       10 * self.mult) * 10
-                    ) * 1.0
+            math.floor((self.in_pris * config["prylKostnadMulti"]) / 10 * self.mult) * 10
+        ) * 1.0
 
     def _update_all(self):
         prylar = self.all(return_fields_by_field_id=True)
@@ -65,57 +75,8 @@ class Prylar(Model):
         base_id = os.environ["base_id"]
         api_key = os.environ["api_key"]
         table_name = "tblsxui7L2zsDDdiy"
-
-
-# class PaketPaket(Model):
-#     name = fields.TextField("fld3ec1hcB3LK56R7")
-#     pris = fields.FloatField("fld0tl6Outn8f6lEj")
-#     prylar = fields.LinkField("fldGkPJMOquzQGrO9", Prylar)
-#     antal_prylar = fields.TextField("fldUTezg1xtekQBir")
-#     Personal = fields.FloatField("fldTTcF0qCx9p8Bz2")
-#     Svanis = fields.CheckboxField("fldp2Il8ITQdFXhVR")
-#     hyra = fields.FloatField("fld8iEEeEjhi9KT3c")
-#     hide_from_calendar = fields.CheckboxField("fldQqTyRk9wzLd5fC")
-
-#     def get_amount(self) -> list[tuple[Prylar, int]]:
-#         if self.antal_prylar is None:
-#             self.antal_prylar = ""
-#         self.amount_list = self.antal_prylar.split(",")
-#         output = []
-#         if self.prylar is not None:
-#             for idx, pryl in enumerate(self.prylar):
-#                 if idx < len(self.amount_list) and self.amount_list[idx] != "":
-#                     output.append((pryl, int(self.amount_list[idx])))
-#                 else:
-#                     output.append((pryl, 1))
-#         return output
-
-#     def get_all_prylar(self):
-#         pryl_list = []
-#         if self.prylar is not None:
-#             for pryl, amount in self.get_amount():
-#                 for _ in range(amount):
-#                     pryl_list.append(pryl)
-#         return pryl_list
-
-#     def calculate(self):
-#         self.pris = 0.0
-#         for pryl, amount in self.get_amount():
-
-#             if pryl.pris is None:
-#                 pryl.fetch()
-#                 if pryl.pris is None:
-#                     pryl.calc_pris()
-#                     pryl.save()
-#             assert pryl.pris is not None
-#             self.pris += pryl.pris * amount
-#         if self.hyra is not None:
-#             self.pris += self.hyra
-
-#     class Meta:
-#         base_id = os.environ["base_id"]
-#         api_key = os.environ["api_key"]
-#         table_name = "Prylpaket"
+        timeout = (5, 5)
+        typecast = True
 
 
 class Paket(Model):
@@ -123,7 +84,7 @@ class Paket(Model):
     pris = fields.FloatField("fld0tl6Outn8f6lEj")
     test_field = fields.Field("fld1PIcwxpsFkrcYy")
     prylar = fields.LinkField("fldGkPJMOquzQGrO9", Prylar)
-    paket_i_pryl_paket = fields.LinkField("fld1PIcwxpsFkrcYy", None, True)
+    paket_i_pryl_paket = fields.LinkField("fld1PIcwxpsFkrcYy", fields.LinkSelf, True)
     antal_prylar = fields.TextField("fldUTezg1xtekQBir")
     personal = fields.FloatField("fldTTcF0qCx9p8Bz2")
     svanis = fields.CheckboxField("fldp2Il8ITQdFXhVR")
@@ -157,6 +118,7 @@ class Paket(Model):
                     pryl_list.append(pryl)
 
         if self.paket_i_pryl_paket is not None:
+            print(self.paket_i_pryl_paket)
             for paket in self.paket_i_pryl_paket:
                 if paket.pris is None:
                     paket.fetch()
@@ -181,7 +143,6 @@ class Paket(Model):
                 if paket.pris is None:
                     paket.fetch()
                     paket.calculate()
-                assert type(paket.pris) is float
                 self.pris += paket.pris
         if self.hyra is not None:
             self.pris += self.hyra
@@ -194,10 +155,9 @@ class Paket(Model):
         amount_of_paket = len(paket)
         paket_list = []
         for idx, paket in enumerate(paket):
-            paket = Paket().from_record(paket)
             paket.calculate()
             paket_list.append(paket.to_record())
-            print(round((idx + 1) / amount_of_paket * 1000) / 10, "%", paket.pris, "KR")
+            print(paket, round((idx + 1) / amount_of_paket * 1000) / 10, "%", paket.pris, "KR")
         temp_tups = []
 
         # for rec_id, paket in self._linked_cache.items():
@@ -261,11 +221,15 @@ class Person(Model):
 
             self.konstant_kostnad = int(input_string[0])
 
-            tuples: list[tuple[int, int, int, str | None]] = []  # fixed, timpris, hourly_point, condition
+            tuples: list[tuple[int, int, int,
+                               str | None]] = []  # fixed, timpris, hourly_point, condition
             for s in input_string[1].split("-"):
                 if "|" in s:
 
-                    tuples.append(tuple(list(map(int, s.split("|")[0].split(","))) + [s.split("|")[1]]))
+                    tuples.append(
+                        tuple(list(map(int,
+                                       s.split("|")[0].split(","))) + [s.split("|")[1]])
+                    )
                 else:
                     tuples.append(tuple(list(map(int, s.split(","))) + [None]))
 
@@ -293,8 +257,7 @@ class Person(Model):
         total_pris = 0
         tim_total = 0
         if self.levande_video:  # TODO kan finnas stora problem här
-            tim_total = timmar['gig'] + timmar['rigg'] + timmar[
-                'proj'] + timmar['res']
+            tim_total = timmar['gig'] + timmar['rigg'] + timmar['proj'] + timmar['res']
             total_kostnad = tim_total * self.tim_kostnad
             total_pris = tim_total * self.timpris
             return total_kostnad, total_pris, tim_total
