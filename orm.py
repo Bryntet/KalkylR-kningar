@@ -26,15 +26,16 @@ def get_all_in_orm(orm):
 def record_to_orm(table, record_input):
     new_ORM = table()
     new_ORM.id = record_input['id']
-
+    tbl_flds = None
     for table_ in table_schema['tables']:
         if table_['id'] == table().Meta.table_name:
             tbl_flds = table_['fields']
 
-    for field_name, value in record_input['fields'].items():
-        for field_id, name in [(x['id'], x['name']) for x in tbl_flds]:
-            if field_name == name:
-                new_ORM.__dict__['_fields'][field_id] = value
+    if tbl_flds is not None:
+        for field_name, value in record_input['fields'].items():
+            for field_id, name in [(x['id'], x['name']) for x in tbl_flds]:
+                if field_name == name:
+                    new_ORM.__dict__['_fields'][field_id] = value
     return new_ORM
 
 
@@ -58,18 +59,15 @@ class Prylar(Model):
         self.mult = self.make_mult()
         if self.in_pris is None:
             self.in_pris = 0
-        self.pris = (
-            math.floor((self.in_pris * config["prylKostnadMulti"]) / 10 * self.mult) * 10
-        ) * 1.0
+        self.pris = (math.floor((self.in_pris * config["prylKostnadMulti"]) / 10 * self.mult) * 10) * 1.0
 
     def _update_all(self):
         prylar = self.all(return_fields_by_field_id=True)
         prylar_list = []
         for pryl in prylar:
-            pryl = self.from_record(pryl)
             pryl.calc_pris()
-            prylar_list.append(pryl.to_record())
-        return self.get_table().batch_update(prylar_list, return_fields_by_field_id=True)
+            prylar_list.append(pryl)
+        return super().batch_save(prylar_list)
 
     class Meta:
         base_id = os.environ["base_id"]
@@ -79,6 +77,7 @@ class Prylar(Model):
         typecast = True
 
 
+# noinspection PyTypeChecker
 class Paket(Model):
     name = fields.TextField("fld3ec1hcB3LK56R7")
     pris = fields.FloatField("fld0tl6Outn8f6lEj")
@@ -156,8 +155,8 @@ class Paket(Model):
         paket_list = []
         for idx, paket in enumerate(paket):
             paket.calculate()
-            paket_list.append(paket.to_record())
-            print(paket, round((idx + 1) / amount_of_paket * 1000) / 10, "%", paket.pris, "KR")
+            paket_list.append(paket)
+            print(paket, round((idx+1) / amount_of_paket * 1000) / 10, "%", paket.pris, "KR")
         temp_tups = []
 
         # for rec_id, paket in self._linked_cache.items():
@@ -167,8 +166,7 @@ class Paket(Model):
 
         # for rec_id, paket in temp_tups:
         #     self._linked_cache.pop(rec_id, None)
-
-        return self.get_table().batch_update(paket_list, return_fields_by_field_id=True)
+        return super().batch_save(paket_list)
 
     class Meta:
         base_id = os.environ["base_id"]
@@ -221,15 +219,10 @@ class Person(Model):
 
             self.konstant_kostnad = int(input_string[0])
 
-            tuples: list[tuple[int, int, int,
-                               str | None]] = []  # fixed, timpris, hourly_point, condition
+            tuples: list[tuple[int, int, int, str | None]] = []  # fixed, timpris, hourly_point, condition
             for s in input_string[1].split("-"):
                 if "|" in s:
-
-                    tuples.append(
-                        tuple(list(map(int,
-                                       s.split("|")[0].split(","))) + [s.split("|")[1]])
-                    )
+                    tuples.append(tuple(list(map(int, s.split("|")[0].split(","))) + [s.split("|")[1]]))
                 else:
                     tuples.append(tuple(list(map(int, s.split(","))) + [None]))
 
@@ -573,4 +566,4 @@ class Inventarie(Model):
 
 
 if __name__ == "__main__":
-    Paket()._update_all()
+    Paket()._update_all(True)
