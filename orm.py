@@ -199,6 +199,11 @@ class Person(Model):
     input_string = fields.TextField("fld8XSSOjSjACYIBy")
     kan_göra = fields.TextField("fld6khXiTavP5xtOc")
     uträkning = fields.LinkField("fldDgH3SedjG0X1bS", FrilansAccounting)
+    conditions_dict = None
+    konstant_kostnad = 0
+    available_tasks = None
+    timpris = 0
+    lön_kostnad = 0
 
     def fix(self):
         if self.name is None:
@@ -219,12 +224,16 @@ class Person(Model):
 
             self.konstant_kostnad = int(input_string[0])
 
-            tuples: list[tuple[int, int, int, str | None]] = []  # fixed, timpris, hourly_point, condition
+            from typing import List, Tuple, Union
+
+            tuples: List[Tuple[int, int, int, Union[str, None]]] = []
+
             for s in input_string[1].split("-"):
-                if "|" in s:
-                    tuples.append(tuple(list(map(int, s.split("|")[0].split(","))) + [s.split("|")[1]]))
-                else:
-                    tuples.append(tuple(list(map(int, s.split(","))) + [None]))
+                parts = s.split("|")
+                p1 = parts[0].split(",")
+                nums: Tuple[int, int, int] = (int(p1[0]), int(p1[1]), int(p1[2]))
+                condition = parts[1] if len(parts) > 1 else None
+                tuples.append(nums + (condition, ))
 
             self.conditions_dict: dict[int, dict[str | None, tuple[int, int]]] = {}
 
@@ -246,9 +255,7 @@ class Person(Model):
         Returns:
             int: Money
         """
-        total_kostnad = 0
-        total_pris = 0
-        tim_total = 0
+
         if self.levande_video:  # TODO kan finnas stora problem här
             tim_total = timmar['gig'] + timmar['rigg'] + timmar['proj'] + timmar['res']
             total_kostnad = tim_total * self.tim_kostnad
@@ -275,7 +282,7 @@ class Person(Model):
     def set_frilans_cost(self):
         self.uträkning = [FrilansAccounting(gissad_kostnad=self.kostnad * 1.0)]
         self.uträkning[0].save()
-        self.save(False)
+        self.save()
         return self.uträkning[0]
 
     class Meta:
