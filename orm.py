@@ -436,7 +436,7 @@ class Leverans(Model):
     antal_paket = fields.TextField("fldqnN89906OtOxJC")
     antal_prylar = fields.TextField("fldwLzWn0LXYpOz4z")
     projekt_kanban = fields.TextField("fld5Ba3wtFv6PvDW6")
-    projekt = fields.LinkField("fldXdY47lGYDUFIge", projekt)
+    projekt = fields.LinkField("fldXdY47lGYDUFIge", Projekt)
     börja_datum = fields.DateField("fldsJHqZu5eM08Kki")
     sluta_datum = fields.DateField("fldfBtMD4wSQT1ikA")
     dagar = fields.IntegerField("fldTxuAKtqGenuEzd")
