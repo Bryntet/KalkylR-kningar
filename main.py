@@ -6,14 +6,15 @@ import math
 import os
 import time
 import urllib.parse
+from typing import List
 
-import googlemaps
+import googlemaps  # type: ignore
 import holidays
 import pandas as pd
 import pytz
 import requests
 from flask import Flask, request
-from pyairtable import Table
+from pyairtable import Api
 
 import orm
 from auth_middleware import token_required
@@ -45,17 +46,19 @@ pd.set_option("display.max_rows", None)
 
 api_key = os.environ["api_key"]
 base_id = os.environ["base_id"]
-output_table = Table(api_key, base_id, "Output table")
-input_data_table = Table(api_key, base_id, "Input data")
-kund_table = Table(api_key, base_id, "Kund")
-pryl_table = Table(api_key, base_id, "Prylar")
-projekt_table = Table(api_key, base_id, "Projekt")
-slutkund_table = Table(api_key, base_id, "Slutkund")
-bestallare_table = Table(api_key, base_id, "Beställare")
-error_table = Table(api_key, base_id, "tbl0NUM7MHa2iVmrw")
+
+api = Api(api_key)
+
+base = api.base(base_id)
+
+input_data_table = base.table("tblzLH9vrPOvkmOrh")
+kund_table = base.table("tblzLHbg1jRtne4Ah")
+pryl_table = base.table("tblsxui7L2zsDDdiy")
+projekt_table = base.table("tblR29p86mCcK9NBL")
+bestallare_table = base.table("tblpRCxCSLYEK41J0")
+error_table = base.table("tbl0NUM7MHa2iVmrw")
 
 beforeTime = time.time()
-output_tables = []
 SECRET_KEY = os.environ.get('my_secret')
 app = Flask(__name__)
 
@@ -88,15 +91,23 @@ def check_with_default(data, default):
     else:
         return default
 
+def convert_time(t):
+    # Split the string by ":", if ":" is not found, it will return the original string
+    parts = t.split(":")
+    # Convert the parts to integers, if there's only hour provided, add "0" for minutes
+    return tuple(map(int, parts if len(parts) > 1 else (parts[0], "0")))
 
 def box_check():
     """Make sure only one latest added box is checked"""
 
-    leveranser = Table(api_key, base_id, "Leveranser")
-    all_checked = leveranser.all(view="Icheckat")
+    leveranser = base.table("tbl2JdL4S1Wl1jhdB")
+    all_checked = leveranser.all(view="viwRyJO7kx3zC9ejn")
     if len(all_checked) == 0:
-        record = leveranser.first()['id']
-        leveranser.update(record, {"latest added": True})
+        first = leveranser.first()
+        if first is not None:
+            record = first['id']
+            if record is not None:
+                leveranser.update(record, {"latest added": True})
     while len(all_checked) > 1:
         leveranser.update(all_checked[0]['id'], {"latest added": False})
         del all_checked[0]
@@ -104,6 +115,7 @@ def box_check():
 
 class Gig:
     def __init__(self, input_RID):
+
         self.tid_rapport = []
 
         with open("config.json", "r", encoding="utf-8") as f:
@@ -152,7 +164,6 @@ class Gig:
         elif self.data.beställare is not None:
             self.bestallare = self.data.beställare[0]
             self.bestallare.fetch()
-            self.bestallare.kund
             self.kund = self.bestallare.kund[0]
             self.kund.fetch()
             self.output_record.beställare = [self.bestallare]
@@ -170,7 +181,6 @@ class Gig:
             self.end_date = self.data.sluta_datum.replace(hour=0).astimezone(pytz.timezone('Europe/Stockholm'))
         else:
             self.end_date = self.start_date
-        self.start_date
         self.output_record.sluta_datum = self.end_date
         self.output_record.börja_datum = self.start_date
         self.output_record.name = self.make_name()
@@ -186,14 +196,14 @@ class Gig:
             x: getattr(self.data, x)
             for x in self.person_field_list if getattr(self.data, x) is not None
         }
-        self.person_list = []
+        self.person_list: List[folk.Person] = []
 
         # Make a de-duped list of all the people involved in the gig
-        [
-            self.person_list.append(item) for sublist in
-            [self.person_dict_grouped[key] for key in self.person_dict_grouped]
-            for item in sublist if item not in self.person_list
-        ]
+
+        for key in self.person_dict_grouped:
+            for item in self.person_dict_grouped[key]:
+                if item not in self.person_list and item is str:
+                    self.person_list.append(item)
 
         if self.data.existerande_adress is not None:
             self.adress = self.data.existerande_adress[0]
@@ -223,8 +233,8 @@ class Gig:
         self.avkastning_without_pris = None
         self.hyr_things = None
         self.pryl_fonden = None
-        self.output_table = Table(api_key, base_id, "Leveranser")
-        self.kalender_table = Table(api_key, base_id, "Projektkalender")
+        self.output_table = base.table("tbl2JdL4S1Wl1jhdB")
+        self.kalender_table = base.table("tbllVOQa9PrKax1PY")
         self.slit_kostnad = None
         self.avkastning = None
         self.pryl_marginal = None
@@ -233,7 +243,7 @@ class Gig:
         self.hyr_pris = None
         self.tim_budget = None
         self.restid: float
-        self.rigg_timmar: float
+        self.rigg_timmar: float = 0.0
         self.begin_earlier: float = self.data.Börja_tidigare if self.data.Börja_tidigare is not None else 0
         self.gig_timmar = 0
         self.tim_pris = None
@@ -242,12 +252,12 @@ class Gig:
         else:
             self.projekt = orm.Projekt()
             self.projekt.save()
-        self.specifik_personal = self.person_list
+
         self.comment = check_with_default(self.data.Anteckning, "")
 
-        self.output_record.Personal = check_with_default(self.data.extraPersonal, 0.0)
-        assert self.output_record.Personal is not None
-        self.output_record.extraPersonal = check_with_default(self.data.extraPersonal, 0.0)
+        self.output_record.personal = check_with_default(self.data.extraPersonal, 0.0)
+        assert self.output_record.personal is not None
+        self.output_record.extra_personal = check_with_default(self.data.extraPersonal, 0.0)
 
         self.marginal = 0
         self.gig_prylar = {}
@@ -269,8 +279,8 @@ class Gig:
 
         self.post_text_kostnad = 0
         self.post_text_pris = 0
-        self.output_record.Pryl_pris = 0.0
-        self.output_record.Pris = 0.0
+        self.output_record.pryl_pris = 0.0
+        self.output_record.pris = 0.0
         self.in_pris = 0
 
         self.config = config
@@ -303,7 +313,7 @@ class Gig:
 
         self.adress_check()
         if self.adress.exists():
-            self.output_record.Adress = [self.adress]
+            self.output_record.adress = [self.adress]
         self.rakna_timmar(config)
 
         self.tid(config)
@@ -393,17 +403,7 @@ class Gig:
                 self.pre_gig_prylar.append(pryl)
 
     def check_paket(self):
-        try:
-            self.antal_paket = self.data.antalPaket
-            if self.antal_paket:
-                try:
-                    int(self.antal_paket)
-                    self.antal_paket = [self.antal_paket]
-                except ValueError:
-                    self.antal_paket = self.antal_paket.split(",")
-            antal = self.antal_paket
-        except KeyError:
-            antal = None
+        self.antal_paket = map(int, self.data.antalPaket.split(",")) # TODO: KOLLA OM FEL
         if self.data.prylPaket is not None:
             for paket in self.data.prylPaket:
                 if paket.name is None:
@@ -415,9 +415,9 @@ class Gig:
                 except KeyError:
                     pass
                 # Get personal
-                if self.output_record.Personal is None:
-                    self.output_record.Personal = 0.0
-                self.output_record.Personal += paket.personal if paket.personal is not None else 0.0
+                if self.output_record.personal is None:
+                    self.output_record.personal = 0.0
+                self.output_record.personal += paket.personal if paket.personal is not None else 0.0
 
                 paket.fetch()
                 for pryl in paket.get_all_prylar():
@@ -439,8 +439,8 @@ class Gig:
             self.pryl_lista.append((pryl, count))
 
     def pryl_mod(self, config):
-        if self.output_record.Pryl_pris is None:
-            self.output_record.Pryl_pris = 0.0
+        if self.output_record.pryl_pris is None:
+            self.output_record.pryl_pris = 0.0
         for pryl, count in self.pryl_lista:
 
             # Mult price by amount of pryl
@@ -454,11 +454,13 @@ class Gig:
                 mod_pryl = int(float(mod_pryl) * config["svanisMulti"])
             pris = self.dagar(config, mod_pryl)
             if pris is not None:
-                self.output_record.Pryl_pris += pris
-        if self.output_record.Pris is None:
-            self.output_record.Pris = 0.0
-        self.output_record.Pris += self.output_record.Pryl_pris
-        self.pryl_kostnad = self.output_record.Pryl_pris * 0.4
+                self.output_record.pryl_pris += pris
+        if self.output_record.pris is None:
+            self.output_record.pris = 0.0
+        if self.output_record.pryl_pris is None:
+            self.output_record.pryl_pris = 0.0
+        self.output_record.pris += self.output_record.pryl_pris
+        self.pryl_kostnad = self.output_record.pryl_pris * 0.4
 
     def dagar(self, config, pris):
         assert self.output_record.sluta_datum is not None and self.output_record.börja_datum is not None
@@ -497,38 +499,43 @@ class Gig:
                 print(self.adress.time_bike)
             except KeyError:
                 raise InvalidMapsAdress("Invalid adress")
-            if self.adress.time_bike / 60 > 60:
-                self.car = True
-                gmaps_car = self.gmaps.distance_matrix(
-                    origins="Levande video",
-                    destinations=self.adress.name,
-                    mode="driving",
-                    units="metric",
-                )
-                try:
-                    self.adress.time_car = gmaps_car["rows"][0]["elements"][0]["duration"]["value"]
-                except KeyError:
-                    raise InvalidMapsAdress("Invalid adress")
-            self.adress.distance = str(
-                (self.adress.time_car if self.adress.time_car is not None else self.adress.time_bike) / 60 / 60) + "h"
+            if self.adress.time_bike is not None:
+                if self.adress.time_bike / 60 > 60:
+                    self.car = True
+                    gmaps_car = self.gmaps.distance_matrix(
+                        origins="Levande video",
+                        destinations=self.adress.name,
+                        mode="driving",
+                        units="metric",
+                    )
+                    try:
+                        self.adress.time_car = gmaps_car["rows"][0]["elements"][0]["duration"]["value"]
+                    except KeyError:
+                        raise InvalidMapsAdress("Invalid adress")
+            if self.adress.time_car is not None:
+                self.adress.distance = str(self.adress.time_car / 60 / 60) + "h"
+            elif self.adress.time_bike is not None:
+                self.adress.distance = str(self.adress.time_bike / 60 / 60) + "h"
+
             self.adress.kund = [self.kund]
             for record in self.adress.all():
-                if record["fields"]["Adress"] == self.adress.name:
-                    self.adress.id = record["id"]
-                    break
+                if record is not None:
+                    if record.name == self.adress.name:
+                        self.adress.id = record.id
+                        break
             self.adress.save()
 
     def rakna_timmar(self, config):
         # Custom riggtimmar
         if self.data.special_rigg is not None and self.data.special_rigg == 1:
             assert self.data.rigg_timmar_spec is not None
-            self.rigg_timmar = self.data.rigg_timmar_spec / self.output_record.Personal if self.output_record.Personal is not None and self.output_record.Personal > 0.0 else 0.0
+            self.rigg_timmar = self.data.rigg_timmar_spec / self.output_record.personal if self.output_record.personal is not None and self.output_record.personal > 0.0 else 0.0
 
         else:
             self.rigg_timmar = math.floor(
-                self.output_record.Pryl_pris * config["andelRiggTimmar"] /
-                self.output_record.Personal
-            ) if self.output_record.Personal is not None and self.output_record.Personal > 0 else 0
+                self.output_record.pryl_pris * config["andelRiggTimmar"] /
+                self.output_record.personal
+            ) if self.output_record.personal is not None and self.output_record.personal > 0 else 0
         if self.adress.exists() and self.adress.name is None:
             self.adress.fetch()
         if self.adress.used_time is not None:
@@ -564,8 +571,8 @@ class Gig:
         for day in self.bad_day_dict:
             self.day_dict[i] = day
             i += 1
-
-        self.end_date = self.data.sluta_datum
+        if self.data.sluta_datum is not None:
+            self.end_date = self.data.sluta_datum
         hours_total = 0
 
         if self.data.tid_för_gig is not None:
@@ -599,40 +606,42 @@ class Gig:
                                                                                        ) for split_tid in
                                                                                        self.extra_gig_tid
                                                                                    ])  # new thing, redoing stuff
-
+            temp_timmar = float(self.gig_timmar)
             for starts, ends in zip(self.program_tider[0], self.program_tider[1]):
-                self.gig_timmar += (ends.hour + ends.minute / 60) - (starts.hour + starts.minute / 60)
+                temp_timmar += (ends.hour + ends.minute / 60) - (starts.hour + starts.minute / 60)
 
-            self.gig_timmar /= len(self.program_tider[0])
+            self.gig_timmar = int(temp_timmar / len(self.program_tider[0]))
 
             if self.mgets_outs_true:
-                self.riggtimmar = 0
+                temp_rigg = 0.0
                 for starts, ends in zip(self.mgetins, self.mgetouts):
-                    self.riggtimmar += (ends.hour + ends.minute / 60) - (
+                    temp_rigg += (ends.hour + ends.minute / 60) - (
                             starts.hour + starts.minute / 60) - self.gig_timmar
-                self.riggtimmar /= len(self.mgetins)
+                self.rigg_timmar = int(temp_rigg / len(self.mgetins))
 
             for idx, tid in enumerate(self.extra_gig_tid):
-                tup: tuple[str, str] = tuple(tid.split("-"))
+                split_tid = tid.split("-")
+                assert len(split_tid) == 2
+                tup: tuple[str, str] = (split_tid[0], split_tid[1])
                 start: tuple[int, int]
                 end: tuple[int, int]
 
-                start, end = map(lambda x: tuple(map(int, x.split(":"))) if ":" in x else tuple(map(int, [x, "0"])),
-                                 tup)
+                start, end = map(convert_time, tup)
+
 
                 cest = pytz.timezone("Europe/Stockholm")
 
                 if self.mgets_outs_true:
-                    rigg_after = 0
-                    rigg_before = 0
+                    rigg_after = 0.0
+                    rigg_before = 0.0
                 else:
                     if self.rigg_timmar > 1:  # Om mer än 1 timme gå till följande logik
                         if self.rigg_timmar > 2:  # Rigg efter gig max på 1, resten går till innan
-                            rigg_after = 1
-                            rigg_before = self.rigg_timmar - 1
+                            rigg_after = 1.0
+                            rigg_before = self.rigg_timmar - 1.0
                         else:  # Om tiden är mer är mer än 1 timme men mindre än 2, splitta jämt mellan
-                            rigg_after = self.rigg_timmar / 2
-                            rigg_before = self.rigg_timmar / 2
+                            rigg_after = self.rigg_timmar / 2.0
+                            rigg_before = self.rigg_timmar / 2.0
                     else:  # Minimum extra tid innan & efter är en halvtimme
                         rigg_after = 0.5
                         rigg_before = 0.5
@@ -686,13 +695,12 @@ class Gig:
 
                 hours_total += (self.dagar_list[-1][1].timestamp() - self.dagar_list[-1][0].timestamp()) / 60 / 60
 
-        while len(self.mgetins) < len(self.dagar_list):
-            self.mgetouts.append(None)
-            self.mgetins.append(None)
+
         self.ob_dict = {"0": [], "1": [], "2": [], "3": [], "4": []}
 
         skärtorsdagen = None
-        for date, holiday in holidays.SWE(False, years=self.end_date.year).items():
+        swe_holidays = holidays.country_holidays("SWE", observed=False, years=self.end_date.year)
+        for date, holiday in swe_holidays.items():
             if holiday == "Långfredagen":
                 skärtorsdagen = date - datetime.timedelta(days=1)
                 break
@@ -707,9 +715,9 @@ class Gig:
                 else:
                     temp_date = begin + datetime.timedelta(hours=hour)
 
-                if temp_date in holidays.SWE(False, years=temp_date.year):
+                if temp_date in swe_holidays:
                     if (
-                            holidays.SWE(False, years=temp_date.year)[temp_date]
+                            swe_holidays[temp_date]
                             in [
                         "Trettondedag jul",
                         "Kristi himmelsfärdsdag",
@@ -719,10 +727,9 @@ class Gig:
                     ):
                         self.ob_dict["3"].append(temp_date)
                     elif (
-                            holidays.SWE(False, years=temp_date.year)[temp_date]
+                            swe_holidays[temp_date]
                             in ["Nyårsafton"] and temp_date.hour >= 18
-                            or holidays.SWE(False,
-                                            years=temp_date.year)[temp_date] in [
+                            or swe_holidays[temp_date] in [
                                 "Pingstdagen",
                                 "Sveriges nationaldag",
                                 "Midsommarafton",
@@ -782,7 +789,7 @@ class Gig:
         self.ob_mult /= self.dag_längd * len(self.dagar_list)
 
     def personal_rakna(self, config):
-        total_personal = self.output_record.Personal
+        total_personal = self.output_record.personal
 
         if len(self.person_list) > total_personal:
             total_personal = len(self.person_list)
@@ -841,7 +848,7 @@ class Gig:
                 total_personal - self.antal_frilans) if total_personal > self.antal_frilans else 0
 
         self.output_record.personal_kostnad = self.frilans_kostnad + self.levande_video_kostnad
-        self.output_record.Personal_pris = self.timpris * total_tid  # Frilans is not used for pris
+        self.output_record.personal_pris = self.timpris * total_tid  # Frilans is not used for pris
 
         # TODO FIX THIS
         self.total_tim_budget = total_tid
@@ -849,8 +856,8 @@ class Gig:
         # Theoretical cost if only done by lv
         self.teoretisk_lön_kostnad = self.total_tim_budget * self.lön_kostnad
         self.teoretisk_lön_pris = self.total_tim_budget * self.timpris
-        self.output_record.Personal = total_personal * 1.0
-        self.output_record.restid = int(self.per_pers_restid * check_with_default(self.output_record.Personal, 0.0))
+        self.output_record.personal = total_personal * 1.0
+        self.output_record.restid = int(self.per_pers_restid * check_with_default(self.output_record.personal, 0.0))
 
     def post_text_func(self):
         try:
@@ -880,30 +887,30 @@ class Gig:
                 self.post_text_kostnad + self.output_record.personal_kostnad
         )
 
-        self.output_record.Pris += self.hyr_pris + self.post_text_pris + self.output_record.Personal_pris
+        self.output_record.pris += self.hyr_pris + self.post_text_pris + self.output_record.personal_pris
 
         # Teoretiska ifall enbart gjort av LV
         self.teoretisk_kostnad = self.kostnad - self.frilans_kostnad - self.levande_video_kostnad + self.teoretisk_lön_kostnad
 
-        if self.output_record.Pryl_pris is not None and self.output_record.Pryl_pris != 0:
+        if self.output_record.pryl_pris is not None and self.output_record.pryl_pris != 0:
             if self.pryl_kostnad is not None:
                 self.pryl_marginal = (
-                                             self.output_record.Pryl_pris - int(self.pryl_kostnad)
-                                     ) / self.output_record.Pryl_pris
+                                             self.output_record.pryl_pris - int(self.pryl_kostnad)
+                                     ) / self.output_record.pryl_pris
             else:
                 raise ValueError("Pryl kostnad is None")
         else:
             self.pryl_marginal = 0
 
-        self.slit_kostnad = self.output_record.Pryl_pris * config["prylSlit"]
+        self.slit_kostnad = self.output_record.pryl_pris * config["prylSlit"]
         self.pryl_fonden = self.slit_kostnad * (
                 1 + config["Prylinv (rel slit)"]
         )
-        print(self.output_record.Pris)
-        self.avkastning = round(self.output_record.Pris - self.kostnad)
+        print(self.output_record.pris)
+        self.avkastning = round(self.output_record.pris - self.kostnad)
 
         self.teoretisk_avkastning = round(
-            self.output_record.Pris - self.teoretisk_kostnad
+            self.output_record.pris - self.teoretisk_kostnad
         )
 
         self.hyr_things = self.data.hyrKostnad * (
@@ -912,7 +919,7 @@ class Gig:
         try:
             self.marginal = (
                     round(self.avkastning /
-                          (self.output_record.Pris - self.hyr_things) * 10000) / 100
+                          (self.output_record.pris - self.hyr_things) * 10000) / 100
             )
         except ZeroDivisionError:
             self.marginal = 0
@@ -920,7 +927,7 @@ class Gig:
             self.teoretisk_marginal = (
                     round(
                         self.teoretisk_avkastning /
-                        (self.output_record.Pris - self.hyr_things) * 10000
+                        (self.output_record.pris - self.hyr_things) * 10000
                     ) / 100
             )
         except ZeroDivisionError:
@@ -929,9 +936,9 @@ class Gig:
 
     def output(self):
         print(f"Post Text: {self.post_text_pris}")
-        print(f"Pryl: {self.output_record.Pryl_pris}")
-        print(f"Personal: {self.output_record.Personal_pris}")
-        print(f"Total: {self.output_record.Pris}")
+        print(f"Pryl: {self.output_record.pryl_pris}")
+        print(f"Personal: {self.output_record.personal_pris}")
+        print(f"Total: {self.output_record.pris}")
         print(f"Avkastning: {self.avkastning}")
 
         if self.marginal > 65:
@@ -999,29 +1006,29 @@ class Gig:
         self.projekt_typ = self.data.Projekt_typ if self.data.Projekt_typ is not None else "live"
         riggdag = self.projekt_typ == 'Rigg'
 
-        self.output_record.Projekt_kanban = self.output_record.name
-        self.output_record.Projekt_timmar = int(
-            float(self.gig_timmar) * self.output_record.Personal * float(len(self.dagar_list)))
-        self.output_record.Rigg_timmar = int(
-            self.rigg_timmar * (self.output_record.Personal if self.output_record.Personal is not None else 0))
+        self.output_record.projekt_kanban = self.output_record.name
+        self.output_record.projekt_timmar = int(
+            float(self.gig_timmar) * self.output_record.personal * float(len(self.dagar_list)))
+        self.output_record.rigg_timmar = int(
+            self.rigg_timmar * (self.output_record.personal if self.output_record.personal is not None else 0))
 
-        self.output_record.prylPaket = self.prylpaket
-        self.output_record.extraPrylar = self.extra_prylar
+        self.output_record.pryl_paket = self.prylpaket
+        self.output_record.extra_prylar = self.extra_prylar
         print(self.prylpaket, self.extra_prylar)
-        self.output_record.antalPrylar = antal_string
-        self.output_record.antalPaket = antal_paket_string
+        self.output_record.antal_prylar = antal_string
+        self.output_record.antal_paket = antal_paket_string
         self.output_record.projektledare = self.data.projektledare
         self.output_record.latest_added = True
         self.output_record.producent = self.data.producent
-        self.output_record.Projekt = [self.projekt]
+        self.output_record.projekt = [self.projekt]
         self.output_record.dagar = len(self.dagar_list)
         self.output_record.packlista = packlista
-        self.output_record.projektTid = int(self.projekt_timmar * self.output_record.Personal)
-        self.output_record.dagLängd = self.dag_längd
-        self.output_record.slitKostnad = self.slit_kostnad
-        self.output_record.prylFonden = self.pryl_fonden
+        self.output_record.projekt_tid = int(self.projekt_timmar * self.output_record.personal)
+        self.output_record.dag_längd = self.dag_längd
+        self.output_record.slit_kostnad = self.slit_kostnad
+        self.output_record.pryl_fonden = self.pryl_fonden
         self.output_record.hyrthings = self.hyr_things
-        self.output_record.avkastWithoutPris = float(self.avkastning)
+        self.output_record.avkast_without_pris = float(self.avkastning)
         self.output_record.avkast2 = float(self.teoretisk_avkastning)
         self.output_record.frilanstimmar = check_with_default(self.tim_budget_frilans, 0.0)
         # self.output_record.ny
@@ -1029,35 +1036,35 @@ class Gig:
         self.output_record.typ = self.projekt_typ
         self.output_record.input_id = self.data.id
         self.output_record.post_deadline = check_with_default(self.data.post_deadline, datetime.datetime.min)
-        self.output_record.All_personal = self.person_list
+        self.output_record.all_personal = self.person_list
         self.output_record.slutkund_temp = [self.slutkund]
         self.output_record.role_format = self.make_format_for_roles()
         self.output_record.extra_namn = self.extra_name
         self.output_record.ob = self.ob_text
-        self.output_record.Kommentar_från_formulär = self.comment
+        self.output_record.kommentar_från_formulär = self.comment
 
         if riggdag:
             self.output_record.eget_pris = 0
             self.output_record.rabatt = 1.0
 
-        self.output_record.Bildproducent = self.data.Bildproducent if self.data.Bildproducent is not None else []
-        self.output_record.Ljudtekniker = self.data.Ljudtekniker if self.data.Ljudtekniker is not None else []
-        self.output_record.Fotograf = self.data.Fotograf if self.data.Fotograf is not None else []
-        self.output_record.Ljustekniker = self.data.Ljustekniker if self.data.Ljustekniker is not None else []
-        self.output_record.Animatör = self.data.Animatör if self.data.Animatör is not None else []
-        self.output_record.Körproducent = self.data.Körproducent if self.data.Körproducent is not None else []
-        self.output_record.Scenmästare = self.data.Scenmästare if self.data.Scenmästare is not None else []
-        self.output_record.Klippare = self.data.Klippare if self.data.Klippare is not None else []
-        self.output_record.Tekniskt_ansvarig = self.data.Tekniskt_ansvarig if self.data.Tekniskt_ansvarig is not None else []
-        self.output_record.Innehållsproducent = self.data.Innehållsproducent if self.data.Innehållsproducent is not None else []
-        self.output_record.Grafikproducent = self.data.Grafikproducent if self.data.Grafikproducent is not None else []
-        self.output_record.Resten = []
+        self.output_record.bildproducent = self.data.Bildproducent if self.data.Bildproducent is not None else []
+        self.output_record.ljudtekniker = self.data.Ljudtekniker if self.data.Ljudtekniker is not None else []
+        self.output_record.fotograf = self.data.Fotograf if self.data.Fotograf is not None else []
+        self.output_record.ljustekniker = self.data.Ljustekniker if self.data.Ljustekniker is not None else []
+        self.output_record.animatör = self.data.Animatör if self.data.Animatör is not None else []
+        self.output_record.körproducent = self.data.Körproducent if self.data.Körproducent is not None else []
+        self.output_record.scenmästare = self.data.Scenmästare if self.data.Scenmästare is not None else []
+        self.output_record.klippare = self.data.Klippare if self.data.Klippare is not None else []
+        self.output_record.tekniskt_ansvarig = self.data.Tekniskt_ansvarig if self.data.Tekniskt_ansvarig is not None else []
+        self.output_record.innehållsproducent = self.data.Innehållsproducent if self.data.Innehållsproducent is not None else []
+        self.output_record.grafikproducent = self.data.Grafikproducent if self.data.Grafikproducent is not None else []
+        self.output_record.resten = []
         if self.output_record.projekt_kalender is None:
             self.output_record.projekt_kalender = []
         for key in self.person_dict_grouped.keys():
             if key not in ["Bildproducent", "Ljudtekniker"]:
                 for person in self.person_dict_grouped[key]:
-                    self.output_record.Resten.append(person)
+                    self.output_record.resten.append(person)
         # TODO
         # if self.projekt_typ == "Rigg":
         #    (output.pop(x) for x in ["Pris", "prylPaket", "extraPrylar"])
@@ -1118,7 +1125,7 @@ class Gig:
                                            ).minute * 60
                     record.åka_från_svanis = getin.hour * 60 * 60 + getin.minute * 60
                     record.komma_tillbaka_till_svanis = getout.hour * 60 * 60 + getout.minute * 60
-                    record.projekt = [self.output_record.Projekt[0]]
+                    record.projekt = [self.output_record.projekt[0]]
                     self.output_record.projekt_kalender.append(record)
 
 
@@ -1173,8 +1180,8 @@ class Gig:
         params = {
             "prefill_fldMpFwH617TIYHkk": self.projektledare[0].id,
             "prefill_fld2Q7WAm4q5MaLSO": self.producent[0].id,
-            "prefill_flddagkZF2A0fGIUF": ",".join([x.id for x in self.output_record.prylPaket if x is not None]),
-            "prefill_fldSee4Tb6eABK6qY": ",".join([x.id for x in self.output_record.extraPrylar if x is not None]),
+            "prefill_flddagkZF2A0fGIUF": ",".join([x.id for x in self.output_record.pryl_paket if x is not None]),
+            "prefill_fldSee4Tb6eABK6qY": ",".join([x.id for x in self.output_record.extra_prylar if x is not None]),
             "prefill_fldMuiKyy5M4Ic36o": self.antal_paket if type(self.antal_paket) is not list else ",".join(
                 self.antal_paket),
             "prefill_fldKPZXPgaAGvypFZ": self.antal_prylar if type(self.antal_prylar) is not list else ",".join(
@@ -1196,8 +1203,8 @@ class Gig:
             "prefill_fldgCwZHHkIj5cxFS": self.data.getin_getout
         }
         equip_url = {
-            "prefill_flddagkZF2A0fGIUF": ",".join([x.id for x in self.output_record.prylPaket if x is not None]),
-            "prefill_fldSee4Tb6eABK6qY": ",".join([x.id for x in self.output_record.extraPrylar if x is not None]),
+            "prefill_flddagkZF2A0fGIUF": ",".join([x.id for x in self.output_record.pryl_paket if x is not None]),
+            "prefill_fldSee4Tb6eABK6qY": ",".join([x.id for x in self.output_record.extra_prylar if x is not None]),
             "prefill_fldMuiKyy5M4Ic36o": self.antal_paket if type(self.antal_paket) is not list else ",".join(
                 self.antal_paket),
             "prefill_fldKPZXPgaAGvypFZ": self.antal_prylar if type(self.antal_prylar) is not list else ",".join(
@@ -1253,7 +1260,7 @@ class Gig:
         self.output_record.save()
 
     def inventarie(self):
-        inventarie = Table(api_key, base_id, "Pryl inventarie")
+        inventarie = base.table("tblHV8tzp8C7kdKCN") # Pryl inventarie
         inventarie_list: list[orm.Inventarie] = []
         for pryl_id, pryl in self.gig_prylar.items():
             inventarie_list.append(orm.Inventarie(
@@ -1279,7 +1286,6 @@ class Gig:
             inventarie.batch_create(create)
 
     def make_tidrapport(self):
-        tid_table = Table(api_key, base_id, "Tidrapport")
         all_people = []
 
         for person in self.person_list:

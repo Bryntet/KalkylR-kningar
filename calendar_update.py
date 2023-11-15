@@ -96,15 +96,15 @@ def main():
         try:
             assert event.leverans_rid is not None
 
-            leverans = all_leverans[event.leverans_rid[2:-2]]
+            leverans: orm.Leverans = all_leverans[event.leverans_rid[2:-2]]
             if event.projekt_typ == "Utrustning" or event.projekt_typ == "Redigerat":
                 continue
-            if leverans.All_personal is None:
-                leverans.All_personal = []
+            if leverans.all_personal is None:
+                leverans.all_personal = []
             all_people: list[orm.Person] = []
             if leverans.producent is not None:
                 all_people.extend(leverans.producent)
-            all_people.extend(leverans.All_personal)
+            all_people.extend(leverans.all_personal)
 
             for person in all_people:
                 if person.name is None:
@@ -182,20 +182,20 @@ def main():
                     description += '\n\n'
 
             # description += "\n"
-            if leverans.prylPaket is not None:
-                paketen = leverans.prylPaket
+            if leverans.pryl_paket is not None:
+                paketen = leverans.pryl_paket
             else:
                 paketen = []
-            if leverans.antalPaket is not None:
-                antal_paket = leverans.antalPaket.split(",")
+            if leverans.antal_paket is not None:
+                antal_paket = leverans.antal_paket.split(",")
             else:
                 antal_paket = []
-            if leverans.extraPrylar is not None:
-                prylar = leverans.extraPrylar
+            if leverans.extra_prylar is not None:
+                prylar = leverans.extra_prylar
             else:
                 prylar = []
-            if leverans.antalPrylar is not None:
-                antal_prylar = leverans.antalPrylar.split(",")
+            if leverans.antal_prylar is not None:
+                antal_prylar = leverans.antal_prylar.split(",")
             else:
                 antal_prylar = []
             paketen_string = "Beställning: \n"
@@ -270,18 +270,18 @@ def main():
                 continue
             assert event.name2 is not None
 
-            if leverans.Adress is not None and leverans.Adress[0].name is None:
-                leverans.Adress[0].fetch()
-                assert leverans.Adress[0].name is not None
+            if leverans.adress is not None and leverans.adress[0].name is None:
+                leverans.adress[0].fetch()
+                assert leverans.adress[0].name is not None
             else:
-                leverans.Adress = []
+                leverans.adress = []
 
             my_event = Event(
                 event.name2[2:-2] + (' [OBEKRÄFTAT]' if event.status == 'Obekräftat projekt' else "") + (
                     " [RIGG]" if leverans.typ == "Rigg" else ""),
                 getin,
                 getout,
-                location=leverans.Adress[0].name if len(leverans.Adress) > 0 else None,
+                location=leverans.adress[0].name if len(leverans.adress) > 0 else None,
                 attendees=invite_list,
                 status=status,
                 description=description,
