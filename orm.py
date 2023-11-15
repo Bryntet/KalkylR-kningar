@@ -41,9 +41,12 @@ def record_to_orm(table, record_input):
 
 class Prylar(Model):
     name = fields.TextField("fldAakG5Ntk1Mro4S")
+    # noinspection PyArgumentList
     pris = fields.FloatField("fld1qKXF28Qz2pJG2")
+    # noinspection PyArgumentList
     in_pris = fields.IntegerField("fldgY78pJgbgBi4Dy")
     lifespan = fields.SelectField("fldwG40TFkeqHVMYG")
+    # noinspection PyArgumentList
     antal_inventarie = fields.FloatField("fldO8AaLRqgoQtmAz")
     hide_from_calendar = fields.CheckboxField("fldb0Hgi9WB3OD8mI")
 
@@ -79,13 +82,17 @@ class Prylar(Model):
 
 # noinspection PyTypeChecker
 class Paket(Model):
+    # noinspection PyArgumentList
     name = fields.TextField("fld3ec1hcB3LK56R7")
+    # noinspection PyArgumentList
     pris = fields.FloatField("fld0tl6Outn8f6lEj")
     prylar = fields.LinkField("fldGkPJMOquzQGrO9", Prylar)
     paket_i_pryl_paket: fields.LinkField = fields.LinkField("fld1PIcwxpsFkrcYy", fields.LinkSelf, True)
     antal_prylar = fields.TextField("fldUTezg1xtekQBir")
+    # noinspection PyArgumentList
     personal = fields.FloatField("fldTTcF0qCx9p8Bz2")
     svanis = fields.CheckboxField("fldp2Il8ITQdFXhVR")
+    # noinspection PyArgumentList
     hyra = fields.FloatField("fld8iEEeEjhi9KT3c")
     hide_from_calendar = fields.CheckboxField("fldQqTyRk9wzLd5fC")
     _force_update = False
@@ -185,6 +192,7 @@ class Projekt(Model):
 
 
 class FrilansAccounting(Model):
+    # noinspection PyArgumentList
     gissad_kostnad = fields.FloatField("fldx8vULV8QQ57Bfq")
 
     class Meta:
@@ -205,13 +213,14 @@ class Person(Model):
     available_tasks = None
     timpris = 0
     lön_kostnad = 0
+    tim_kostnad = 0
 
     def fix(self):
         if self.name is None:
             self.fetch()
         if self.kan_göra is None:
             self.kan_göra = ""
-        self.available_tasks = re.findall(r"\[*'([\w\såäöÅÄÖ]+)'\]*", self.kan_göra)
+        self.available_tasks = re.findall(r"\[*'([\w\såäöÅÄÖ]+)']*", self.kan_göra)
         self.kan_göra = ", ".join(self.available_tasks)
         if self.levande_video:
             self.timpris = config["levandeVideoLön"]
@@ -296,14 +305,18 @@ class Person(Model):
 class Tidrapport(Model):
     person = fields.TextField("fld0rfqy45K5IOb34")
     datum = fields.DateField("fldZd6hRrxR5T0KL2")
+    # noinspection PyArgumentList
     tid = fields.FloatField("fldzCupBWoGl6cgR8")
+    # noinspection PyArgumentList
     start_tid = fields.FloatField("fldS7uDn92PtAEYCR")
     o_b = fields.TextField("fld5jc0S4rQALPsvY")
     kommentar = fields.TextField("fldnpajIJz62nDCk8")
+    # noinspection PyArgumentList
     mil = fields.FloatField("fldcL3qksoVqN9le6")
     is_default = fields.CheckboxField("fldzupNeSCkJ0hMcl")
     månad = fields.TextField("fldWhREtVWvRThp4b")
     unused = fields.CheckboxField("fldcbw9qh1f5Aq8XG")
+    # noinspection PyArgumentList
     i_d = fields.IntegerField("fldSnPZyBh7cjv8bc")
     month_calculations = fields.TextField("fldvdZjWPhlMAJIfu")
     robot = fields.CheckboxField("fld4JqaTdWzgTwdiC")
@@ -336,10 +349,13 @@ class Slutkund(Model):
 class Adressbok(Model):
     name = fields.TextField("fldfyrX4mHcGjQIJc")
     distance = fields.TextField("fldphlP8E1aCyXMbT")
+    # noinspection PyArgumentList
     time_bike = fields.IntegerField("fldcrcoZE5v7czRrg")
+    # noinspection PyArgumentList
     time_car = fields.IntegerField("fldTr4mYBAha7sXhZ")
     transport_type = fields.TextField("fld4xpwxz0lnQdphA")
     kund = fields.LinkField("fldHH4DFi1ES93saa", Kund)
+    # noinspection PyArgumentList
     used_time = fields.IntegerField("fldsOvDT5kugGCP9G")
 
     class Meta:
@@ -362,9 +378,13 @@ class Bestallare(Model):
 
 class Projektkalender(Model):
     name2 = fields.TextField("fldO8TzRQVNgt02qU")
+    # noinspection PyArgumentList
     getin = fields.IntegerField("fldITTqANmwPUjYuC")
+    # noinspection PyArgumentList
     getout = fields.IntegerField("fldAnBswzCzNt7OFs")
+    # noinspection PyArgumentList
     program_start = fields.IntegerField("fldDVxfuTkDruHHL8")
+    # noinspection PyArgumentList
     program_slut = fields.IntegerField("flddD7XrPVHYHIPST")
     datum = fields.DateField("fld81rwHaQu7eRx53")
     status = fields.TextField("fldUrrqRZBsVLxxx4")
@@ -374,10 +394,14 @@ class Projektkalender(Model):
     slides = fields.CheckboxField("fldDhBQk3opw1CSgk")
     fakturareferens = fields.TextField("fldSEEzRXfRgwKKl2")
     skicka_mejl = fields.CheckboxField("fld7w7Rt5T1vVhzXb")
+    # noinspection PyArgumentList
     actual_getin = fields.IntegerField("fldSQcKggYPFHtEAB")
+    # noinspection PyArgumentList
     åka_från_svanis = fields.IntegerField("fldi5mO5lix7abnXm")
+    # noinspection PyArgumentList
     komma_tillbaka_till_svanis = fields.IntegerField("flddKPdxarm5UYnZm")
     calendar_description = fields.TextField("fldeTVUkgCro8oAIg")
+    # noinspection PyArgumentList
     actual_getout = fields.IntegerField("fldmIHQYnKeYVk9PU")
     egna_anteckningar = fields.TextField("fldYX8PWAbiRL3Qv9")
     projekt = fields.LinkField("fldfFm1RO4zqAP2zi", Projekt)
@@ -390,18 +414,25 @@ class Projektkalender(Model):
     projekt_2 = fields.TextField("fldXXtWhMURLywgE3")
     levandevideo = fields.LinkField("fldxTl0TKgoLymqFK", Person)
     frilans_mail = fields.EmailField("flduU5Lyuuf5RGPFC")
+    # noinspection PyArgumentList
     egen_getin = fields.FloatField("fldnz9NbGRgz9bFBT")
     bara_riggtid = fields.CheckboxField("fldEmgb8XCtjGlk3z")
     rigg_dagen_innan = fields.CheckboxField("fldZ8orE83xtYmSkM")
+    # noinspection PyArgumentList
     m_getin = fields.FloatField("fld6F3xuRadz07hyv")
+    # noinspection PyArgumentList
     m_getout = fields.FloatField("fldRxrXmAiZBKO4cu")
     # dagen_innan_rigg = fields.LinkField("fldYjafIh96hI3pTe", )
     frilans_uträkningar = fields.LinkField("flds3BC39ufa1eTVc", FrilansAccounting)
+    # noinspection PyArgumentList
     extra_rigg = fields.FloatField("fldPLMeJSbypPygtK")
+    # noinspection PyArgumentList
     i_d = fields.IntegerField("fldnOyMoIQlfEJNXb")
     fakturanummer = fields.TextField("fldj3L72EeGGRE0gV")
     betalningsdatum = fields.DateField("fldjsKIIPTOhfg7gW")
+    # noinspection PyArgumentList
     program_stop_hidden = fields.FloatField("fldpW1yaKniipOP0z")
+    # noinspection PyArgumentList
     program_start_hidden = fields.FloatField("fldZhrBxTQ1azrdEz")
     projekt_typ = fields.TextField("fldjq2WoRhwPnO2xE")
     leverans_rid = fields.TextField("fldJunVGOofzOVrov")
@@ -423,13 +454,20 @@ class Leverans(Model):
     projekt_kalender = fields.LinkField("fld8sMBfKU73Rt5RB", Projektkalender)
     link_to_update = fields.TextField("fldnAUE87gCkyzUW7")
     link_to_copy = fields.TextField("fldkVvmHIDCofPTxE")
+    # noinspection PyArgumentList
     eget_pris = fields.IntegerField("fldh6JAFQjK5RMDPT")
     name = fields.TextField("fldeZo8wMi9C8D78j")
+    # noinspection PyArgumentList
     pris = fields.FloatField("fld0O9MGtVYeB87DC")
+    # noinspection PyArgumentList
     personal = fields.FloatField("fldGj04MBtd7yVS6y")
+    # noinspection PyArgumentList
     extra_personal = fields.FloatField("flds76lS0HTW380WJ")
+    # noinspection PyArgumentList
     projekt_timmar = fields.IntegerField("fldrztHjZrLDjky6q")
+    # noinspection PyArgumentList
     rigg_timmar = fields.IntegerField("fldVfzIAGpa49C8qy")
+    # noinspection PyArgumentList
     pryl_pris = fields.FloatField("fldnQYR5MbklAQKSU")
     pryl_paket = fields.LinkField("fldrUHtmGbW4OTX8Z", Paket)
     extra_prylar = fields.LinkField("fldIt8Y4P3xSP5xxG", Prylar)
@@ -439,16 +477,26 @@ class Leverans(Model):
     projekt = fields.LinkField("fldXdY47lGYDUFIge", Projekt)
     börja_datum = fields.DateField("fldsJHqZu5eM08Kki")
     sluta_datum = fields.DateField("fldfBtMD4wSQT1ikA")
+    # noinspection PyArgumentList
     dagar = fields.IntegerField("fldTxuAKtqGenuEzd")
     packlista = fields.TextField("fldninb2sH5xg2rdf")
+    # noinspection PyArgumentList
     restid = fields.IntegerField("fldJCj4KjK2I8RdsG")
+    # noinspection PyArgumentList
     projekt_tid = fields.IntegerField("fldW3EJf2n13tg2aC")
+    # noinspection PyArgumentList
     dag_längd = fields.FloatField("fldEcIo4yzJQ9sRRb")
+    # noinspection PyArgumentList
     slit_kostnad = fields.FloatField("fldarGhCnL33DTvPD")
+    # noinspection PyArgumentList
     pryl_fonden = fields.FloatField("fldv4MgeBeziiuRgX")
+    # noinspection PyArgumentList
     hyrthings = fields.FloatField("fldgO3uhxa7enwZ8I")
+    # noinspection PyArgumentList
     avkast_without_pris = fields.FloatField("fldFQjYyG5LGQnYPU")
+    # noinspection PyArgumentList
     avkast2 = fields.FloatField("fldnrs1UnBqz2I8Bt")
+    # noinspection PyArgumentList
     frilanstimmar = fields.FloatField("fldKunOK7Gpqx3x77")
     frilans = fields.LinkField("fld5dISuz2dXpyFWl", Person)
     bildproducent = fields.LinkField("flduzo0PJJRBF8TlT", Person)
@@ -467,6 +515,7 @@ class Leverans(Model):
     projektledare = fields.LinkField("fld4ALH1wr3eoi1wj", Person)
     latest_added = fields.CheckboxField("fldVW1DEIYPH0fcUG")
     status = fields.TextField("fldWbvJbz9N20yFww")
+    # noinspection PyArgumentList
     leverans_nummer = fields.IntegerField("fldlXvqQJi31guMWY")
     kund = fields.LinkField("fldYGBNxXLwxy6Ej1", Kund)
     svanis = fields.CheckboxField("fldlj8nYVzBfeYMe2")
@@ -484,9 +533,11 @@ class Leverans(Model):
     extra_namn = fields.TextField("fldAa4QimQWLXEosO")
     ob = fields.TextField("fldCcecFWkEr6QMIS")
     kommentar_från_formulär = fields.TextField("fldp4H3xsgi2puMNO")
+    # noinspection PyArgumentList
     rabatt = fields.FloatField("fldQw9OqKfVWNrDru")
     equipment_url = fields.TextField("fldecfG6DnmrybU1X")
     edvs_probs = fields.LinkField("fldAkqW8feXXld8ED", EdvinsProblem)
+    # noinspection PyArgumentList
     personal_kostnad = fields.FloatField("fldSLwsJFWFdyVThg")
     personal_pris = 0
 
@@ -509,7 +560,9 @@ class input_data(Model):
     antalPaket = fields.TextField("fldMuiKyy5M4Ic36o")
     antalPrylar = fields.TextField("fldKPZXPgaAGvypFZ")
     Svanis = fields.CheckboxField("fldgJioVMIGqVqVDE")
+    # noinspection PyArgumentList
     extraPersonal = fields.FloatField("fldgdbo04e5daul7r")
+    # noinspection PyArgumentList
     hyrKostnad = fields.FloatField("fldqpTwSSKNDL9fGT")
     börja_datum = fields.DatetimeField("fldWI184kPDtbd76h")
     sluta_datum = fields.DatetimeField("fldBRV7PMCSYPemuP")
@@ -519,6 +572,7 @@ class input_data(Model):
     projektledare = fields.LinkField("fldMpFwH617TIYHkk", Person)
     producent = fields.LinkField("fld2Q7WAm4q5MaLSO", Person)
     post_text = fields.CheckboxField("fldQJP25CrDQdZGRg")
+    # noinspection PyArgumentList
     Textning_minuter = fields.IntegerField("fldPxGMqLTl0BYZms")
     Frilans = fields.LinkField("fldnH3dsbRixSXDVI", Person)
     Projekt_typ = fields.TextField("fldFpABlroJj4muC9")
@@ -531,6 +585,7 @@ class input_data(Model):
     ny_kund = fields.TextField("flde22WSFwNXuWsBf")
     ny_beställare = fields.TextField("fldoTuaIttzRWDPYy")
     existerande_adress = fields.LinkField("fldKr9l8iJym15vnv", Adressbok)
+    # noinspection PyArgumentList
     projekt_timmar = fields.IntegerField("fldQibfzkvf2pPPsK")
     Bildproducent = fields.LinkField("fld2bU8lAGsjDR0rd", Person)
     Fotograf = fields.LinkField("fldGhbhWOU144JENx", Person)
@@ -552,10 +607,13 @@ class input_data(Model):
     nytt_projekt = fields.CheckboxField("fldB06TMygWWfyiyM")
     Output_table = fields.LinkField("fldKy8eQZejPBt6ta", Leverans)
     Projekt_copy = fields.TextField("fldkZGenkv1vE5mp7")
-    Leveranser_copy = fields.TextField("fld8E15CzhDcbYvI4")
-    Leveranser_copy = fields.TextField("fldc4TYAbX80h3XIe")
+    _ = fields.TextField("fld8E15CzhDcbYvI4")  # Leveranser_copy knas
+    _ = fields.TextField("fldc4TYAbX80h3XIe")  # |==================|
+    # noinspection PyArgumentList
     Börja_tidigare = fields.FloatField("fldxANgmnX6XuDIwN")
+    # noinspection PyArgumentList
     special_rigg = fields.IntegerField("fld9Blpuyi40ZI4YR")
+    # noinspection PyArgumentList
     rigg_timmar_spec = fields.FloatField("fldnnOlN8Z9opg4eD")
 
     class Meta:
@@ -567,6 +625,7 @@ class input_data(Model):
 class Inventarie(Model):
     based_on = fields.LinkField("fld486RrDoIslIVdY", Prylar)
     leverans = fields.LinkField("fldjDT2LWD8NUxXrP", Leverans)
+    # noinspection PyArgumentList
     amount = fields.IntegerField("fldNjNPsb1Kx7vcdP")
 
     class Meta:
