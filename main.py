@@ -116,6 +116,7 @@ def box_check():
 class Gig:
     def __init__(self, input_RID):
 
+        self.airtable_record = None
         self.tid_rapport = []
 
         with open("config.json", "r", encoding="utf-8") as f:
@@ -1065,7 +1066,7 @@ class Gig:
             if key not in ["Bildproducent", "Ljudtekniker"]:
                 for person in self.person_dict_grouped[key]:
                     self.output_record.resten.append(person)
-        # TODO
+        # TODO: No idea what this is, but sure
         # if self.projekt_typ == "Rigg":
         #    (output.pop(x) for x in ["Pris", "prylPaket", "extraPrylar"])
 
@@ -1096,7 +1097,7 @@ class Gig:
         self.output_record.save()
 
         if self.dagar_list is not None:
-            for idx, (getin, getout) in enumerate(self.dagar_list):
+            for idx, getin, getout in enumerate(self.dagar_list):
                 if idx < len(calendar_records):
                     record = calendar_records[idx]
                 else:
@@ -1260,7 +1261,7 @@ class Gig:
         self.output_record.save()
 
     def inventarie(self):
-        inventarie = base.table("tblHV8tzp8C7kdKCN") # Pryl inventarie
+        inventarie = base.table("tblHV8tzp8C7kdKCN")  # Pryl inventarie
         inventarie_list: list[orm.Inventarie] = []
         for pryl_id, pryl in self.gig_prylar.items():
             inventarie_list.append(orm.Inventarie(
@@ -1270,24 +1271,25 @@ class Gig:
             ))
         existing_list = []
         update_list = []
-        for record in inventarie.all():
-            if record.get('fields', {}).get('Leverans') == self.output_record.id:
-                existing_list.append(record['id'])
-                if record['fields']['Based on'] not in self.gig_prylar.keys():
+
+        for record in orm.get_all_in_orm(orm.Inventarie):
+            if record.leverans[0].id == self.output_record.id:
+                existing_list.append(record)
+                if record.id not in self.gig_prylar.keys():
                     del existing_list[-1]
-                    inventarie.delete(record['id'])
+                    record.delete()
                 else:
-                    update_list.append(record['id'])
-        update = [dict_thing for dict_thing in inventarie_list if dict_thing['Based on'] in update_list]
+                    update_list.append(record)
+        update = [dict_thing for dict_thing in inventarie_list if dict_thing.based_on in update_list]
+
         if len(update) > 0:
             inventarie.batch_update(update)
-        create = [x for x in inventarie_list if x['Based on'] not in existing_list]
+        create = [x for x in inventarie_list if x.based_on not in existing_list]
         if len(create) > 0:
             inventarie.batch_create(create)
 
     def make_tidrapport(self):
         all_people = []
-
         for person in self.person_list:
 
             if person.levande_video:
@@ -1343,7 +1345,7 @@ def fuck_yeah():
         prylar = json.load(f)
     i_data_name = list(i_data.keys())[-1]
 
-    Gig(i_data, config, prylar, paket, i_data_name)
+    Gig(i_data)
     return "OK!", 200
 
 

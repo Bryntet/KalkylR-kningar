@@ -1,6 +1,7 @@
 import math
 import os
 import re
+from typing import TypeVar, Type, List
 
 import pyairtable
 from pyairtable import metadata
@@ -18,8 +19,10 @@ config = {
     for record in base.table("tbloHfNdwu6Adw97g").all(return_fields_by_field_id=True)
 }
 
+ORMType = TypeVar('ORMType', bound=Model)
 
-def get_all_in_orm(orm):
+
+def get_all_in_orm(orm: Type[ORMType]) -> List[ORMType]:
     return [orm().from_record(record) for record in orm().all(return_fields_by_field_id=True)]
 
 
