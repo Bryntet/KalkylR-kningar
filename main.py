@@ -1248,11 +1248,11 @@ class Gig:
         copy_params = params_list[1]
 
         self.update_url = (
-                "https://airtable.com/shrQOV05GKoC6rjJz" + "?" +
+                "https://airtable.com/appG1QEArAVGABdjm/pagaxLdhr9z1u7AwQ/form" + "?" +
                 urllib.parse.urlencode(update_params)
         )
         self.copy_url = (
-                "https://airtable.com/shrQOV05GKoC6rjJz" + "?" +
+                "https://airtable.com/appG1QEArAVGABdjm/pagaxLdhr9z1u7AwQ/form" + "?" +
                 urllib.parse.urlencode(copy_params)
         )
 
