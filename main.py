@@ -14,10 +14,10 @@ import pandas as pd
 import pytz
 import requests
 from flask import Flask, request
-from pyairtable import Api
 
 import orm
 from auth_middleware import token_required
+from pyairtable import Api
 
 
 # import google_drive_handler
@@ -91,11 +91,13 @@ def check_with_default(data, default):
     else:
         return default
 
+
 def convert_time(t):
     # Split the string by ":", if ":" is not found, it will return the original string
     parts = t.split(":")
     # Convert the parts to integers, if there's only hour provided, add "0" for minutes
     return tuple(map(int, parts if len(parts) > 1 else (parts[0], "0")))
+
 
 def box_check():
     """Make sure only one latest added box is checked"""
@@ -141,7 +143,7 @@ class Gig:
                 name=self.data.ny_slutkund
             )
             self.slutkund.save()
-        elif self.data.slutkund is not None:
+        elif len(self.data.slutkund) != 0:
             self.slutkund = self.data.slutkund[0]
             self.slutkund.fetch()
         else:
@@ -162,7 +164,7 @@ class Gig:
             self.output_record.beställare = [self.bestallare]
             self.output_record.kund = [self.kund]
             # get_prylar()
-        elif self.data.beställare is not None:
+        elif len(self.data.beställare) != 0:
             self.bestallare = self.data.beställare[0]
             self.bestallare.fetch()
             self.kund = self.bestallare.kund[0]
@@ -170,9 +172,9 @@ class Gig:
             self.output_record.beställare = [self.bestallare]
             self.output_record.kund = [self.kund]
 
-        if self.output_record.kund is None:
+        if len(self.output_record.kund) == 0:
             self.kund = orm.Kund()
-        if self.output_record.beställare is None:
+        if len(self.output_record.beställare) == 0:
             self.bestallare = None
         self.extra_name = check_with_default(self.data.extra_name, "")
         assert self.data.börja_datum is not None
@@ -206,9 +208,9 @@ class Gig:
                 if item not in self.person_list and item is str:
                     self.person_list.append(item)
 
-        if self.data.existerande_adress is not None:
+        if len(self.data.existerande_adress) != 0:
             self.adress = self.data.existerande_adress[0]
-        elif self.data.Adress is not None:
+        elif self.data.Adress != "":
             self.adress = orm.Adressbok(name=self.data.Adress)
         else:
             self.adress = orm.Adressbok()
@@ -248,7 +250,7 @@ class Gig:
         self.begin_earlier: float = self.data.Börja_tidigare if self.data.Börja_tidigare is not None else 0
         self.gig_timmar = 0
         self.tim_pris = None
-        if self.data.Projekt is not None:
+        if len(self.data.Projekt) != 0:
             self.projekt = self.data.Projekt[0]
         else:
             self.projekt = orm.Projekt()
@@ -269,7 +271,7 @@ class Gig:
         self.frilans_hyrkostnad = 0
         self.frilans_lista = []
 
-        if self.data.Frilans is not None:
+        if len(self.data.Frilans) != 0:
             self.frilans = len(self.data.Frilans)
             with open("frilans.json", "r", encoding="utf-8") as f:
                 frilans_list = json.load(f)
@@ -404,8 +406,10 @@ class Gig:
                 self.pre_gig_prylar.append(pryl)
 
     def check_paket(self):
-        self.antal_paket = map(int, self.data.antalPaket.split(",")) # TODO: KOLLA OM FEL
+        if self.data.antalPaket is not None:
+            self.antal_paket = map(int, self.data.antalPaket.split(","))  # TODO: KOLLA OM FEL
         if self.data.prylPaket is not None:
+
             for paket in self.data.prylPaket:
                 if paket.name is None:
                     paket.fetch()
@@ -629,7 +633,6 @@ class Gig:
 
                 start, end = map(convert_time, tup)
 
-
                 cest = pytz.timezone("Europe/Stockholm")
 
                 if self.mgets_outs_true:
@@ -695,7 +698,6 @@ class Gig:
                     ))
 
                 hours_total += (self.dagar_list[-1][1].timestamp() - self.dagar_list[-1][0].timestamp()) / 60 / 60
-
 
         self.ob_dict = {"0": [], "1": [], "2": [], "3": [], "4": []}
 
@@ -848,7 +850,7 @@ class Gig:
         self.levande_video_kostnad = self.lön_kostnad * (total_tid / total_personal) * (
                 total_personal - self.antal_frilans) if total_personal > self.antal_frilans else 0
 
-        self.output_record.personal_kostnad = self.frilans_kostnad + self.levande_video_kostnad
+        self.output_record.personal_kostnad = float(self.frilans_kostnad) + float(self.levande_video_kostnad)
         self.output_record.personal_pris = self.timpris * total_tid  # Frilans is not used for pris
 
         # TODO FIX THIS
@@ -1038,6 +1040,7 @@ class Gig:
         self.output_record.input_id = self.data.id
         self.output_record.post_deadline = check_with_default(self.data.post_deadline, datetime.datetime.min)
         self.output_record.all_personal = self.person_list
+        self.slutkund.save()
         self.output_record.slutkund_temp = [self.slutkund]
         self.output_record.role_format = self.make_format_for_roles()
         self.output_record.extra_namn = self.extra_name
@@ -1097,7 +1100,7 @@ class Gig:
         self.output_record.save()
 
         if self.dagar_list is not None:
-            for idx, getin, getout in enumerate(self.dagar_list):
+            for idx, (getin, getout) in enumerate(self.dagar_list):
                 if idx < len(calendar_records):
                     record = calendar_records[idx]
                 else:
@@ -1345,7 +1348,7 @@ def fuck_yeah():
         prylar = json.load(f)
     i_data_name = list(i_data.keys())[-1]
 
-    Gig(i_data)
+    Gig(i_data_name)
     return "OK!", 200
 
 
@@ -1397,6 +1400,13 @@ def take_back():
 @app.route("/test-auth", methods=["POST"])
 @token_required
 def auth_test():
+    return "OK!", 200
+
+
+@app.route("/send-latest", methods=["GET"])
+@token_required
+def test_thing():
+    Gig(input_data_table.first(view="viwK1bPu47Ood2kyP").get("id"))
     return "OK!", 200
 
 

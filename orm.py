@@ -23,7 +23,7 @@ ORMType = TypeVar('ORMType', bound=Model)
 
 
 def get_all_in_orm(orm: Type[ORMType]) -> List[ORMType]:
-    return [orm().from_record(record) for record in orm().all(return_fields_by_field_id=True)]
+    return orm().all(return_fields_by_field_id=True)
 
 
 def record_to_orm(table, record_input):
@@ -121,17 +121,15 @@ class Paket(Model):
 
     def get_all_prylar(self):
         pryl_list = []
-        if self.prylar is not None:
-            for pryl, amount in self.get_amount():
-                for _ in range(amount):
-                    pryl_list.append(pryl)
+        for pryl, amount in self.get_amount():
+            for _ in range(amount):
+                pryl_list.append(pryl)
 
-        if self.paket_i_pryl_paket is not None:
-            print(self.paket_i_pryl_paket)
-            for paket in self.paket_i_pryl_paket:
-                if paket.pris is None:
-                    paket.fetch()
-                pryl_list.extend(paket.get_all_prylar())
+        print(self.paket_i_pryl_paket)
+        for paket in self.paket_i_pryl_paket:
+            if paket.pris is None:
+                paket.fetch()
+            pryl_list.extend(paket.get_all_prylar())
 
         for pryl in pryl_list:
             if pryl.name is None:
