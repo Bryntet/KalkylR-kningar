@@ -5,19 +5,15 @@ import re
 import time
 
 from gcsa.event import Event
-from gcsa.google_calendar import GoogleCalendar
-from gcsa.google_calendar import SendUpdatesMode
+from gcsa.google_calendar import GoogleCalendar, SendUpdatesMode
 from gcsa.serializers.event_serializer import EventSerializer
-from pyairtable import Base
 
 import orm
+from pyairtable import Base
 
 
 def dict_symmetric_difference(a, b):
-    return {
-        k: a[k] if k in a else b[k]
-        for k in set(a.keys()).symmetric_difference(b.keys())
-    }
+    return {k: a[k] if k in a else b[k] for k in set(a.keys()).symmetric_difference(b.keys())}
 
 
 def phone_number(nrs: str) -> str:
@@ -84,8 +80,10 @@ def main():
         if 'telefon nr' in person_record['fields'].keys():
             nrs = person_record['fields']['telefon nr']
             phone_numbers[person_record['id']] = phone_number(nrs)
-    lv_emails = [epost[0] for epost in emails.values() if
-                 '@levandevideo.se' in epost[0] or epost[0] == "epost@edvinbryntesson.se"]
+    lv_emails = [
+        epost[0] for epost in emails.values()
+        if '@levandevideo.se' in epost[0] or epost[0] == "epost@edvinbryntesson.se"
+    ]
 
     for adress in orm.get_all_in_orm(orm.Adressbok):
         adresser_dict[adress.id] = adress.name
@@ -122,10 +120,10 @@ def main():
             getin = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(seconds=event.getin)
             getout = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(seconds=event.getout)
             if event.program_start is not None and event.program_slut is not None:
-                program_start = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(
-                    seconds=event.program_start)
-                program_slut = datetime.datetime.fromisoformat(datum.isoformat()) + datetime.timedelta(
-                    seconds=event.program_slut)
+                program_start = datetime.datetime.fromisoformat(datum.isoformat()
+                                                                ) + datetime.timedelta(seconds=event.program_start)
+                program_slut = datetime.datetime.fromisoformat(datum.isoformat()
+                                                               ) + datetime.timedelta(seconds=event.program_slut)
             else:
                 program_start, program_slut = None, None
             if event.status is not None:
@@ -144,9 +142,7 @@ def main():
                         try:
                             print(f"deleting one")
                             print(f"{event.name2[2:-2]}")
-                            kal_del = EventSerializer.to_object(
-                                kalender[event.id]
-                            )
+                            kal_del = EventSerializer.to_object(kalender[event.id])
 
                             gc.delete_event(kal_del)
                             kalender.pop(event.id)
@@ -159,25 +155,22 @@ def main():
             else:
                 status = 'confirmed'
             description = ''
-            saker = ['Projektledare', 'producent',
-                     'Bildproducent', 'Fotograf', 'Ljudtekniker', 'Ljustekniker',
-                     'Grafikproducent', 'Animatör', 'Körproducent', 'Innehållsproducent',
-                     'Scenmästare', 'Tekniskt_ansvarig'
-                     ]
+            saker = [
+                'Projektledare', 'producent', 'Bildproducent', 'Fotograf', 'Ljudtekniker', 'Ljustekniker',
+                'Grafikproducent', 'Animatör', 'Körproducent', 'Innehållsproducent', 'Scenmästare', 'Tekniskt_ansvarig'
+            ]
             for field in saker:
                 if field in leverans.__dict__['_fields'].keys():
                     if field == 'producent':
                         description += "Producent: \n{}".format(
-                            "\n".join(
-                                [((namn[x] + " - " + phone_numbers[x]) if x in phone_numbers.keys() else namn[x]) for x
-                                 in leverans_thing['fields'][field]])
+                            "\n".join([((namn[x] + " - " + phone_numbers[x]) if x in phone_numbers.keys() else namn[x])
+                                       for x in leverans_thing['fields'][field]])
                         )
                     else:
                         description += "{}: \n{}".format(
                             field,
-                            "\n".join(
-                                [((namn[x] + " - " + phone_numbers[x]) if x in phone_numbers.keys() else namn[x]) for x
-                                 in leverans_thing['fields'][field]])
+                            "\n".join([((namn[x] + " - " + phone_numbers[x]) if x in phone_numbers.keys() else namn[x])
+                                       for x in leverans_thing['fields'][field]])
                         )
                     description += '\n\n'
 
@@ -253,8 +246,9 @@ def main():
                     description += ' - {}'.format(phone_number(bestallare.phone))
                 description += '\n\n'
             if program_start is not None:
-                description += 'Körtider: {}-{}\n'.format(program_start.strftime("%H:%M"),
-                                                          program_slut.strftime("%H:%M"))
+                description += 'Körtider: {}-{}\n'.format(
+                    program_start.strftime("%H:%M"), program_slut.strftime("%H:%M")
+                )
 
             if event.kommentar_till_frilans is not None:
                 description += event.kommentar_till_frilans
@@ -277,15 +271,17 @@ def main():
                 leverans.adress = []
 
             my_event = Event(
-                event.name2[2:-2] + (' [OBEKRÄFTAT]' if event.status == 'Obekräftat projekt' else "") + (
-                    " [RIGG]" if leverans.typ == "Rigg" else ""),
+                event.name2[2:-2] + (' [OBEKRÄFTAT]' if event.status == 'Obekräftat projekt' else "") +
+                (" [RIGG]" if leverans.typ == "Rigg" else ""),
                 getin,
                 getout,
                 location=leverans.adress[0].name if len(leverans.adress) > 0 else None,
                 attendees=invite_list,
                 status=status,
                 description=description,
-                extendedProperties={"private": {"autogenerated": "true"}}
+                extendedProperties={"private": {
+                    "autogenerated": "true"
+                }}
             )
 
             if event.id in kalender.keys() and kalender[event.id].get("id") is not None:
@@ -294,8 +290,10 @@ def main():
                 before_update: Event = EventSerializer.to_object(kalender[event.id])
                 my_event.event_id = before_update.event_id
 
-                pop_thingies = ["sequence", "iCalUID", "htmlLink", "eventType", "visibility", "etag", "kind",
-                                "location", "send_updates"]
+                pop_thingies = [
+                    "sequence", "iCalUID", "htmlLink", "eventType", "visibility", "etag", "kind", "location",
+                    "send_updates"
+                ]
                 formatted_dict = [EventSerializer.to_json(my_event), EventSerializer.to_json(before_update)]
 
                 more_thingies = ["responseStatus", "displayName"]
@@ -311,8 +309,9 @@ def main():
                             print("fuck")
 
                 for pop_thing in pop_thingies:
-                    if pop_thing == "location" and any(
-                            [x.get("location", "") != "" for x in [formatted_dict[0], formatted_dict[1]]]):
+                    if pop_thing == "location" and any([
+                        x.get("location", "") != "" for x in [formatted_dict[0], formatted_dict[1]]
+                    ]):
                         continue
                     formatted_dict[0].pop(pop_thing, None)
                     formatted_dict[1].pop(pop_thing, None)
@@ -330,8 +329,10 @@ def main():
                     before_update.description = my_event.description
                     gc.update_event(before_update, SendUpdatesMode.NONE)
                     update = SendUpdatesMode.NONE
-                    if any(formatted_dict[0].get(dict_key) != formatted_dict[1].get(dict_key) for dict_key in
-                           ping_conditions):
+                    if any(
+                        formatted_dict[0].get(dict_key) != formatted_dict[1].get(dict_key)
+                        for dict_key in ping_conditions
+                    ):
                         update = SendUpdatesMode.ALL
                     my_event = gc.update_event(my_event, update)
                     print(my_event)

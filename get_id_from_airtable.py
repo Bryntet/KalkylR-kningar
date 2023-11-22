@@ -17,9 +17,7 @@ headers = {
     'Cookie': 'brw=brwCwx8u9KwIzkmiJ; AWSALB=ay99AB8vnr+eFIkJZDmokIXwcpikQrt2KgtIchwf73Al3UvLwd3xTehb+lkZ9UIiDWr1e+d9Czv7R3kdYz+KkK+zb2qN8uxXp2hKjZG/e1zfTSIQDl/BsKhZB7f9; AWSALBCORS=ay99AB8vnr+eFIkJZDmokIXwcpikQrt2KgtIchwf73Al3UvLwd3xTehb+lkZ9UIiDWr1e+d9Czv7R3kdYz+KkK+zb2qN8uxXp2hKjZG/e1zfTSIQDl/BsKhZB7f9'
 }
 
-
 # tables = response.json()['tables']
-
 
 # with open("table_schema.json", "w", encoding="utf-8") as f:
 #    json.dump(tables, f, ensure_ascii=False, indent=2)
@@ -60,11 +58,14 @@ def get_model_class(base_id):
                     # else:
                     #    field['type'] = ""
 
-                elif any(x == field['type'] for x in
-                         ["singleLineText", "multilineText", "richText", "multipleSelects", "singleSelect", "url"]):
+                elif any(
+                    x == field['type']
+                    for x in ["singleLineText", "multilineText", "richText", "multipleSelects", "singleSelect", "url"]
+                ):
                     field['type'] = "Text"
-                elif any(x == field['type'] for x in
-                         ["autoNumber", "number", "currency", "percent", "duration", "rating"]):
+                elif any(
+                    x == field['type'] for x in ["autoNumber", "number", "currency", "percent", "duration", "rating"]
+                ):
                     if field['type'] == "autoNumber" or field['options'].get('precision') == 0:
                         field['type'] = "Integer"
                     else:
@@ -114,25 +115,19 @@ def get_model_class(base_id):
                 attrs[field_name] = field_type(field.fldid)
 
         # Define meta class based on base id, table name and api key
-        meta_attrs = {
-            "base_id": base_id,
-            'table_name': table.name,
-            'api_key': api_key
-        }
+        meta_attrs = {"base_id": base_id, 'table_name': table.name, 'api_key': api_key}
 
         meta_class = type("Meta", (), meta_attrs)
 
         attrs["Meta"] = meta_class
 
         # Create model class based on attributes
-        model_class = type(table.name.replace(" ", ""), (Model,), attrs)
+        model_class = type(table.name.replace(" ", ""), (Model, ), attrs)
 
         return model_class
 
     else:
-        raise Exception(
-            f"Request failed with status code {response.status_code}"
-        )
+        raise Exception(f"Request failed with status code {response.status_code}")
 
 
 get_model_class(base_id)

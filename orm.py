@@ -1,11 +1,12 @@
 import math
 import os
 import re
-from typing import TypeVar, Type, List
+from typing import List, Type, TypeVar
+
+from pyairtable.orm import Model, fields
 
 import pyairtable
 from pyairtable import metadata
-from pyairtable.orm import Model, fields
 
 LinkSelf = fields.LinkSelf
 

@@ -9,6 +9,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
 from pyairtable import Base
 
 # If modifying these scopes, delete the file token.json.
@@ -30,9 +31,7 @@ def make_creds():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES
-            )
+            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open('token_drive.json', 'w') as token:
@@ -53,7 +52,7 @@ def search_file(service):
                 q="mimeType='image/jpeg'",
                 spaces='drive',
                 fields='nextPageToken, '
-                       'files(id, name)',
+                'files(id, name)',
                 pageToken=page_token
             ).execute()
             for file in response.get('files', []):
@@ -77,16 +76,12 @@ def search_file(service):
 def create_folder(service, name, parent_id=None) -> str:
     try:
 
-        file_metadata = {
-            'name': name,
-            'mimeType': 'application/vnd.google-apps.folder'
-        }
+        file_metadata = {'name': name, 'mimeType': 'application/vnd.google-apps.folder'}
         if parent_id:
             file_metadata['parents'] = [parent_id]
 
         # pylint: disable=maybe-no-member
-        file = service.files().create(body=file_metadata,
-                                      fields='id').execute()
+        file = service.files().create(body=file_metadata, fields='id').execute()
 
         return file.get('id')
 
@@ -105,7 +100,6 @@ top_parent = os.environ['DRIVE_TOP_FOLDER']
 projekt_table = airtable_base.get_table('Projekt')
 our_clients = airtable_base.get_table('Kund')
 end_clients = airtable_base.get_table('Slutkund')
-
 
 # DRID = Drive ID
 # RID = Record ID
@@ -155,18 +149,26 @@ class Kund:
         return new_folder
 
     def get_dict(self) -> dict:
-        return {
-            self.KUND_RID: {
-                'drid': self.KUND_DRID,
-                self.year: self.sub_DRIDs[self.year]
-            }
-        }
+        return {self.KUND_RID: {'drid': self.KUND_DRID, self.year: self.sub_DRIDs[self.year]}}
 
 
 class Slutkund(Kund):
-    def __init__(self, service, kund_top_parent: str, kund_name: str, kund_rid: str, year: str, slutkund: str,
-                 slutkund_rid: str, projekt: str, projekt_rid: str, slutkund_drid=None, leverans_drid=None,
-                 kund_DRID=None, kund_sub_DRIDs=None):
+    def __init__(
+        self,
+        service,
+        kund_top_parent: str,
+        kund_name: str,
+        kund_rid: str,
+        year: str,
+        slutkund: str,
+        slutkund_rid: str,
+        projekt: str,
+        projekt_rid: str,
+        slutkund_drid=None,
+        leverans_drid=None,
+        kund_DRID=None,
+        kund_sub_DRIDs=None
+    ):
         super().__init__(service, kund_top_parent, kund_name, kund_rid, year, kund_DRID, kund_sub_DRIDs)
 
         self.slutkund_name = slutkund
@@ -174,8 +176,9 @@ class Slutkund(Kund):
         self.slutkund_rid = slutkund_rid
         self.projekt_rid = projekt_rid
 
-        self.slutkund_drid = super().make_if_drid_not_none(self.slutkund_name, self.sub_DRIDs[year]['drid'],
-                                                           slutkund_drid)
+        self.slutkund_drid = super().make_if_drid_not_none(
+            self.slutkund_name, self.sub_DRIDs[year]['drid'], slutkund_drid
+        )
         self.projekt_drid = super().make_if_drid_not_none(self.projekt_name, self.slutkund_drid, leverans_drid)
 
         self.sub_DRIDs[self.year].update({
@@ -236,9 +239,10 @@ def all_the_processes(big_dict_with_all, projekt) -> dict:
                                 if projekt['id'] in big_dict_with_all[kund_rid][year][slutkund_rid].keys():
                                     projekt_drid = big_dict_with_all[kund_rid][year][slutkund_rid][projekt['id']]
                                     return big_dict_with_all
-                    x = Slutkund(service, top_parent, kund_name, kund_rid, year, slutkund_name, slutkund_rid,
-                                 p_fields['Name'].lower(), projekt['id'], slutkund_drid, projekt_drid, kund_drid,
-                                 sublist)
+                    x = Slutkund(
+                        service, top_parent, kund_name, kund_rid, year, slutkund_name, slutkund_rid,
+                        p_fields['Name'].lower(), projekt['id'], slutkund_drid, projekt_drid, kund_drid, sublist
+                    )
                     make_proj_rid = False
             if next_thing:
                 x = Kund(service, top_parent, kund_name, kund_rid, year, kund_drid, sublist)
