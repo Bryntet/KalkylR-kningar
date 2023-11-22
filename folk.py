@@ -2,7 +2,6 @@ import json
 
 
 class Person():
-
     def __init__(self, information, lv_timpeng, lv_timpris, hyr_multi=0.2):
         """Person object
 
@@ -36,8 +35,7 @@ class Person():
                 self.tim_kostnad = False
 
             if information['timpeng efter'] is not None:
-                self.tim_kostnad_after_time = information['timpeng efter'
-                                              ] / 60 / 60
+                self.tim_kostnad_after_time = information['timpeng efter'] / 60 / 60
             else:
                 self.tim_kostnad_after_time = False
             self.input_string = information.get('input_string')
@@ -75,8 +73,7 @@ class Person():
         total_pris = 0
         tim_total = 0
         if self.levande_video:  # TODO kan finnas stora problem här
-            tim_total = timmar['gig'] + timmar['rigg'] + timmar[
-                'proj'] + timmar['res']
+            tim_total = timmar['gig'] + timmar['rigg'] + timmar['proj'] + timmar['res']
             total_kostnad = tim_total * self.tim_kostnad
             total_pris = tim_total * self.timpris
 
@@ -95,7 +92,6 @@ class Person():
 
                 total_kostnad += current_hourly
                 counter += 1
-
             """
             for idx, t in enumerate(tuples):
                 old_hrs = tim_total
@@ -139,10 +135,7 @@ class Folk():
 
         with open("folk.json", "r") as f:
             json_data = json.load(f)
-            self.folk_dictionary = {
-                key: Person(val, lön, timpris, hyr_multi)
-                for key, val in json_data.items()
-            }
+            self.folk_dictionary = {key: Person(val, lön, timpris, hyr_multi) for key, val in json_data.items()}
 
     def get_person(self, id: str) -> Person:
         """Get person object
@@ -203,9 +196,7 @@ class Folk():
                 for key, value in grouped_thingies.items():
                     if person in value:
                         typ_av_arbete = key
-                temp_total_kostnad, temp_total_pris, temp_tim = self.get_person(
-                    person
-                ).get_cost(timmar, typ_av_arbete)
+                temp_total_kostnad, temp_total_pris, temp_tim = self.get_person(person).get_cost(timmar, typ_av_arbete)
                 person_cost_list[person] = temp_total_kostnad
                 total_kostnad += temp_total_kostnad
                 tim_total += temp_tim
