@@ -336,7 +336,6 @@ def main():
                 new_attendee_list = list(set([attendee.email for attendee in my_event.attendees]))
                 old_attendee_list = list(set([attendee.email for attendee in before_update.attendees]))
 
-
                 # Flatten stupid dict list crazyness.......
                 people_condition = not len(new_attendee_list) == len(old_attendee_list) or any(
                     a not in old_attendee_list for a in new_attendee_list
