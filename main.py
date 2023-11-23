@@ -253,9 +253,9 @@ class Gig:
 
         self.comment = check_with_default(self.data.Anteckning, "")
 
-        self.output_record.personal = check_with_default(self.data.extraPersonal, 0.0)
+        self.output_record.personal = float(check_with_default(self.data.extraPersonal, 0.0))
         assert self.output_record.personal is not None
-        self.output_record.extra_personal = check_with_default(self.data.extraPersonal, 0.0)
+        self.output_record.extra_personal = float(check_with_default(self.data.extraPersonal, 0.0))
 
         self.marginal = 0
         self.gig_prylar = {}
