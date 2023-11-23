@@ -3,13 +3,14 @@ import json
 import os
 import re
 import time
+from typing import List
 
 from gcsa.event import Event
 from gcsa.google_calendar import GoogleCalendar, SendUpdatesMode
 from gcsa.serializers.event_serializer import EventSerializer
 
 import orm
-from pyairtable import Base
+from pyairtable import Api
 
 
 def dict_symmetric_difference(a, b):
@@ -28,10 +29,23 @@ def delete_event(record_id):
         gc.delete_event(kalender[record_id]['post'])
 
 
+def flatten_dict(d: List[dict]) -> List[dict]:
+    seen = set()
+    for thing in d:
+        for value in thing.values():
+            if value not in seen:
+                seen.add(value)
+            else:
+                d.remove(thing)
+    return d
+
+
 api_key = os.environ["api_key"]
 base_id = os.environ["base_id"]
 gcal_id = os.environ["gcal_id"]
-base = Base(api_key, base_id)
+api = Api(api_key)
+
+base = api.base(base_id)
 
 
 def main():
@@ -46,14 +60,13 @@ def main():
     # s.send_message(mail)
     # s.quit()
 
-    projektkalender = base.get_table("Projektkalender")
-    people = base.get_table("Frilans")
-    adresser = base.get_table("Adressbok")
-    leveranser = base.get_table("Leveranser")
-    bestallare = base.get_table("Beställare")
+    projektkalender = base.table("Projektkalender")
+    people = base.table("Frilans")
+    adresser = base.table("Adressbok")
+    bestallare = base.table("Beställare")
     new_thing = {}
 
-    prylartable = base.get_table('Prylar')
+    prylartable = base.table('Prylar')
     # mail.add_header('Content-Type', 'text/html')
     # ending_of_mail = "<sub>Jag är en robot och lär mig nya saker varje dag, ifall det blev fel så kan du antingen skicka iväg ett mejl till din kontakt på Levande Video eller till <a href='mailto: epost@edvinbryntesson.se'>mig</a> :)</sub>"
     # mail.set_payload('Body of <b>email{}</b>'.format(ending_of_mail))
@@ -88,13 +101,10 @@ def main():
     for adress in orm.get_all_in_orm(orm.Adressbok):
         adresser_dict[adress.id] = adress.name
 
-    all_leverans = {x.id: x for x in orm.get_all_in_orm(orm.Leverans)}
-
-    for event in orm.get_all_in_orm(orm.Projektkalender):
-        try:
-            assert event.leverans_rid is not None
-
-            leverans: orm.Leverans = all_leverans[event.leverans_rid[2:-2]]
+    for event in orm.get_all_in_orm(orm.Projektkalender, "viwXU5C7cSM4POk5z"):
+        if len(event.leverans) != 0:
+            leverans: orm.Leverans = event.leverans[0]
+            leverans.fetch()
             if event.projekt_typ == "Utrustning" or event.projekt_typ == "Redigerat":
                 continue
             if leverans.all_personal is None:
@@ -239,7 +249,7 @@ def main():
             except AssertionError:
                 print("assert error :(")
 
-            if leverans.beställare is not None:
+            if len(leverans.beställare) != 0:
                 bestallare = leverans.beställare[0]
                 description += 'Beställare: {}'.format(bestallare.name)
                 if bestallare.phone is not None:
@@ -264,14 +274,14 @@ def main():
                 continue
             assert event.name2 is not None
 
-            if leverans.adress is not None and leverans.adress[0].name is None:
+            if len(leverans.adress) != 0 and leverans.adress[0].name is None:
                 leverans.adress[0].fetch()
                 assert leverans.adress[0].name is not None
             else:
                 leverans.adress = []
 
             my_event = Event(
-                event.name2[2:-2] + (' [OBEKRÄFTAT]' if event.status == 'Obekräftat projekt' else "") +
+                event.name2[0] + (' [OBEKRÄFTAT]' if event.status == 'Obekräftat projekt' else "") +
                 (" [RIGG]" if leverans.typ == "Rigg" else ""),
                 getin,
                 getout,
@@ -316,26 +326,27 @@ def main():
                     formatted_dict[0].pop(pop_thing, None)
                     formatted_dict[1].pop(pop_thing, None)
 
-                ping_conditions = ["attendees", "status", "start", "end", "location"]
+                conditions = ["status", "start", "end", "location"]
 
                 # print(
                 #    json.dumps(formatted_dict[0], indent=2),
                 #    json.dumps(formatted_dict[1], indent=2)
                 # )
-                if formatted_dict[0] == formatted_dict[1]:
-                    kalender[event.id] = EventSerializer.to_json(before_update)
-                    continue
-                else:
-                    before_update.description = my_event.description
-                    gc.update_event(before_update, SendUpdatesMode.NONE)
-                    update = SendUpdatesMode.NONE
-                    if any(
-                        formatted_dict[0].get(dict_key) != formatted_dict[1].get(dict_key)
-                        for dict_key in ping_conditions
-                    ):
-                        update = SendUpdatesMode.ALL
-                    my_event = gc.update_event(my_event, update)
-                    print(my_event)
+                update = SendUpdatesMode.NONE
+                new_attendee_list = list(set([attendee.email for attendee in my_event.attendees]))
+                old_attendee_list = list(set([attendee.email for attendee in before_update.attendees]))
+
+
+                # Flatten stupid dict list crazyness.......
+                people_condition = not len(new_attendee_list) == len(old_attendee_list) or any(
+                    a not in old_attendee_list for a in new_attendee_list
+                ) or any(a not in new_attendee_list for a in old_attendee_list)
+
+                if people_condition or any([formatted_dict[0].get(k) != formatted_dict[1].get(k) for k in conditions]):
+                    update = SendUpdatesMode.ALL
+                before_update.description = my_event.description
+                my_event = gc.update_event(my_event, update)
+                print(my_event)
             else:
                 try:
                     my_event = gc.add_event(my_event, SendUpdatesMode.ALL)
@@ -343,10 +354,6 @@ def main():
                 except:
                     pass
             kalender[event.id] = EventSerializer.to_json(my_event)
-        except Exception as e:
-            print(e, event)
-            if event.leverans_rid[2:-2] == "recQTkEOxpgfazdxN":
-                print("HELLO HERE")
 
     keys_to_del = []
     all_ids = [record["id"] for record in projektkalender.all()]
@@ -366,7 +373,7 @@ def main():
         json.dump(new_thing, f, ensure_ascii=False, indent=2)
 
 
-error_table = base.get_table("tbl0NUM7MHa2iVmrw")
+error_table = base.table("tbl0NUM7MHa2iVmrw")
 while __name__ == "__main__":
     if os.environ.get("airtable_debug", "yes") != "no":
         main()

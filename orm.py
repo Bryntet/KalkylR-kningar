@@ -23,8 +23,10 @@ config = {
 ORMType = TypeVar('ORMType', bound=Model)
 
 
-def get_all_in_orm(orm: Type[ORMType]) -> List[ORMType]:
-    return orm().all(return_fields_by_field_id=True)
+def get_all_in_orm(orm: Type[ORMType], view: str | None = None) -> List[ORMType]:
+    if view is None:
+        return orm().all(return_fields_by_field_id=True)
+    return orm().all(return_fields_by_field_id=True, view=view)
 
 
 def record_to_orm(table, record_input):
@@ -438,6 +440,7 @@ class Projektkalender(Model):
     program_start_hidden = fields.FloatField("fldZhrBxTQ1azrdEz")
     projekt_typ = fields.TextField("fldjq2WoRhwPnO2xE")
     leverans_rid = fields.TextField("fldJunVGOofzOVrov")
+    leverans = fields.LinkField("fldnlSZBJ93DzClW4", "orm.Leverans")
 
     class Meta:
         base_id = os.environ["base_id"]
