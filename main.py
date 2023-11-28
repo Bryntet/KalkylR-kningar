@@ -185,8 +185,17 @@ class Gig:
         self.output_record.name = self.make_name()
 
         self.person_field_list = [
-            'Bildproducent', 'Fotograf', 'Ljudtekniker', 'Ljustekniker', 'Grafikproducent', 'Animatör', 'Körproducent',
-            'Innehållsproducent', 'Scenmästare', 'Tekniskt_ansvarig', 'Klippare',
+            'Bildproducent',
+            'Fotograf',
+            'Ljudtekniker',
+            'Ljustekniker',
+            'Grafikproducent',
+            'Animatör',
+            'Körproducent',
+            'Innehållsproducent',
+            'Scenmästare',
+            'Tekniskt_ansvarig',
+            'Klippare',
         ]
 
         # Make a dict of all the types of tasks with lists of people recIDs inside
@@ -761,9 +770,11 @@ class Gig:
 
         if self.projekt_timmar is None:
             # Slask timmar för tid spenderat på planering
-            self.projekt_timmar = (math.ceil(
-                ((self.gig_timmar + self.rigg_timmar) * config["projektTid"] / total_personal) if total_personal != 0
-                else 0) + (self.projekt_timmar_add / total_personal if total_personal != 0 and total_personal is not None else 0))
+            self.projekt_timmar = (
+                math.ceil(((self.gig_timmar + self.rigg_timmar) * config["projektTid"] /
+                           total_personal) if total_personal != 0 else 0) +
+                (self.projekt_timmar_add / total_personal if total_personal != 0 and total_personal is not None else 0)
+            )
 
         self.tim_dict = {
             'gig': int(self.gig_timmar),
