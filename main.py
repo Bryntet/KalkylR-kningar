@@ -186,7 +186,7 @@ class Gig:
 
         self.person_field_list = [
             'Bildproducent', 'Fotograf', 'Ljudtekniker', 'Ljustekniker', 'Grafikproducent', 'Animatör', 'Körproducent',
-            'Innehållsproducent', 'Scenmästare', 'Tekniskt_ansvarig', 'Klippare'
+            'Innehållsproducent', 'Scenmästare', 'Tekniskt_ansvarig', 'Klippare',
         ]
 
         # Make a dict of all the types of tasks with lists of people recIDs inside
@@ -194,14 +194,13 @@ class Gig:
             x: getattr(self.data, x)
             for x in self.person_field_list if getattr(self.data, x) is not None
         }
-        self.person_list: List[folk.Person] = []
+        self.person_list: List[orm.Person] = []
 
         # Make a de-duped list of all the people involved in the gig
 
-        for key in self.person_dict_grouped:
-            for item in self.person_dict_grouped[key]:
-                if item not in self.person_list and item is str:
-                    self.person_list.append(item)
+        for item in self.person_dict_grouped.values():
+            if item not in self.person_list and type(item) is orm.Person:
+                self.person_list.append(item)
 
         if len(self.data.existerande_adress) != 0:
             self.adress = self.data.existerande_adress[0]
@@ -350,15 +349,15 @@ class Gig:
         if self.kund.exists():
             if self.kund.name is None:
                 self.kund.fetch()
-            assert self.kund.name is not None
-            name += " | " + self.kund.name
+            if self.kund.name is not None:
+                name += " | " + self.kund.name
         if self.slutkund.exists():
             if self.slutkund.name is None:
                 self.slutkund.fetch()
             if self.kund.exists():
                 name += " ➜ "
-            assert self.slutkund.name is not None
-            name += self.slutkund.name
+            if self.slutkund.name is not None:
+                name += self.slutkund.name
         if self.extra_name is not None:
             name += " | " + self.extra_name
         return name
@@ -762,10 +761,9 @@ class Gig:
 
         if self.projekt_timmar is None:
             # Slask timmar för tid spenderat på planering
-            self.projekt_timmar = math.ceil(
-                (self.gig_timmar + self.rigg_timmar) * config["projektTid"] /
-                total_personal if total_personal != 0 else 0
-            ) + (self.projekt_timmar_add / total_personal if total_personal != 0 and total_personal is not None else 0)
+            self.projekt_timmar = (math.ceil(
+                ((self.gig_timmar + self.rigg_timmar) * config["projektTid"] / total_personal) if total_personal != 0
+                else 0) + (self.projekt_timmar_add / total_personal if total_personal != 0 and total_personal is not None else 0))
 
         self.tim_dict = {
             'gig': int(self.gig_timmar),
@@ -1156,13 +1154,13 @@ class Gig:
             "prefill_fldG8glSnyO1voEt0": self.output_record.id,
             "prefill_fldgIVyUu8kci0haJ": self.output_record.börja_datum,
             "prefill_fldjr98jyFoWSOsHw": self.data.sluta_datum,
+            "prefill_fldB06TMygWWfyiyM": False,
         })
         hidden_update = ["fldkZgi81M0SoCbIi", "fldG8glSnyO1voEt0"]
         for field in hidden_update:
             update_params.update({f"hidden_{field}": True})
         copy_params = copy.deepcopy(params)
         copy_params.update({
-            "prefill_fldB06TMygWWfyiyM": False,
             "prefill_fld2IwCPbq7b8Yjik": self.output_record.name,
         })
 
