@@ -155,8 +155,11 @@ class Paket(Model):
                     paket.calculate()
                 if paket.pris is not None:
                     self.pris += paket.pris
-        if self.hyra is not None and self.pris is not None:
-            self.pris += self.hyra
+        if self.hyra is not None:
+            if self.pris is None:
+                self.pris = self.hyra
+            else:
+                self.pris += self.hyra
 
     def _update_all(self, force_update=False):
         self._force_update = force_update
