@@ -489,6 +489,7 @@ class Gig:
                 destinations=self.adress.name,
                 mode="bicycling",
                 units="metric",
+                traffic_model="optimistic"
             )
 
             try:
@@ -498,18 +499,21 @@ class Gig:
                 raise InvalidMapsAdress("Invalid adress")
             if self.adress.time_bike is not None:
                 if self.adress.time_bike / 60 > 60:
-                    self.car = True
                     gmaps_car = self.gmaps.distance_matrix(
                         origins="Levande video",
                         destinations=self.adress.name,
                         mode="driving",
                         units="metric",
+                        traffic_model="pessimistic"
                     )
                     try:
                         self.adress.time_car = gmaps_car["rows"][0]["elements"][0]["duration"]["value"]
+                        if self.adress.time_car > self.adress.time_bike:
+                            self.adress.distance = str(self.adress.time_car / 60 / 60) + "h"
                     except KeyError:
                         raise InvalidMapsAdress("Invalid adress")
-            if self.adress.time_car is not None:
+            if self.adress.time_car is not None and self.adress.time_bike is not None and self.adress.time_car > self.adress.time_bike:
+                self.car = True
                 self.adress.distance = str(self.adress.time_car / 60 / 60) + "h"
             elif self.adress.time_bike is not None:
                 self.adress.distance = str(self.adress.time_bike / 60 / 60) + "h"
