@@ -484,32 +484,47 @@ class Gig:
             self.adress_update = True
             self.car = False
 
+            temp = self.gmaps.find_place(
+                input=self.adress.name,
+                input_type="textquery",
+                fields=["display_name", "formatted_address"],
+                language="sv"
+            ).get("candidates", [{}])[0]
+            new_destination = temp.get("formatted_address", None)
+            if new_destination is None:
+                new_destination = self.adress.name
+            if temp.get("display_name", None) is not None and len(temp.get("display_name")) > len(self.adress.name):
+                self.adress.name = temp.get("display_name")
             gmaps_bike = self.gmaps.distance_matrix(
-                origins="Levande video",
-                destinations=self.adress.name,
+                origins="Levande Video",
+                destinations=new_destination,
                 mode="bicycling",
                 units="metric",
-                traffic_model="optimistic"
+                language="sv",
             )
 
+
+
             try:
-                self.adress.time_bike = gmaps_bike['rows'][0]['elements'][0]['duration']['value']
-                print(self.adress.time_bike)
+                time_bike_temp = gmaps_bike['rows'][0]['elements'][0]['duration']
+                self.adress.time_bike = time_bike_temp['value']
+                print("bike-time:"+time_bike_temp['text'])
             except KeyError:
                 raise InvalidMapsAdress("Invalid adress")
             if self.adress.time_bike is not None:
                 if self.adress.time_bike / 60 > 60:
                     gmaps_car = self.gmaps.distance_matrix(
-                        origins="Levande video",
-                        destinations=self.adress.name,
+                        origins="Levande Video",
+                        destinations=new_destination,
                         mode="driving",
                         units="metric",
-                        traffic_model="pessimistic"
+                        language="sv",
                     )
                     try:
-                        self.adress.time_car = gmaps_car["rows"][0]["elements"][0]["duration"]["value"]
+                        time_car_temp = gmaps_car['rows'][0]['elements'][0]['duration']
+                        self.adress.time_car = time_car_temp["value"]
                         if self.adress.time_car > self.adress.time_bike:
-                            self.adress.distance = str(self.adress.time_car / 60 / 60) + "h"
+                            self.adress.distance = time_car_temp['text']
                     except KeyError:
                         raise InvalidMapsAdress("Invalid adress")
             if self.adress.time_car is not None and self.adress.time_bike is not None and self.adress.time_car > self.adress.time_bike:
